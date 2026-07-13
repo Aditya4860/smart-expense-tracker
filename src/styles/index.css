@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — CSS Custom Properties
+   ============================================================ */
+:root {
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Border radius */
+  --radius-sm:  0.375rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base:   250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Sidebar */
+  --sidebar-width:          16rem;
+  --sidebar-collapsed-width: 4.5rem;
+
+  /* Z-index layers */
+  --z-sidebar:  40;
+  --z-navbar:   50;
+  --z-overlay:  60;
+  --z-modal:    70;
+  --z-toast:    80;
+  --z-tooltip:  90;
+}
+
+/* ============================================================
+   BASE RESET & DEFAULTS
+   ============================================================ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark mode body */
+  .dark body {
+    background-color: #0f1623;
+    color: #e2e8f0;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: rgba(99, 112, 241, 0.3);
+    color: inherit;
+  }
+
+  /* Focus ring — visible only for keyboard users */
+  :focus-visible {
+    outline: 2px solid #6370f1;
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(99, 112, 241, 0.3);
+    border-radius: var(--radius-full);
+    transition: background var(--transition-fast);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 112, 241, 0.6);
+  }
+
+  /* Typography scale */
+  h1 { @apply text-3xl font-bold tracking-tight; }
+  h2 { @apply text-2xl font-semibold tracking-tight; }
+  h3 { @apply text-xl font-semibold; }
+  h4 { @apply text-lg font-medium; }
+  h5 { @apply text-base font-medium; }
+  h6 { @apply text-sm font-medium; }
+
+  p  { @apply leading-relaxed; }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-size: inherit;
+  }
+}
+
+/* ============================================================
+   COMPONENT UTILITIES
+   ============================================================ */
+@layer components {
+
+  /* Glass card */
+  .card-glass {
+    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Solid surface card */
+  .card {
+    @apply rounded-2xl border border-surface-700/60 bg-surface-800;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-brand bg-clip-text text-transparent;
+  }
+
+  /* Sidebar nav link */
+  .nav-link {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium
+           text-slate-400 transition-all duration-200
+           hover:bg-white/5 hover:text-white;
+  }
+
+  .nav-link.active {
+    @apply bg-primary-600/20 text-primary-400;
+    box-shadow: inset 2px 0 0 #6370f1;
+  }
+
+  /* Badge base */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-success { @apply badge bg-success-500/15 text-success-400; }
+  .badge-danger  { @apply badge bg-danger-500/15  text-danger-400;  }
+  .badge-warning { @apply badge bg-warning-500/15 text-warning-500; }
+  .badge-primary { @apply badge bg-primary-500/15 text-primary-400; }
+  .badge-neutral { @apply badge bg-white/10 text-slate-300; }
+
+  /* Input base */
+  .input {
+    @apply w-full rounded-xl border border-surface-700 bg-surface-800 px-4 py-2.5
+           text-sm text-white placeholder-slate-500
+           transition-all duration-200
+           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           text-sm font-medium transition-all duration-200
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-brand text-white shadow-glow-primary
+           hover:shadow-glow-accent hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn border border-surface-700 bg-surface-800 text-slate-300
+           hover:border-primary-500/50 hover:bg-surface-700 hover:text-white;
+  }
+
+  .btn-ghost {
+    @apply btn text-slate-400 hover:bg-white/5 hover:text-white;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800;
+  }
+
+  /* Divider */
+  .divider {
+    @apply my-4 border-t border-surface-700/60;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply card p-5;
+  }
+}
+
+/* ============================================================
+   UTILITY OVERRIDES
+   ============================================================ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Glassmorphism overlay */
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Income / expense color helpers */
+  .text-income  { @apply text-success-400; }
+  .text-expense { @apply text-danger-400; }
+  .text-neutral { @apply text-slate-400; }
+
+  /* Transition presets */
+  .transition-fast   { transition: all var(--transition-fast); }
+  .transition-base   { transition: all var(--transition-base); }
+  .transition-slow   { transition: all var(--transition-slow); }
+  .transition-bounce { transition: all var(--transition-bounce); }
+}
+
+/* ============================================================
+   PAGE TRANSITION ANIMATIONS
+   ============================================================ */
+.page-enter {
+  animation: fadeUp 0.35s ease-out both;
+}
+
+/* ============================================================
+   GLOBAL LOADING SKELETON
+   ============================================================ */
+.skeleton {
+  @apply rounded-lg bg-surface-700/60 animate-pulse;
+}
+
+/* ============================================================
+   MODAL BACKDROP
+   ============================================================ */
+.modal-backdrop {
+  @apply fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm;
+  animation: fadeIn 0.2s ease-out both;
+}
