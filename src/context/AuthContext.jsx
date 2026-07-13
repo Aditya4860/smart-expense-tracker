@@ -9,14 +9,14 @@ import { createContext, useState, useEffect, useCallback } from 'react';
 export const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'set_auth_token';
-const USER_KEY  = 'set_auth_user';
+const USER_KEY = 'set_auth_user';
 
 /**
  * Generates a deterministic mock JWT-shaped token.
  * Format: header.payload.signature (base64url segments).
  */
 function generateMockToken(user) {
-  const header  = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = btoa(
     JSON.stringify({
       sub: user.id,
@@ -68,7 +68,7 @@ function clearSession() {
  */
 function restoreSession() {
   const token = localStorage.getItem(TOKEN_KEY);
-  const raw   = localStorage.getItem(USER_KEY);
+  const raw = localStorage.getItem(USER_KEY);
 
   if (!token || !raw) return null;
 
@@ -92,8 +92,8 @@ function restoreSession() {
  * through AuthContext.
  */
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);
-  const [token,   setToken]   = useState(null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   /**
@@ -124,9 +124,9 @@ export function AuthProvider({ children }) {
     const normalizedEmail = email.trim().toLowerCase();
 
     const authenticatedUser = {
-      id:    `user_${btoa(normalizedEmail).replace(/=/g, '')}`,
+      id: `user_${btoa(normalizedEmail).replace(/=/g, '')}`,
       email: normalizedEmail,
-      name:  normalizedEmail.split('@')[0],
+      name: normalizedEmail.split('@')[0],
     };
 
     const newToken = generateMockToken(authenticatedUser);
@@ -155,9 +155,9 @@ export function AuthProvider({ children }) {
     const normalizedEmail = email.trim().toLowerCase();
 
     const newUser = {
-      id:    `user_${btoa(normalizedEmail).replace(/=/g, '')}`,
+      id: `user_${btoa(normalizedEmail).replace(/=/g, '')}`,
       email: normalizedEmail,
-      name:  name.trim(),
+      name: name.trim(),
     };
 
     const newToken = generateMockToken(newUser);
@@ -178,7 +178,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     token,
     loading,
@@ -186,8 +186,14 @@ export function AuthProvider({ children }) {
     login,
     logout,
     register,
-  };
-
+  }), [
+    user,
+    token,
+    loading,
+    login,
+    logout,
+    register
+  ]);
   return (
     <AuthContext.Provider value={value}>
       {children}
