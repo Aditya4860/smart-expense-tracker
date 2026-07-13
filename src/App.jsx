@@ -1,29 +1,33 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
 /**
  * App.jsx — Root component.
  *
  * Responsibilities:
  *  - Wraps the entire application in BrowserRouter
+ *  - Mounts AuthProvider so every route can access auth state via useAuth()
  *  - Defines the top-level route structure
  *  - Acts as the single composition root for global providers (added phase by phase)
  *
  * Route structure will grow across phases:
  *  Phase 1  → Scaffold placeholder
- *  Phase 2  → Auth routes + ProtectedRoute guard
+ *  Phase 2  → Auth routes + ProtectedRoute guard  ← current
  *  Phase 3+ → Feature routes (Expenses, Income, Dashboard, etc.)
  */
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Temporary scaffold landing — replaced in Phase 2 with AppShell + Dashboard */}
-        <Route path="/" element={<ScaffoldLanding />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Temporary scaffold landing — replaced in Phase 3 with auth pages + AppShell */}
+          <Route path="/" element={<ScaffoldLanding />} />
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
