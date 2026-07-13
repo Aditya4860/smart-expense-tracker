@@ -9,16 +9,15 @@ import Dashboard from './pages/Dashboard';
 /**
  * App.jsx — Root component.
  *
- * Responsibilities:
- *  - Wraps the entire application in BrowserRouter
- *  - Mounts AuthProvider so every route can access auth state via useAuth()
- *  - Defines the top-level route structure
- *  - Acts as the single composition root for global providers (added phase by phase)
+ * Provider hierarchy (outermost → innermost):
+ *   AuthProvider → BrowserRouter → Routes
  *
  * Route structure:
- *  Phase 1  → Scaffold placeholder
- *  Phase 2  → Auth routes + ProtectedRoute guard  ← current
- *  Phase 3+ → Feature routes (Expenses, Income, Dashboard, etc.)
+ *   /            → Landing     (public)
+ *   /login       → Login       (public; redirects to /dashboard if authed)
+ *   /register    → Register    (public; redirects to /dashboard if authed)
+ *   /dashboard   → Dashboard   (protected via ProtectedRoute)
+ *   *            → redirect to /
  */
 function App() {
   return (
@@ -26,16 +25,16 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/"         element={<Landing />}  />
+          <Route path="/login"    element={<Login />}    />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected routes — unauthenticated users are redirected to /login */}
+          {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
 
-          {/* Catch-all redirect */}
+          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
