@@ -1,130 +1,221 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { loadExpenses, saveExpenses, buildExpense } from '../services/expenseStorage';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useMemo,
+} from 'react';
+import {
+  loadExpenses,
+  saveExpenses,
+  clearExpenses as storageClear,
+  buildExpense,
+} from '../services/expenseStorage';
 
-/**
- * ExpenseContext — manages all expense state.
- * Persists to localStorage automatically on every mutation.
- *
- * Provides:
- *   expenses, processedExpenses, summary,
- *   addExpense, updateExpense, deleteExpense,
- *   searchQuery, setSearchQuery,
- *   filters, setFilters, resetFilters,
- *   sortOrder, setSortOrder
- */
+// ── Action types ───────────────────────────────────────────────────────────
+
+const ADD     = 'ADD';
+const UPDATE  = 'UPDATE';
+const DELETE  = 'DELETE';
+const CLEAR   = 'CLEAR';
+const SEARCH  = 'SEARCH';
+const FILTER  = 'FILTER';
+const SORT    = 'SORT';
+
+// ── Initial state ──────────────────────────────────────────────────────────
+
+const INITIAL_FILTERS = {
+  category:      '',
+  paymentMethod: '',
+  dateFrom:      '',
+  dateTo:        '',
+};
+
+function makeInitialState() {
+  return {
+    expenses:    loadExpenses(),
+    searchQuery: '',
+    filters:     INITIAL_FILTERS,
+    sortOrder:   'newest',   // newest | oldest | highest | lowest
+  };
+}
+
+// ── Reducer ────────────────────────────────────────────────────────────────
+
+function reducer(state, action) {
+  switch (action.type) {
+
+    case ADD: {
+      const next = [action.payload, ...state.expenses];
+      saveExpenses(next);
+      return { ...state, expenses: next };
+    }
+
+    case UPDATE: {
+      const next = state.expenses.map(e =>
+        e.id === action.payload.id ? action.payload : e
+      );
+      saveExpenses(next);
+      return { ...state, expenses: next };
+    }
+
+    case DELETE: {
+      const next = state.expenses.filter(e => e.id !== action.id);
+      saveExpenses(next);
+      return { ...state, expenses: next };
+    }
+
+    case CLEAR: {
+      storageClear();
+      return { ...state, expenses: [] };
+    }
+
+    case SEARCH:
+      return { ...state, searchQuery: action.query };
+
+    case FILTER:
+      return { ...state, filters: { ...state.filters, ...action.partial } };
+
+    case SORT:
+      return { ...state, sortOrder: action.order };
+
+    default:
+      return state;
+  }
+}
+
+// ── Context ────────────────────────────────────────────────────────────────
+
 const ExpenseContext = createContext(null);
 
+/**
+ * ExpenseProvider — wraps the app and makes expense state available everywhere.
+ *
+ * Persists to localStorage automatically on every mutation.
+ * Restores state from localStorage on first render.
+ */
 export function ExpenseProvider({ children }) {
-  const [expenses,    setExpenses]    = useState(() => loadExpenses());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters,     setFiltersRaw]  = useState({
-    category:      '',
-    paymentMethod: '',
-    dateFrom:      '',
-    dateTo:        '',
-  });
-  const [sortOrder, setSortOrder] = useState('newest'); // newest | oldest | highest | lowest
+  const [state, dispatch] = useReducer(reducer, null, makeInitialState);
 
-  // ── Mutations ─────────────────────────────────────────────────────────────
+  // ── Mutations ──────────────────────────────────────────────────────────
 
   const addExpense = useCallback((values) => {
     const expense = buildExpense(values);
-    setExpenses(prev => {
-      const next = [expense, ...prev];
-      saveExpenses(next);
-      return next;
-    });
+    dispatch({ type: ADD, payload: expense });
     return expense;
   }, []);
 
   const updateExpense = useCallback((id, values) => {
-    setExpenses(prev => {
-      const existing = prev.find(e => e.id === id);
-      if (!existing) return prev;
-      const updated = buildExpense(values, id, existing.createdAt);
-      const next = prev.map(e => (e.id === id ? updated : e));
-      saveExpenses(next);
-      return next;
-    });
-  }, []);
+    const existing = state.expenses.find(e => e.id === id);
+    if (!existing) return;
+    const updated = buildExpense(values, id, existing.createdAt);
+    dispatch({ type: UPDATE, payload: updated });
+    return updated;
+  }, [state.expenses]);
 
   const deleteExpense = useCallback((id) => {
-    setExpenses(prev => {
-      const next = prev.filter(e => e.id !== id);
-      saveExpenses(next);
-      return next;
-    });
+    dispatch({ type: DELETE, id });
   }, []);
 
-  // ── Filter helpers ────────────────────────────────────────────────────────
+  const getExpense = useCallback((id) => {
+    return state.expenses.find(e => e.id === id) ?? null;
+  }, [state.expenses]);
+
+  const clearExpenses = useCallback(() => {
+    dispatch({ type: CLEAR });
+  }, []);
+
+  // ── Search / filter / sort ─────────────────────────────────────────────
+
+  const setSearchQuery = useCallback((query) => {
+    dispatch({ type: SEARCH, query });
+  }, []);
 
   const setFilters = useCallback((partial) => {
-    setFiltersRaw(prev => ({ ...prev, ...partial }));
+    dispatch({ type: FILTER, partial });
   }, []);
 
   const resetFilters = useCallback(() => {
-    setFiltersRaw({ category: '', paymentMethod: '', dateFrom: '', dateTo: '' });
-    setSearchQuery('');
-    setSortOrder('newest');
+    dispatch({ type: FILTER, partial: INITIAL_FILTERS });
+    dispatch({ type: SEARCH, query: '' });
+    dispatch({ type: SORT, order: 'newest' });
   }, []);
 
-  // ── Derived list (filtered + sorted) ─────────────────────────────────────
+  const setSortOrder = useCallback((order) => {
+    dispatch({ type: SORT, order });
+  }, []);
+
+  // ── Derived data ───────────────────────────────────────────────────────
 
   const processedExpenses = useMemo(() => {
-    let list = [...expenses];
+    let list = [...state.expenses];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
+    if (state.searchQuery.trim()) {
+      const q = state.searchQuery.trim().toLowerCase();
       list = list.filter(
         e => e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
       );
     }
 
-    if (filters.category)      list = list.filter(e => e.category      === filters.category);
-    if (filters.paymentMethod) list = list.filter(e => e.paymentMethod === filters.paymentMethod);
-    if (filters.dateFrom)      list = list.filter(e => e.date          >= filters.dateFrom);
-    if (filters.dateTo)        list = list.filter(e => e.date          <= filters.dateTo);
+    const { category, paymentMethod, dateFrom, dateTo } = state.filters;
+    if (category)      list = list.filter(e => e.category      === category);
+    if (paymentMethod) list = list.filter(e => e.paymentMethod === paymentMethod);
+    if (dateFrom)      list = list.filter(e => e.date          >= dateFrom);
+    if (dateTo)        list = list.filter(e => e.date          <= dateTo);
 
-    switch (sortOrder) {
-      case 'oldest':  list.sort((a, b) => a.date.localeCompare(b.date));     break;
-      case 'highest': list.sort((a, b) => b.amount - a.amount);              break;
-      case 'lowest':  list.sort((a, b) => a.amount - b.amount);              break;
-      default:        list.sort((a, b) => b.date.localeCompare(a.date));     break;
+    switch (state.sortOrder) {
+      case 'oldest':  list.sort((a, b) => a.date.localeCompare(b.date));  break;
+      case 'highest': list.sort((a, b) => b.amount - a.amount);           break;
+      case 'lowest':  list.sort((a, b) => a.amount - b.amount);           break;
+      default:        list.sort((a, b) => b.date.localeCompare(a.date));  break;
     }
 
     return list;
-  }, [expenses, searchQuery, filters, sortOrder]);
-
-  // ── Summary stats (over ALL expenses, not just filtered) ─────────────────
+  }, [state.expenses, state.searchQuery, state.filters, state.sortOrder]);
 
   const summary = useMemo(() => {
+    const { expenses } = state;
     if (!expenses.length) return { total: 0, count: 0, largest: 0, average: 0 };
     const total   = expenses.reduce((s, e) => s + e.amount, 0);
     const largest = Math.max(...expenses.map(e => e.amount));
     return { total, count: expenses.length, largest, average: total / expenses.length };
-  }, [expenses]);
+  }, [state.expenses]);
 
-  // ── Context value ─────────────────────────────────────────────────────────
+  // ── Context value ──────────────────────────────────────────────────────
 
   const value = useMemo(() => ({
-    expenses,
+    // Raw state
+    expenses:    state.expenses,
+    searchQuery: state.searchQuery,
+    filters:     state.filters,
+    sortOrder:   state.sortOrder,
+    // Derived
+    processedExpenses,
+    summary,
+    // Mutations
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    getExpense,
+    clearExpenses,
+    // Search / filter / sort
+    setSearchQuery,
+    setFilters,
+    resetFilters,
+    setSortOrder,
+  }), [
+    state,
     processedExpenses,
     summary,
     addExpense,
     updateExpense,
     deleteExpense,
-    searchQuery,
+    getExpense,
+    clearExpenses,
     setSearchQuery,
-    filters,
     setFilters,
     resetFilters,
-    sortOrder,
     setSortOrder,
-  }), [
-    expenses, processedExpenses, summary,
-    addExpense, updateExpense, deleteExpense,
-    searchQuery, filters, sortOrder,
-    setFilters, resetFilters,
   ]);
 
   return (
@@ -134,9 +225,13 @@ export function ExpenseProvider({ children }) {
   );
 }
 
+/**
+ * useExpenseContext — internal hook.
+ * Throws a descriptive error if called outside <ExpenseProvider>.
+ */
 export function useExpenseContext() {
   const ctx = useContext(ExpenseContext);
-  if (!ctx) throw new Error('useExpenseContext must be used inside <ExpenseProvider>');
+  if (!ctx) throw new Error('useExpenseContext must be called inside <ExpenseProvider>');
   return ctx;
 }
 
