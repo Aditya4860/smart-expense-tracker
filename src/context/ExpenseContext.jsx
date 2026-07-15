@@ -1,163 +1,130 @@
-import {
-  createContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from 'react';
-import useAuth from '../hooks/useAuth';
-import {
-  getExpenses,
-  addExpense as svcAdd,
-  updateExpense as svcUpdate,
-  deleteExpense as svcDelete,
-  getStats,
-} from '../services/expenseService';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import { loadExpenses, saveExpenses, buildExpense } from '../services/expenseStorage';
 
 /**
- * ExpenseContext — global state for the expense management module.
+ * ExpenseContext — manages all expense state.
+ * Persists to localStorage automatically on every mutation.
  *
- * Consumed via the `useExpenses` hook. Never consume directly.
+ * Provides:
+ *   expenses, processedExpenses, summary,
+ *   addExpense, updateExpense, deleteExpense,
+ *   searchQuery, setSearchQuery,
+ *   filters, setFilters, resetFilters,
+ *   sortOrder, setSortOrder
  */
-export const ExpenseContext = createContext(null);
+const ExpenseContext = createContext(null);
 
-/**
- * Default filter state. All filters are optional; null means "unset".
- *
- * {
- *   search:     string | ''         — filters on description (case-insensitive)
- *   categories: string[]            — empty array = show all
- *   dateFrom:   'YYYY-MM-DD' | ''
- *   dateTo:     'YYYY-MM-DD' | ''
- *   sortBy:     'date' | 'amount'
- *   sortDir:    'desc' | 'asc'
- * }
- */
-const DEFAULT_FILTERS = {
-  search:     '',
-  categories: [],
-  dateFrom:   '',
-  dateTo:     '',
-  sortBy:     'date',
-  sortDir:    'desc',
-};
-
-/**
- * Applies filters + sort to a raw expense array.
- */
-function applyFilters(expenses, filters) {
-  let result = [...expenses];
-
-  if (filters.search.trim()) {
-    const q = filters.search.trim().toLowerCase();
-    result = result.filter(
-      e =>
-        e.description.toLowerCase().includes(q) ||
-        e.notes?.toLowerCase().includes(q)
-    );
-  }
-
-  if (filters.categories.length > 0) {
-    result = result.filter(e => filters.categories.includes(e.category));
-  }
-
-  if (filters.dateFrom) {
-    result = result.filter(e => e.date >= filters.dateFrom);
-  }
-
-  if (filters.dateTo) {
-    result = result.filter(e => e.date <= filters.dateTo);
-  }
-
-  result.sort((a, b) => {
-    const dir = filters.sortDir === 'asc' ? 1 : -1;
-    if (filters.sortBy === 'amount') return dir * (a.amount - b.amount);
-    // default: date
-    if (a.date !== b.date) return dir * a.date.localeCompare(b.date);
-    return dir * a.createdAt.localeCompare(b.createdAt);
-  });
-
-  return result;
-}
-
-/**
- * ExpenseProvider — wraps protected pages that need expense state.
- */
 export function ExpenseProvider({ children }) {
-  const { user } = useAuth();
+  const [expenses,    setExpenses]    = useState(() => loadExpenses());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters,     setFiltersRaw]  = useState({
+    category:      '',
+    paymentMethod: '',
+    dateFrom:      '',
+    dateTo:        '',
+  });
+  const [sortOrder, setSortOrder] = useState('newest'); // newest | oldest | highest | lowest
 
-  const [allExpenses, setAllExpenses] = useState([]);
-  const [filters,     setFiltersState] = useState(DEFAULT_FILTERS);
-  const [stats,       setStats]        = useState({ total: 0, thisMonth: 0, count: 0, byCategory: [] });
-  const [loading,     setLoading]      = useState(true);
+  // ── Mutations ─────────────────────────────────────────────────────────────
 
-  // Load from localStorage whenever the logged-in user changes
-  useEffect(() => {
-    if (!user?.id) return;
-    setLoading(true);
-    const data = getExpenses(user.id);
-    setAllExpenses(data);
-    setStats(getStats(user.id));
-    setLoading(false);
-  }, [user?.id]);
+  const addExpense = useCallback((values) => {
+    const expense = buildExpense(values);
+    setExpenses(prev => {
+      const next = [expense, ...prev];
+      saveExpenses(next);
+      return next;
+    });
+    return expense;
+  }, []);
 
-  /** addExpense(payload) — adds and syncs state */
-  const addExpense = useCallback((payload) => {
-    if (!user?.id) return;
-    const newExpense = svcAdd(user.id, payload);
-    setAllExpenses(prev => [newExpense, ...prev]);
-    setStats(getStats(user.id));
-    return newExpense;
-  }, [user?.id]);
+  const updateExpense = useCallback((id, values) => {
+    setExpenses(prev => {
+      const existing = prev.find(e => e.id === id);
+      if (!existing) return prev;
+      const updated = buildExpense(values, id, existing.createdAt);
+      const next = prev.map(e => (e.id === id ? updated : e));
+      saveExpenses(next);
+      return next;
+    });
+  }, []);
 
-  /** updateExpense(id, patch) — updates and syncs state */
-  const updateExpense = useCallback((id, patch) => {
-    if (!user?.id) return;
-    const updated = svcUpdate(user.id, id, patch);
-    if (!updated) return;
-    setAllExpenses(prev => prev.map(e => e.id === id ? updated : e));
-    setStats(getStats(user.id));
-    return updated;
-  }, [user?.id]);
-
-  /** deleteExpense(id) — removes and syncs state */
   const deleteExpense = useCallback((id) => {
-    if (!user?.id) return;
-    svcDelete(user.id, id);
-    setAllExpenses(prev => prev.filter(e => e.id !== id));
-    setStats(getStats(user.id));
-  }, [user?.id]);
+    setExpenses(prev => {
+      const next = prev.filter(e => e.id !== id);
+      saveExpenses(next);
+      return next;
+    });
+  }, []);
 
-  /** setFilters(partial) — merges partial filter updates */
+  // ── Filter helpers ────────────────────────────────────────────────────────
+
   const setFilters = useCallback((partial) => {
-    setFiltersState(prev => ({ ...prev, ...partial }));
+    setFiltersRaw(prev => ({ ...prev, ...partial }));
   }, []);
 
-  /** resetFilters() — restores default filter state */
   const resetFilters = useCallback(() => {
-    setFiltersState(DEFAULT_FILTERS);
+    setFiltersRaw({ category: '', paymentMethod: '', dateFrom: '', dateTo: '' });
+    setSearchQuery('');
+    setSortOrder('newest');
   }, []);
 
-  // Derived: filtered + sorted view of expenses
-  const expenses = useMemo(
-    () => applyFilters(allExpenses, filters),
-    [allExpenses, filters]
-  );
+  // ── Derived list (filtered + sorted) ─────────────────────────────────────
+
+  const processedExpenses = useMemo(() => {
+    let list = [...expenses];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(
+        e => e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
+      );
+    }
+
+    if (filters.category)      list = list.filter(e => e.category      === filters.category);
+    if (filters.paymentMethod) list = list.filter(e => e.paymentMethod === filters.paymentMethod);
+    if (filters.dateFrom)      list = list.filter(e => e.date          >= filters.dateFrom);
+    if (filters.dateTo)        list = list.filter(e => e.date          <= filters.dateTo);
+
+    switch (sortOrder) {
+      case 'oldest':  list.sort((a, b) => a.date.localeCompare(b.date));     break;
+      case 'highest': list.sort((a, b) => b.amount - a.amount);              break;
+      case 'lowest':  list.sort((a, b) => a.amount - b.amount);              break;
+      default:        list.sort((a, b) => b.date.localeCompare(a.date));     break;
+    }
+
+    return list;
+  }, [expenses, searchQuery, filters, sortOrder]);
+
+  // ── Summary stats (over ALL expenses, not just filtered) ─────────────────
+
+  const summary = useMemo(() => {
+    if (!expenses.length) return { total: 0, count: 0, largest: 0, average: 0 };
+    const total   = expenses.reduce((s, e) => s + e.amount, 0);
+    const largest = Math.max(...expenses.map(e => e.amount));
+    return { total, count: expenses.length, largest, average: total / expenses.length };
+  }, [expenses]);
+
+  // ── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo(() => ({
-    expenses,      // filtered + sorted
-    allExpenses,   // raw, unfiltered
-    stats,
-    filters,
-    loading,
+    expenses,
+    processedExpenses,
+    summary,
     addExpense,
     updateExpense,
     deleteExpense,
+    searchQuery,
+    setSearchQuery,
+    filters,
     setFilters,
     resetFilters,
+    sortOrder,
+    setSortOrder,
   }), [
-    expenses, allExpenses, stats, filters, loading,
-    addExpense, updateExpense, deleteExpense, setFilters, resetFilters,
+    expenses, processedExpenses, summary,
+    addExpense, updateExpense, deleteExpense,
+    searchQuery, filters, sortOrder,
+    setFilters, resetFilters,
   ]);
 
   return (
@@ -166,3 +133,11 @@ export function ExpenseProvider({ children }) {
     </ExpenseContext.Provider>
   );
 }
+
+export function useExpenseContext() {
+  const ctx = useContext(ExpenseContext);
+  if (!ctx) throw new Error('useExpenseContext must be used inside <ExpenseProvider>');
+  return ctx;
+}
+
+export default ExpenseContext;
