@@ -82,40 +82,48 @@ const Sidebar = memo(function Sidebar({ mobileOpen, collapsed, onCollapse, onMob
         'fixed inset-y-0 left-0 z-70 flex flex-col',
         // Visual
         'bg-surface-900 border-r border-surface-700/60',
-        // Width transitions — only animate width + transform for performance
-        'transition-[width,transform] duration-300 ease-in-out',
-        // Width: icon-only or full
+        // Animate width AND transform only — avoids repaints from transition-all
+        'transition-[width,transform] duration-300 ease-in-out will-change-transform',
+        // Width: icon-only (72px) or full (256px)
         collapsed ? 'w-[4.5rem]' : 'w-64',
-        // Visibility: mobile slide, desktop always on via md:translate-x-0
+        // Mobile: hidden off-screen by default, slides in when open
+        // Desktop: always visible — md:translate-x-0 overrides the -translate-x-full
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0',
       ].join(' ')}
     >
       {/* ── Header ───────────────────────────────────────── */}
-      <div className="flex h-16 flex-shrink-0 items-center justify-between border-b border-surface-700/60 px-3">
-        <Logo collapsed={collapsed} />
+      <div className="relative flex h-16 flex-shrink-0 items-center border-b border-surface-700/60 px-3">
+        {/* Logo — hidden when collapsed so only the icon shows */}
+        <div className={['transition-opacity duration-200', collapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'].join(' ')}>
+          <Logo collapsed={false} />
+        </div>
 
-        {/* Desktop collapse toggle */}
+        {/* Desktop collapse toggle — absolutely centred when collapsed */}
         <button
           id="sidebar-collapse-btn"
           type="button"
           onClick={onCollapse}
           className={[
             'hidden md:flex h-7 w-7 flex-shrink-0 items-center justify-center',
-            'rounded-lg text-slate-500 transition-all duration-200',
+            'rounded-lg text-slate-500 transition-colors duration-200',
             'hover:bg-white/5 hover:text-white',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-            // When collapsed, icon is centered in the full 4.5rem width
-            collapsed ? 'ml-0 -mr-1' : '',
+            // When sidebar is full, pin to the right edge; when collapsed, centre in the rail
+            collapsed
+              ? 'absolute inset-0 m-auto'
+              : 'ml-auto',
           ].join(' ')}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
         >
-          {/* Chevron rotates 180° when collapsed */}
+          {/* Single chevron that rotates 180° on collapse */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 16 16"
             fill="currentColor"
             className={['h-4 w-4 transition-transform duration-300', collapsed ? 'rotate-180' : ''].join(' ')}
+            aria-hidden="true"
           >
             <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L6.81 8l2.97 2.72a.75.75 0 1 1-1.04 1.08l-3.5-3.25a.75.75 0 0 1 0-1.08l3.5-3.25a.75.75 0 0 1 1.04.02Z" clipRule="evenodd" />
           </svg>
@@ -127,13 +135,13 @@ const Sidebar = memo(function Sidebar({ mobileOpen, collapsed, onCollapse, onMob
           type="button"
           onClick={onMobileClose}
           className={[
-            'flex md:hidden h-7 w-7 items-center justify-center rounded-lg',
+            'flex md:hidden ml-auto h-7 w-7 items-center justify-center rounded-lg',
             'text-slate-500 transition-colors hover:bg-white/5 hover:text-white',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
           ].join(' ')}
           aria-label="Close sidebar"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4" aria-hidden="true">
             <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
           </svg>
         </button>
@@ -156,8 +164,10 @@ const Sidebar = memo(function Sidebar({ mobileOpen, collapsed, onCollapse, onMob
                   aria-current={active ? 'page' : undefined}
                   title={collapsed ? item.label : undefined}
                   className={[
+                    // Layout & spacing
                     'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
-                    'transition-all duration-200 outline-none',
+                    // Use transition-colors instead of transition-all (cheaper repaints)
+                    'transition-colors duration-200 outline-none',
                     'focus-visible:ring-2 focus-visible:ring-primary-500',
                     collapsed ? 'justify-center' : '',
                     active
@@ -165,14 +175,15 @@ const Sidebar = memo(function Sidebar({ mobileOpen, collapsed, onCollapse, onMob
                       : 'text-slate-400 hover:bg-white/5 hover:text-white',
                   ].join(' ')}
                 >
-                  {/* Icon — always rendered, never hides */}
+                  {/* Icon — always visible, never moves */}
                   <span className="flex-shrink-0">{item.icon}</span>
 
-                  {/* Label — fades + collapses horizontally */}
+                  {/* Label — animates via max-width (animatable) + opacity */}
                   <span
                     className={[
-                      'overflow-hidden whitespace-nowrap transition-all duration-300',
-                      collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
+                      'overflow-hidden whitespace-nowrap',
+                      'transition-[max-width,opacity] duration-300 ease-in-out',
+                      collapsed ? 'max-w-0 opacity-0' : 'max-w-[12rem] opacity-100',
                     ].join(' ')}
                   >
                     {item.label}
@@ -205,8 +216,9 @@ const Sidebar = memo(function Sidebar({ mobileOpen, collapsed, onCollapse, onMob
           </svg>
           <span
             className={[
-              'overflow-hidden whitespace-nowrap transition-all duration-300',
-              collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100',
+              'overflow-hidden whitespace-nowrap',
+              'transition-[max-width,opacity] duration-300 ease-in-out',
+              collapsed ? 'max-w-0 opacity-0' : 'max-w-[12rem] opacity-100',
             ].join(' ')}
           >
             Sign out

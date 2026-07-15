@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import TopNavbar from '../components/layout/TopNavbar';
 import PageContainer from '../components/layout/PageContainer';
@@ -38,8 +38,8 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen bg-surface-950 text-white">
 
-      {/* Decorative ambient glows */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+      {/* Decorative ambient glows — below all content */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
         <div className="absolute -top-32 left-1/3 h-[600px] w-[600px] rounded-full bg-primary-600/[0.07] blur-[160px]" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-accent-600/[0.06] blur-[130px]" />
       </div>
