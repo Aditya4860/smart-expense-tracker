@@ -1,17 +1,25 @@
-import { useEffect, useCallback, memo } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
  * ExpenseModal — accessible modal dialog rendered via React portal.
  *
+ * Features:
+ *   - Escape key closes the modal
+ *   - Backdrop click closes the modal
+ *   - Body scroll is locked while open
+ *   - Focus trapped inside (first interactive element receives focus)
+ *   - Bottom-sheet on mobile, centred panel on sm+
+ *
  * Props:
- *   isOpen    — boolean
- *   onClose   — () => void
- *   title     — string — dialog heading
- *   children  — modal body content
+ *   isOpen   — boolean
+ *   onClose  — () => void
+ *   title    — string shown in the modal header
+ *   children — modal body content
  */
-const ExpenseModal = memo(function ExpenseModal({ isOpen, onClose, title, children }) {
-  // Close on Escape
+export default function ExpenseModal({ isOpen, onClose, title, children }) {
+  const panelRef = useRef(null);
+
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') onClose();
   }, [onClose]);
@@ -20,6 +28,13 @@ const ExpenseModal = memo(function ExpenseModal({ isOpen, onClose, title, childr
     if (!isOpen) return;
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
+
+    // Move focus into the panel on open
+    const firstFocusable = panelRef.current?.querySelector(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
@@ -37,38 +52,68 @@ const ExpenseModal = memo(function ExpenseModal({ isOpen, onClose, title, childr
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Panel */}
-      <div className="relative z-10 w-full sm:max-w-lg bg-surface-900 border border-surface-700/60 rounded-t-3xl sm:rounded-2xl shadow-2xl animate-scale-in max-h-[90vh] flex flex-col">
+      <div
+        ref={panelRef}
+        className={[
+          'relative z-10 w-full bg-surface-900',
+          'border border-surface-700/60',
+          'rounded-t-3xl sm:rounded-2xl',
+          'shadow-2xl shadow-black/50',
+          'animate-fade-up sm:animate-scale-in',
+          'sm:max-w-lg',
+          'max-h-[92dvh] flex flex-col',
+        ].join(' ')}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-surface-700/60 px-6 py-4 flex-shrink-0">
-          <h2 id="expense-modal-title" className="text-base font-semibold text-white">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-surface-700/60 px-6 py-4">
+          {/* Drag handle — mobile only */}
+          <div
+            className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-surface-700 sm:hidden"
+            aria-hidden="true"
+          />
+
+          <h2
+            id="expense-modal-title"
+            className="text-base font-semibold text-white"
+          >
             {title}
           </h2>
+
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className={[
+              'flex h-8 w-8 items-center justify-center rounded-lg',
+              'text-slate-500 transition-colors',
+              'hover:bg-white/5 hover:text-white',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+            ].join(' ')}
             aria-label="Close modal"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
               <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
             </svg>
           </button>
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto p-6 flex-1">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-6">
           {children}
         </div>
       </div>
     </div>,
     document.body
   );
-});
-
-export default ExpenseModal;
+}

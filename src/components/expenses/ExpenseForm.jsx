@@ -1,51 +1,88 @@
 import { useState, useCallback } from 'react';
-import { CATEGORIES, PAYMENT_METHODS } from '../../constants/expenseCategories';
+import { PAYMENT_METHODS } from '../../constants/expenseCategories';
 import { validateExpense, defaultExpenseValues } from '../../utils/expenseValidation';
 import CategorySelect from './CategorySelect';
 import Button from '../ui/Button';
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function todayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function valuesFromExpense(expense) {
+  return {
+    title:         expense.title,
+    amount:        String(expense.amount),
+    category:      expense.category,
+    date:          expense.date,
+    paymentMethod: expense.paymentMethod,
+    notes:         expense.notes ?? '',
+  };
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────
+
+function FieldError({ id, message }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="mt-1 text-xs text-danger-400">
+      {message}
+    </p>
+  );
+}
+
+function Label({ htmlFor, children, required, optional }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="mb-1.5 block text-sm font-medium text-slate-300"
+    >
+      {children}
+      {required && <span className="ml-0.5 text-danger-400" aria-hidden="true">*</span>}
+      {optional && <span className="ml-1 text-xs font-normal text-slate-500">(optional)</span>}
+    </label>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
 
 /**
  * ExpenseForm — controlled form for adding or editing an expense.
  *
  * Props:
- *   initialValues — expense object to pre-fill (for edit mode), or undefined (add mode)
- *   onSubmit      — (values) => void  called with valid form values
+ *   initialValues — expense object (edit mode) or undefined (add mode)
+ *   onSubmit      — (formValues: object) => void  — called only when validation passes
  *   onCancel      — () => void
- *   loading       — boolean  shows spinner on the submit button
+ *   loading       — boolean — shows spinner and disables submit button
  */
 export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading = false }) {
-  const [values, setValues] = useState(() =>
-    initialValues
-      ? {
-          title:         initialValues.title,
-          amount:        String(initialValues.amount),
-          category:      initialValues.category,
-          date:          initialValues.date,
-          paymentMethod: initialValues.paymentMethod,
-          notes:         initialValues.notes ?? '',
-        }
-      : defaultExpenseValues()
+  const isEdit = Boolean(initialValues);
+
+  const [values,  setValues]  = useState(() =>
+    initialValues ? valuesFromExpense(initialValues) : defaultExpenseValues()
   );
-  const [errors, setErrors] = useState({});
+  const [errors,  setErrors]  = useState({});
   const [touched, setTouched] = useState({});
 
-  const isEdit = Boolean(initialValues);
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setValues(prev => ({ ...prev, [name]: value }));
-    // Clear error for the changed field
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-  }, [errors]);
+    setErrors(prev => prev[name] ? { ...prev, [name]: '' } : prev);
+  }, []);
 
   const handleBlur = useCallback((e) => {
-    setTouched(prev => ({ ...prev, [e.target.name]: true }));
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
   }, []);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    // Mark all fields touched so errors show
-    setTouched({ title: true, amount: true, category: true, date: true, paymentMethod: true, notes: true });
+    const ALL_FIELDS = { title: true, amount: true, category: true, date: true, paymentMethod: true, notes: true };
+    setTouched(ALL_FIELDS);
     const { valid, errors: newErrors } = validateExpense(values);
     if (!valid) {
       setErrors(newErrors);
@@ -54,128 +91,147 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
     onSubmit(values);
   }, [values, onSubmit]);
 
-  function field(name, label, { type = 'text', placeholder = '', required = true } = {}) {
-    const hasError = touched[name] && errors[name];
-    return (
-      <div>
-        <label htmlFor={`expense-${name}`} className="mb-1.5 block text-sm font-medium text-slate-300">
-          {label}{required && <span className="ml-0.5 text-danger-400">*</span>}
-        </label>
-        <input
-          id={`expense-${name}`}
-          name={name}
-          type={type}
-          value={values[name]}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          aria-invalid={!!hasError}
-          aria-describedby={hasError ? `expense-${name}-error` : undefined}
-          max={type === 'date' ? new Date().toISOString().split('T')[0] : undefined}
-          className={[
-            'input h-10 text-sm',
-            hasError ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20' : '',
-          ].join(' ')}
-        />
-        {hasError && (
-          <p id={`expense-${name}-error`} role="alert" className="mt-1 text-xs text-danger-400">
-            {errors[name]}
-          </p>
-        )}
-      </div>
-    );
+  // ── Field helpers ─────────────────────────────────────────────────────────
+
+  function err(name) {
+    return touched[name] ? errors[name] : '';
   }
 
-  function selectError(name) {
-    return touched[name] ? errors[name] : undefined;
+  function inputClass(name) {
+    return [
+      'input h-10 text-sm',
+      err(name) ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20' : '',
+    ].filter(Boolean).join(' ');
   }
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <form id="expense-form" onSubmit={handleSubmit} noValidate className="space-y-4">
-      {/* Row: Title */}
-      {field('title', 'Title', { placeholder: 'e.g. Grocery shopping' })}
-
-      {/* Row: Amount + Date */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {field('amount', 'Amount (₹)', { type: 'number', placeholder: '0.00' })}
-        {field('date', 'Date', { type: 'date' })}
+    <form
+      id="expense-form"
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-4"
+    >
+      {/* Title */}
+      <div>
+        <Label htmlFor="ef-title" required>Title</Label>
+        <input
+          id="ef-title"
+          name="title"
+          type="text"
+          value={values.title}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="e.g. Grocery shopping"
+          autoComplete="off"
+          aria-invalid={!!err('title')}
+          aria-describedby={err('title') ? 'ef-title-error' : undefined}
+          className={inputClass('title')}
+        />
+        <FieldError id="ef-title-error" message={err('title')} />
       </div>
 
-      {/* Row: Category */}
+      {/* Amount + Date */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="ef-amount" required>Amount (₹)</Label>
+          <input
+            id="ef-amount"
+            name="amount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            value={values.amount}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="0.00"
+            aria-invalid={!!err('amount')}
+            aria-describedby={err('amount') ? 'ef-amount-error' : undefined}
+            className={inputClass('amount')}
+          />
+          <FieldError id="ef-amount-error" message={err('amount')} />
+        </div>
+
+        <div>
+          <Label htmlFor="ef-date" required>Date</Label>
+          <input
+            id="ef-date"
+            name="date"
+            type="date"
+            value={values.date}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            max={todayString()}
+            aria-invalid={!!err('date')}
+            aria-describedby={err('date') ? 'ef-date-error' : undefined}
+            className={inputClass('date')}
+          />
+          <FieldError id="ef-date-error" message={err('date')} />
+        </div>
+      </div>
+
+      {/* Category */}
       <div>
-        <label htmlFor="category" className="mb-1.5 block text-sm font-medium text-slate-300">
-          Category<span className="ml-0.5 text-danger-400">*</span>
-        </label>
+        <Label htmlFor="ef-category" required>Category</Label>
         <CategorySelect
-          id="category"
+          id="ef-category"
           value={values.category}
           onChange={handleChange}
-          error={selectError('category')}
+          onBlur={handleBlur}
+          error={err('category')}
         />
-        {selectError('category') && (
-          <p id="category-error" role="alert" className="mt-1 text-xs text-danger-400">
-            {errors.category}
-          </p>
-        )}
+        <FieldError id="ef-category-error" message={err('category')} />
       </div>
 
-      {/* Row: Payment Method */}
+      {/* Payment Method */}
       <div>
-        <label htmlFor="expense-paymentMethod" className="mb-1.5 block text-sm font-medium text-slate-300">
-          Payment Method<span className="ml-0.5 text-danger-400">*</span>
-        </label>
+        <Label htmlFor="ef-paymentMethod" required>Payment Method</Label>
         <select
-          id="expense-paymentMethod"
+          id="ef-paymentMethod"
           name="paymentMethod"
           value={values.paymentMethod}
           onChange={handleChange}
           onBlur={handleBlur}
-          aria-invalid={!!selectError('paymentMethod')}
+          aria-invalid={!!err('paymentMethod')}
+          aria-describedby={err('paymentMethod') ? 'ef-paymentMethod-error' : undefined}
           className={[
             'input h-10 text-sm',
-            selectError('paymentMethod')
+            err('paymentMethod')
               ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20'
               : '',
-          ].join(' ')}
+          ].filter(Boolean).join(' ')}
         >
           <option value="">Select payment method</option>
           {PAYMENT_METHODS.map(p => (
             <option key={p.id} value={p.id}>{p.label}</option>
           ))}
         </select>
-        {selectError('paymentMethod') && (
-          <p id="expense-paymentMethod-error" role="alert" className="mt-1 text-xs text-danger-400">
-            {errors.paymentMethod}
-          </p>
-        )}
+        <FieldError id="ef-paymentMethod-error" message={err('paymentMethod')} />
       </div>
 
-      {/* Row: Notes */}
+      {/* Notes */}
       <div>
-        <label htmlFor="expense-notes" className="mb-1.5 block text-sm font-medium text-slate-300">
-          Notes <span className="text-slate-500 font-normal">(optional)</span>
-        </label>
+        <Label htmlFor="ef-notes" optional>Notes</Label>
         <textarea
-          id="expense-notes"
+          id="ef-notes"
           name="notes"
           value={values.notes}
           onChange={handleChange}
           onBlur={handleBlur}
-          placeholder="Any additional details…"
+          placeholder="Any extra details…"
           rows={3}
           maxLength={500}
           className="input resize-none py-2.5 text-sm"
         />
-        <p className="mt-1 text-right text-xs text-slate-600">
-          {values.notes.length}/500
-        </p>
-        {touched.notes && errors.notes && (
-          <p role="alert" className="mt-1 text-xs text-danger-400">{errors.notes}</p>
-        )}
+        <div className="mt-1 flex items-start justify-between gap-2">
+          <FieldError id="ef-notes-error" message={err('notes')} />
+          <p className="ml-auto text-xs text-slate-600">{values.notes.length}/500</p>
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-surface-700/60">
+      {/* Footer */}
+      <div className="flex items-center justify-end gap-3 border-t border-surface-700/60 pt-4">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>
