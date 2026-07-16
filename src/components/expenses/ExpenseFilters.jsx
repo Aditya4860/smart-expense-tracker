@@ -1,10 +1,30 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { CATEGORIES, PAYMENT_METHODS } from '../../constants/expenseCategories';
 import useExpenses from '../../hooks/useExpenses';
 
+// ── Label helper ───────────────────────────────────────────────────────────
+
+function FilterLabel({ htmlFor, children }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="mb-1 block text-xs font-medium text-slate-400"
+    >
+      {children}
+    </label>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
 /**
- * ExpenseFilters — dropdowns for category, payment method, and date range.
- * Reads/writes the `filters` slice from ExpenseContext.
+ * ExpenseFilters — filter panel for Category, Payment Method, and Date Range.
+ *
+ * Reads and writes the `filters` slice of ExpenseContext.
+ * Calling `resetFilters()` also clears the search query and sort order (handled in context).
+ *
+ * Props:
+ *   onClose — optional () => void — called alongside resetFilters on "Clear all"
  */
 const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
   const { filters, setFilters, resetFilters } = useExpenses();
@@ -12,31 +32,43 @@ const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
   const hasActive =
     filters.category || filters.paymentMethod || filters.dateFrom || filters.dateTo;
 
-  function handle(field) {
-    return (e) => setFilters({ [field]: e.target.value });
+  const handle = useCallback(
+    (field) => (e) => setFilters({ [field]: e.target.value }),
+    [setFilters]
+  );
+
+  function handleClearAll() {
+    resetFilters();
+    onClose?.();
   }
 
   return (
-    <div className="rounded-2xl border border-surface-700/60 bg-surface-800 p-4 shadow-card-dark">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filters</h3>
+    <div
+      className="rounded-2xl border border-surface-700/60 bg-surface-800 p-4 shadow-card-dark"
+      aria-label="Expense filters"
+    >
+      {/* Panel header */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Filters
+        </p>
         {hasActive && (
           <button
             type="button"
-            onClick={() => { resetFilters(); onClose?.(); }}
-            className="text-xs text-primary-400 hover:text-primary-300 transition-colors"
+            onClick={handleClearAll}
+            className="text-xs font-medium text-primary-400 transition-colors hover:text-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
             Clear all
           </button>
         )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Filter controls grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
         {/* Category */}
         <div>
-          <label htmlFor="filter-category" className="mb-1 block text-xs font-medium text-slate-400">
-            Category
-          </label>
+          <FilterLabel htmlFor="filter-category">Category</FilterLabel>
           <select
             id="filter-category"
             value={filters.category}
@@ -45,16 +77,16 @@ const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
           >
             <option value="">All categories</option>
             {CATEGORIES.map(c => (
-              <option key={c.id} value={c.id}>{c.label}</option>
+              <option key={c.id} value={c.id}>
+                {c.icon}  {c.name}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Payment Method */}
         <div>
-          <label htmlFor="filter-payment" className="mb-1 block text-xs font-medium text-slate-400">
-            Payment Method
-          </label>
+          <FilterLabel htmlFor="filter-payment">Payment Method</FilterLabel>
           <select
             id="filter-payment"
             value={filters.paymentMethod}
@@ -70,9 +102,7 @@ const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
 
         {/* Date from */}
         <div>
-          <label htmlFor="filter-date-from" className="mb-1 block text-xs font-medium text-slate-400">
-            From date
-          </label>
+          <FilterLabel htmlFor="filter-date-from">From date</FilterLabel>
           <input
             id="filter-date-from"
             type="date"
@@ -85,9 +115,7 @@ const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
 
         {/* Date to */}
         <div>
-          <label htmlFor="filter-date-to" className="mb-1 block text-xs font-medium text-slate-400">
-            To date
-          </label>
+          <FilterLabel htmlFor="filter-date-to">To date</FilterLabel>
           <input
             id="filter-date-to"
             type="date"

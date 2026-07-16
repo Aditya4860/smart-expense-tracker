@@ -2,15 +2,16 @@ import { memo, useMemo } from 'react';
 import useExpenses from '../../hooks/useExpenses';
 import Card from '../ui/Card';
 
-function formatINR(amount) {
-  return new Intl.NumberFormat('en-IN', {
-    style:                 'currency',
-    currency:              'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+// ── Formatter ──────────────────────────────────────────────────────────────
 
-// Icons defined outside render — never recreated
+const amountFmt = new Intl.NumberFormat('en-IN', {
+  style:                 'currency',
+  currency:              'INR',
+  maximumFractionDigits: 0,
+});
+
+// ── Icons (stable module-level constants) ─────────────────────────────────
+
 const ICONS = {
   wallet: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
@@ -34,10 +35,21 @@ const ICONS = {
   ),
 };
 
-const MONTHLY_INCOME = 45000; // Static until income module is added
+// Static monthly income — replace when income module is built
+const MONTHLY_INCOME = 45_000;
+
+// ── Main component ─────────────────────────────────────────────────────────
 
 /**
- * SummaryCards — four financial stat cards populated from live ExpenseContext data.
+ * SummaryCards — four financial overview cards driven by live ExpenseContext data.
+ *
+ * Cards:
+ *   1. Net Savings       — income minus total expenses
+ *   2. Monthly Income    — static placeholder (₹45,000)
+ *   3. Total Expenses    — sum of all recorded expenses
+ *   4. Savings Rate      — percentage of income saved
+ *
+ * All values update automatically whenever an expense is added, edited, or deleted.
  */
 const SummaryCards = memo(function SummaryCards() {
   const { summary } = useExpenses();
@@ -45,15 +57,15 @@ const SummaryCards = memo(function SummaryCards() {
 
   const cards = useMemo(() => {
     const netSavings  = MONTHLY_INCOME - totalExpenses;
-    const savingsPct  = MONTHLY_INCOME > 0 ? Math.max(0, Math.round((netSavings / MONTHLY_INCOME) * 100)) : 0;
-    const expensePct  = MONTHLY_INCOME > 0 ? Math.min(100, Math.round((totalExpenses / MONTHLY_INCOME) * 100)) : 0;
+    const savingsPct  = Math.max(0, Math.min(100, Math.round((netSavings  / MONTHLY_INCOME) * 100)));
+    const expensePct  = Math.max(0, Math.min(100, Math.round((totalExpenses / MONTHLY_INCOME) * 100)));
 
     return [
       {
-        id:       'summary-balance',
+        id:       'summary-savings',
         label:    'Net Savings',
-        value:    formatINR(netSavings),
-        change:   `${savingsPct}% savings rate`,
+        value:    amountFmt.format(netSavings),
+        change:   `${savingsPct}% of income saved`,
         positive: netSavings >= 0,
         progress: savingsPct,
         icon:     ICONS.wallet,
@@ -64,8 +76,8 @@ const SummaryCards = memo(function SummaryCards() {
       {
         id:       'summary-income',
         label:    'Monthly Income',
-        value:    formatINR(MONTHLY_INCOME),
-        change:   'Static — add income module',
+        value:    amountFmt.format(MONTHLY_INCOME),
+        change:   'Add income module to update',
         positive: true,
         progress: 100,
         icon:     ICONS.income,
@@ -76,7 +88,7 @@ const SummaryCards = memo(function SummaryCards() {
       {
         id:       'summary-expense',
         label:    'Total Expenses',
-        value:    formatINR(totalExpenses),
+        value:    amountFmt.format(totalExpenses),
         change:   `${count} ${count === 1 ? 'expense' : 'expenses'} logged`,
         positive: totalExpenses === 0,
         progress: expensePct,
@@ -86,10 +98,16 @@ const SummaryCards = memo(function SummaryCards() {
         valueCls: 'text-danger-400',
       },
       {
-        id:       'summary-savings',
+        id:       'summary-rate',
         label:    'Savings Rate',
         value:    `${savingsPct}%`,
-        change:   savingsPct >= 20 ? 'Great job! 🎉' : savingsPct > 0 ? 'Keep going!' : 'Over budget',
+        change:   savingsPct >= 30
+          ? 'Excellent! 🏆'
+          : savingsPct >= 20
+          ? 'Great job! 🎉'
+          : savingsPct > 0
+          ? 'Keep going!'
+          : 'Over budget',
         positive: savingsPct >= 20,
         progress: savingsPct,
         icon:     ICONS.savings,
@@ -110,10 +128,15 @@ const SummaryCards = memo(function SummaryCards() {
           hover
           className="flex flex-col justify-between"
         >
+          {/* Label + icon */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{card.label}</p>
-              <p className={`mt-2.5 text-2xl font-bold tracking-tight ${card.valueCls}`}>{card.value}</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                {card.label}
+              </p>
+              <p className={`mt-2.5 text-2xl font-bold tracking-tight tabular-nums ${card.valueCls}`}>
+                {card.value}
+              </p>
               <p className={`mt-1 text-xs font-medium ${card.positive ? 'text-success-400' : 'text-danger-400'}`}>
                 {card.change}
               </p>
@@ -123,6 +146,7 @@ const SummaryCards = memo(function SummaryCards() {
             </div>
           </div>
 
+          {/* Progress bar */}
           <div className="mt-4" aria-hidden="true">
             <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700">
               <div
