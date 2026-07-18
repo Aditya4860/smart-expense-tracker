@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { IncomeProvider } from './context/IncomeContext';
+import { AnalyticsProvider } from './context/AnalyticsContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -9,12 +10,13 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Income from './pages/Income';
+import Analytics from './pages/Analytics';
 
 /**
  * App.jsx — Root component.
  *
  * Provider hierarchy (outermost → innermost):
- *   AuthProvider → ExpenseProvider → IncomeProvider → BrowserRouter → Routes
+ *   AuthProvider → ExpenseProvider → IncomeProvider → AnalyticsProvider → BrowserRouter → Routes
  *
  * Route structure:
  *   /            → Landing     (public)
@@ -23,13 +25,14 @@ import Income from './pages/Income';
  *   /dashboard   → Dashboard   (protected)
  *   /expenses    → Expenses    (protected)
  *   /income      → Income      (protected)
- *   *            → redirect to /
+ *   /analytics   → Analytics    (protected)
  */
 function App() {
   return (
     <AuthProvider>
       <ExpenseProvider>
         <IncomeProvider>
+          <AnalyticsProvider>
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
@@ -41,13 +44,15 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/expenses"  element={<Expenses />}  />
-                <Route path="/income"    element={<Income />}    />
+                <Route path="/income"      element={<Income />}      />
+                <Route path="/analytics"   element={<Analytics />}   />
               </Route>
 
               {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          </AnalyticsProvider>
         </IncomeProvider>
       </ExpenseProvider>
     </AuthProvider>
