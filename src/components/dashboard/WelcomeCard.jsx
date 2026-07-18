@@ -1,5 +1,8 @@
 import { memo } from 'react';
 import useAuth from '../../hooks/useAuth';
+import useAnalytics from '../../hooks/useAnalytics';
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 const MESSAGES = [
   'Every rupee tracked is a step toward financial freedom.',
@@ -28,25 +31,48 @@ function formatToday() {
 }
 
 /**
- * WelcomeCard — gradient hero card with greeting, user name, date, and a motivational quote.
+ * Derive financial health label + colours from savings rate.
+ * @param {number} rate — integer 0–100
+ * @param {boolean} hasData — false when no income/expense exists yet
+ * @returns {{ label: string, dot: string, badge: string }}
+ */
+function healthFromRate(rate, hasData) {
+  if (!hasData) return { label: 'No data yet',      dot: 'bg-slate-400',   badge: 'bg-white/10 text-white/60' };
+  if (rate >= 30) return { label: 'Excellent 🏆',   dot: 'bg-emerald-400', badge: 'bg-emerald-400/20 text-emerald-300' };
+  if (rate >= 20) return { label: 'Healthy 🎉',     dot: 'bg-green-400',   badge: 'bg-green-400/20 text-green-300'   };
+  if (rate >= 10) return { label: 'Fair ⚡',         dot: 'bg-yellow-400',  badge: 'bg-yellow-400/20 text-yellow-300' };
+  if (rate >  0)  return { label: 'Needs Attention', dot: 'bg-orange-400',  badge: 'bg-orange-400/20 text-orange-300' };
+  return              { label: 'Over Budget ⚠️',    dot: 'bg-red-400',     badge: 'bg-red-400/20 text-red-300'       };
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+
+/**
+ * WelcomeCard — gradient hero card with greeting, financial health status,
+ * today's date, and a rotating motivational message.
  */
 const WelcomeCard = memo(function WelcomeCard() {
-  const { user } = useAuth();
+  const { user }     = useAuth();
+  const { analytics } = useAnalytics();
+
   const firstName = user?.name?.split(' ')[0] ?? 'there';
   const message   = MESSAGES[new Date().getDay() % MESSAGES.length];
+
+  const hasData = analytics.incomeCount > 0 || analytics.expenseCount > 0;
+  const health  = healthFromRate(analytics.savingsRate, hasData);
 
   return (
     <div
       id="welcome-card"
       className="relative overflow-hidden rounded-2xl bg-gradient-brand p-6 text-white shadow-glow-primary/50"
     >
-      {/* Decorative circles — layered for depth */}
+      {/* Decorative circles */}
       <div aria-hidden="true" className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.06]" />
       <div aria-hidden="true" className="absolute -right-4 -bottom-10 h-40 w-40 rounded-full bg-white/[0.04]" />
       <div aria-hidden="true" className="absolute left-1/2 -top-8 h-32 w-32 rounded-full bg-white/[0.04]" />
 
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Text content */}
+        {/* Text */}
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wider text-white/60">
             {formatToday()}
@@ -57,9 +83,23 @@ const WelcomeCard = memo(function WelcomeCard() {
           <p className="mt-2 max-w-sm text-sm text-white/70 leading-relaxed">
             {message}
           </p>
+
+          {/* Financial health badge */}
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
+              Financial Health:
+            </span>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${health.badge}`}
+              aria-label={`Financial health: ${health.label}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${health.dot}`} aria-hidden="true" />
+              {health.label}
+            </span>
+          </div>
         </div>
 
-        {/* Decorative coin icon badge */}
+        {/* Coin icon badge */}
         <div
           className="flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20"
           aria-hidden="true"
