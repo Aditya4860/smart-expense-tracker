@@ -5,52 +5,82 @@ import SummaryCards from '../components/dashboard/SummaryCards';
 import QuickActions from '../components/dashboard/QuickActions';
 import ExpenseModal from '../components/expenses/ExpenseModal';
 import ExpenseForm from '../components/expenses/ExpenseForm';
+import IncomeModal from '../components/income/IncomeModal';
+import IncomeForm from '../components/income/IncomeForm';
 import useExpenses from '../hooks/useExpenses';
+import useIncome from '../hooks/useIncome';
 
 /**
- * DashboardInner — consumes ExpenseContext (provided by App).
+ * DashboardInner — consumes ExpenseContext and IncomeContext (provided by App).
  *
- * Manages the "Add Expense" modal state and delegates opening
- * to the QuickActions "Add Expense" button via the onAddExpense prop.
+ * Manages modal state for both "Add Expense" and "Add Income" quick actions.
  */
 function DashboardInner() {
   const { addExpense } = useExpenses();
-  const [addOpen, setAddOpen] = useState(false);
-  const [saving,  setSaving]  = useState(false);
+  const { addIncome  } = useIncome();
 
-  const handleAdd = useCallback((values) => {
-    setSaving(true);
+  const [expenseOpen, setExpenseOpen] = useState(false);
+  const [incomeOpen,  setIncomeOpen]  = useState(false);
+  const [savingExp,   setSavingExp]   = useState(false);
+  const [savingInc,   setSavingInc]   = useState(false);
+
+  const handleAddExpense = useCallback((values) => {
+    setSavingExp(true);
     addExpense(values);
-    setSaving(false);
-    setAddOpen(false);
+    setSavingExp(false);
+    setExpenseOpen(false);
   }, [addExpense]);
+
+  const handleAddIncome = useCallback((values) => {
+    setSavingInc(true);
+    addIncome(values);
+    setSavingInc(false);
+    setIncomeOpen(false);
+  }, [addIncome]);
 
   return (
     <>
       <div className="space-y-6">
         <WelcomeCard />
         <SummaryCards />
-        <QuickActions onAddExpense={() => setAddOpen(true)} />
+        <QuickActions
+          onAddExpense={() => setExpenseOpen(true)}
+          onAddIncome={() => setIncomeOpen(true)}
+        />
       </div>
 
+      {/* Add Expense modal */}
       <ExpenseModal
-        isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
+        isOpen={expenseOpen}
+        onClose={() => setExpenseOpen(false)}
         title="Add Expense"
       >
         <ExpenseForm
-          onSubmit={handleAdd}
-          onCancel={() => setAddOpen(false)}
-          loading={saving}
+          onSubmit={handleAddExpense}
+          onCancel={() => setExpenseOpen(false)}
+          loading={savingExp}
         />
       </ExpenseModal>
+
+      {/* Add Income modal */}
+      <IncomeModal
+        isOpen={incomeOpen}
+        onClose={() => setIncomeOpen(false)}
+        title="Add Income"
+      >
+        <IncomeForm
+          onSubmit={handleAddIncome}
+          onCancel={() => setIncomeOpen(false)}
+          loading={savingInc}
+        />
+      </IncomeModal>
     </>
   );
 }
 
 /**
  * Dashboard — main authenticated landing page.
- * ExpenseContext is provided by App above the route tree.
+ * ExpenseContext and IncomeContext are provided by App above the route tree.
  */
 export default function Dashboard() {
   return (
