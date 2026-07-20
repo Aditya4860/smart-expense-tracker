@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import useAuth from '../../hooks/useAuth';
 import useAnalytics from '../../hooks/useAnalytics';
+import useBudget from '../../hooks/useBudget';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -32,7 +33,7 @@ function formatToday() {
 
 /**
  * Derive financial health label + colours from savings rate.
- * @param {number} rate — integer 0–100
+ * @param {number}  rate    — integer 0–100
  * @param {boolean} hasData — false when no income/expense exists yet
  * @returns {{ label: string, dot: string, badge: string }}
  */
@@ -49,17 +50,27 @@ function healthFromRate(rate, hasData) {
 
 /**
  * WelcomeCard — gradient hero card with greeting, financial health status,
- * today's date, and a rotating motivational message.
+ * today's date, budget alert count, and a rotating motivational message.
+ *
+ * Budget alert count is derived here (not from BudgetAlertWidget) to keep
+ * each component independently re-renderable.
  */
 const WelcomeCard = memo(function WelcomeCard() {
-  const { user }     = useAuth();
+  const { user }      = useAuth();
   const { analytics } = useAnalytics();
+  const { budgets, calculateBudgetProgress } = useBudget();
 
   const firstName = user?.name?.split(' ')[0] ?? 'there';
   const message   = MESSAGES[new Date().getDay() % MESSAGES.length];
 
   const hasData = analytics.incomeCount > 0 || analytics.expenseCount > 0;
   const health  = healthFromRate(analytics.savingsRate, hasData);
+
+  // Count budgets at ≥70 % utilization for the alert badge
+  const alertCount = useMemo(() =>
+    budgets.filter(b => calculateBudgetProgress(b.id) >= 70).length,
+    [budgets, calculateBudgetProgress],
+  );
 
   return (
     <div
@@ -84,8 +95,9 @@ const WelcomeCard = memo(function WelcomeCard() {
             {message}
           </p>
 
-          {/* Financial health badge */}
-          <div className="mt-4 flex items-center gap-2">
+          {/* Badges row */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {/* Financial health */}
             <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
               Financial Health:
             </span>
@@ -96,6 +108,17 @@ const WelcomeCard = memo(function WelcomeCard() {
               <span className={`h-1.5 w-1.5 rounded-full ${health.dot}`} aria-hidden="true" />
               {health.label}
             </span>
+
+            {/* Budget alert badge — only when there are active alerts */}
+            {alertCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full bg-orange-400/20 px-2.5 py-1 text-xs font-semibold text-orange-300"
+                aria-label={`${alertCount} budget ${alertCount === 1 ? 'alert' : 'alerts'}`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-400" aria-hidden="true" />
+                {alertCount} Budget {alertCount === 1 ? 'Alert' : 'Alerts'}
+              </span>
+            )}
           </div>
         </div>
 

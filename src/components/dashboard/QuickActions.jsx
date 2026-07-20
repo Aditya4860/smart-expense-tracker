@@ -35,6 +35,21 @@ const ACTIONS = [
     ),
   },
   {
+    id:          'quick-add-budget',
+    label:       'Add Budget',
+    description: 'Set a spending limit',
+    iconBg:      'bg-primary-500/15',
+    iconText:    'text-primary-400',
+    borderHover: 'hover:border-primary-500/40',
+    labelCls:    'text-primary-400',
+    handler:     'onAddBudget',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+        <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
     id:          'quick-analytics',
     label:       'Analytics',
     description: 'View detailed insights',
@@ -51,35 +66,34 @@ const ACTIONS = [
     ),
   },
   {
-    id:          'quick-expenses',
-    label:       'View Expenses',
-    description: 'See all transactions',
-    iconBg:      'bg-primary-500/15',
-    iconText:    'text-primary-400',
-    borderHover: 'hover:border-primary-500/40',
-    labelCls:    'text-primary-400',
-    handler:     null,
-    to:          '/expenses',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <path fillRule="evenodd" d="M2.5 4A1.5 1.5 0 0 0 1 5.5V6h18v-.5A1.5 1.5 0 0 0 17.5 4h-15ZM19 8.5H1v6A1.5 1.5 0 0 0 2.5 16h15a1.5 1.5 0 0 0 1.5-1.5v-6ZM3 13.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm4.75-.75a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z" clipRule="evenodd" />
-      </svg>
-    ),
-  },
-  {
-    id:          'quick-income',
-    label:       'View Income',
-    description: 'See all income records',
+    id:          'quick-view-budget',
+    label:       'View Budget',
+    description: 'Manage monthly budgets',
     iconBg:      'bg-yellow-500/15',
     iconText:    'text-yellow-400',
     borderHover: 'hover:border-yellow-500/40',
     labelCls:    'text-yellow-400',
     handler:     null,
-    to:          '/income',
+    to:          '/budget',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 0 1-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004ZM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 0 1-.921.42Z" />
-        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v.816a3.836 3.836 0 0 0-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 0 1-.921-.421l-.879-.66a.75.75 0 0 0-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 0 0 1.5 0v-.81a4.124 4.124 0 0 0 1.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 0 0-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 0 0 .933-1.175l-.415-.33a3.836 3.836 0 0 0-1.719-.755V6Z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="M10 2a.75.75 0 0 1 .75.75v.258a33.186 33.186 0 0 1 6.668.83.75.75 0 0 1-.336 1.461 31.28 31.28 0 0 0-1.103-.232l1.702 7.545a.75.75 0 0 1-.387.832A4.981 4.981 0 0 1 15 14c-.825 0-1.606-.2-2.294-.556a.75.75 0 0 1-.387-.832l1.77-7.849a31.743 31.743 0 0 0-3.339-.254v11.505a20.01 20.01 0 0 1 3.78.501.75.75 0 1 1-.339 1.462A18.51 18.51 0 0 0 10 18.25a18.51 18.51 0 0 0-4.191.482.75.75 0 1 1-.338-1.462 20.01 20.01 0 0 1 3.779-.501V5.26a31.743 31.743 0 0 0-3.339.254l1.77 7.85a.75.75 0 0 1-.387.83A4.981 4.981 0 0 1 5 14a4.98 4.98 0 0 1-2.294-.556.75.75 0 0 1-.387-.832L4.02 5.067c-.37.07-.738.148-1.103.232a.75.75 0 1 1-.336-1.462 33.186 33.186 0 0 1 6.668-.829V2.75A.75.75 0 0 1 10 2ZM5 7.543 3.91 12.33a3.499 3.499 0 0 0 2.18 0L5 7.543Zm10 0-1.09 4.787a3.498 3.498 0 0 0 2.18 0L15 7.543Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    id:          'quick-expenses',
+    label:       'View Expenses',
+    description: 'See all transactions',
+    iconBg:      'bg-slate-500/15',
+    iconText:    'text-slate-400',
+    borderHover: 'hover:border-slate-500/40',
+    labelCls:    'text-slate-400',
+    handler:     null,
+    to:          '/expenses',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+        <path fillRule="evenodd" d="M2.5 4A1.5 1.5 0 0 0 1 5.5V6h18v-.5A1.5 1.5 0 0 0 17.5 4h-15ZM19 8.5H1v6A1.5 1.5 0 0 0 2.5 16h15a1.5 1.5 0 0 0 1.5-1.5v-6ZM3 13.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5a.75.75 0 0 1-.75-.75Zm4.75-.75a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z" clipRule="evenodd" />
       </svg>
     ),
   },
@@ -105,21 +119,22 @@ const itemClass = (action) => [
 // ── Main component ─────────────────────────────────────────────────────────
 
 /**
- * QuickActions — 5-button dashboard shortcut panel.
+ * QuickActions — 6-button dashboard shortcut panel.
  *
  * Props:
  *   onAddExpense — () => void  opens the Add Expense modal
  *   onAddIncome  — () => void  opens the Add Income modal
+ *   onAddBudget  — () => void  opens the Add Budget modal
  */
-const QuickActions = memo(function QuickActions({ onAddExpense, onAddIncome }) {
-  const handlerMap = { onAddExpense, onAddIncome };
+const QuickActions = memo(function QuickActions({ onAddExpense, onAddIncome, onAddBudget }) {
+  const handlerMap = { onAddExpense, onAddIncome, onAddBudget };
 
   return (
     <section aria-label="Quick actions">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
         Quick Actions
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {ACTIONS.map(action => {
           const inner = (
             <>

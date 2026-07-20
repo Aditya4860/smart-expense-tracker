@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
+import useBudget from '../../hooks/useBudget';
 import Card from '../ui/Card';
 
 // ── Formatter ──────────────────────────────────────────────────────────────
@@ -47,27 +48,64 @@ const ICONS = {
       <path fillRule="evenodd" d="M13.5 4.938a7 7 0 1 1-9.006 1.737c.202-.257.59-.218.793.039.278.352.594.672.943.954.332.269.786-.049.8-.476.067-2.134.48-3.96 1.074-5.026.167-.304.57-.283.726.033.154.31.264.639.348.98C9.55 2.283 11.39 2 13.5 2c.09 0 .18.003.268.007A5.5 5.5 0 1 0 9.5 9.5a.75.75 0 0 1 0 1.5A7 7 0 0 1 13.5 4.938Z" clipRule="evenodd" />
     </svg>
   ),
+  budgetRemain: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
+    </svg>
+  ),
+  utilization: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+      <path d="M15.5 2A1.5 1.5 0 0 0 14 3.5v13a1.5 1.5 0 0 0 3 0v-13A1.5 1.5 0 0 0 15.5 2ZM9.5 6A1.5 1.5 0 0 0 8 7.5v9A1.5 1.5 0 0 0 11 16.5v-9A1.5 1.5 0 0 0 9.5 6ZM3.5 10A1.5 1.5 0 0 0 2 11.5v5A1.5 1.5 0 0 0 5 16.5v-5A1.5 1.5 0 0 0 3.5 10Z" />
+    </svg>
+  ),
 };
 
 // ── Main component ─────────────────────────────────────────────────────────
 
 /**
- * SummaryCards — four live financial stat cards from AnalyticsContext.
+ * SummaryCards — six live financial stat cards.
  *
- * Cards: Net Balance · Total Income · Total Expenses · Savings Rate
- * Each shows a value, trend arrow, sub-label, and progress bar.
+ * Cards: Net Balance · Total Income · Total Expenses · Savings Rate ·
+ *        Budget Remaining · Budget Utilization
+ *
+ * Reads analytics from AnalyticsContext and budget data from BudgetContext.
+ * No calculations are duplicated — only context values are consumed.
  */
 const SummaryCards = memo(function SummaryCards() {
   const { analytics } = useAnalytics();
+  const { budgets }   = useBudget();
+
   const {
     netBalance, totalIncome, totalExpense,
     savingsRate, incomeCount, expenseCount,
   } = analytics;
 
+  const budgetStats = useMemo(() => {
+    const totalLimit  = budgets.reduce((s, b) => s + b.monthlyLimit, 0);
+    const totalSpent  = budgets.reduce((s, b) => s + b.spent,        0);
+    const totalRemain = totalLimit - totalSpent;
+    const utilization = totalLimit > 0
+      ? parseFloat(((totalSpent / totalLimit) * 100).toFixed(1))
+      : 0;
+    return { totalLimit, totalRemain, utilization, hasBudgets: budgets.length > 0 };
+  }, [budgets]);
+
   const cards = useMemo(() => {
     const expensePct = totalIncome > 0
       ? Math.max(0, Math.min(100, Math.round((totalExpense / totalIncome) * 100)))
       : 0;
+
+    const budgetUtilClamped = Math.min(100, budgetStats.utilization);
+    const budgetUtilColour  = budgetStats.utilization > 90
+      ? 'text-danger-400'
+      : budgetStats.utilization > 70
+        ? 'text-yellow-400'
+        : 'text-success-400';
+    const budgetUtilBarCls  = budgetStats.utilization > 90
+      ? 'bg-danger-500'
+      : budgetStats.utilization > 70
+        ? 'bg-yellow-500'
+        : 'bg-success-500';
 
     return [
       {
@@ -77,6 +115,7 @@ const SummaryCards = memo(function SummaryCards() {
         sub:      netBalance >= 0 ? 'Surplus this period' : 'Deficit this period',
         positive: netBalance >= 0,
         progress: Math.max(0, Math.min(100, savingsRate)),
+        barCls:   'bg-gradient-brand',
         icon:     ICONS.balance,
         iconBg:   'bg-primary-500/15',
         iconText: 'text-primary-400',
@@ -89,6 +128,7 @@ const SummaryCards = memo(function SummaryCards() {
         sub:      `${incomeCount} ${incomeCount === 1 ? 'record' : 'records'} logged`,
         positive: true,
         progress: 100,
+        barCls:   'bg-success-500',
         icon:     ICONS.income,
         iconBg:   'bg-success-500/15',
         iconText: 'text-success-400',
@@ -101,6 +141,7 @@ const SummaryCards = memo(function SummaryCards() {
         sub:      `${expenseCount} ${expenseCount === 1 ? 'expense' : 'expenses'} logged`,
         positive: totalExpense === 0,
         progress: expensePct,
+        barCls:   'bg-danger-500',
         icon:     ICONS.expense,
         iconBg:   'bg-danger-500/15',
         iconText: 'text-danger-400',
@@ -120,17 +161,63 @@ const SummaryCards = memo(function SummaryCards() {
           ? 'Add income to track'
           : 'Over budget',
         positive: savingsRate >= 20,
-        progress: savingsRate,
+        progress: Math.max(0, savingsRate),
+        barCls:   'bg-accent-500',
         icon:     ICONS.savings,
         iconBg:   'bg-accent-500/15',
         iconText: 'text-accent-400',
         valueCls: 'text-accent-400',
       },
+      {
+        id:       'sc-budget-remain',
+        label:    'Budget Remaining',
+        value:    budgetStats.hasBudgets
+          ? (budgetStats.totalRemain >= 0
+              ? amountFmt.format(budgetStats.totalRemain)
+              : `−${amountFmt.format(Math.abs(budgetStats.totalRemain))}`)
+          : '—',
+        sub:      budgetStats.hasBudgets
+          ? (budgetStats.totalRemain >= 0 ? 'Still available' : 'Over budget')
+          : 'No budgets set',
+        positive: budgetStats.totalRemain >= 0,
+        progress: budgetStats.hasBudgets ? Math.max(0, 100 - budgetUtilClamped) : 0,
+        barCls:   budgetStats.totalRemain >= 0 ? 'bg-success-500' : 'bg-danger-500',
+        icon:     ICONS.budgetRemain,
+        iconBg:   budgetStats.totalRemain >= 0 ? 'bg-success-500/15' : 'bg-danger-500/15',
+        iconText: budgetStats.totalRemain >= 0 ? 'text-success-400' : 'text-danger-400',
+        valueCls: budgetStats.totalRemain >= 0 ? 'text-success-400' : 'text-danger-400',
+      },
+      {
+        id:       'sc-budget-util',
+        label:    'Budget Utilization',
+        value:    budgetStats.hasBudgets ? `${budgetStats.utilization}%` : '—',
+        sub:      budgetStats.hasBudgets
+          ? (budgetStats.utilization <= 70
+              ? 'On track 🎯'
+              : budgetStats.utilization <= 90
+              ? 'High usage ⚡'
+              : 'Over budget ⚠️')
+          : 'Set budgets to track',
+        positive: budgetStats.utilization <= 70,
+        progress: budgetUtilClamped,
+        barCls:   budgetUtilBarCls,
+        icon:     ICONS.utilization,
+        iconBg:   budgetStats.utilization <= 70
+          ? 'bg-success-500/15'
+          : budgetStats.utilization <= 90
+          ? 'bg-yellow-500/15'
+          : 'bg-danger-500/15',
+        iconText: budgetUtilColour,
+        valueCls: budgetUtilColour,
+      },
     ];
-  }, [netBalance, totalIncome, totalExpense, savingsRate, incomeCount, expenseCount]);
+  }, [
+    netBalance, totalIncome, totalExpense, savingsRate,
+    incomeCount, expenseCount, budgetStats,
+  ]);
 
   return (
-    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {cards.map(card => (
         <Card
           key={card.id}
@@ -162,7 +249,7 @@ const SummaryCards = memo(function SummaryCards() {
           <div className="mt-4" aria-hidden="true">
             <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700">
               <div
-                className="h-full rounded-full bg-gradient-brand transition-all duration-700"
+                className={`h-full rounded-full transition-all duration-700 ${card.barCls}`}
                 style={{ width: `${card.progress}%` }}
               />
             </div>

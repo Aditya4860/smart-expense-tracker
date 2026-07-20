@@ -1,20 +1,24 @@
 import { useState, useCallback, memo } from 'react';
-import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import QuickActions from '../components/dashboard/QuickActions';
+import BudgetOverviewWidget from '../components/dashboard/BudgetOverviewWidget';
+import BudgetAlertWidget from '../components/dashboard/BudgetAlertWidget';
+import BudgetProgressWidget from '../components/dashboard/BudgetProgressWidget';
 import RecentTransactions from '../components/analytics/RecentTransactions';
 import ExpenseModal from '../components/expenses/ExpenseModal';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import IncomeModal from '../components/income/IncomeModal';
 import IncomeForm from '../components/income/IncomeForm';
+import BudgetModal from '../components/budget/BudgetModal';
+import BudgetForm from '../components/budget/BudgetForm';
 import Card from '../components/ui/Card';
 import useExpenses from '../hooks/useExpenses';
 import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
+import useBudget from '../hooks/useBudget';
 import { CATEGORY_MAP } from '../constants/expenseCategories';
-import { INCOME_CATEGORY_MAP } from '../constants/incomeCategories';
 
 // ── Formatter ──────────────────────────────────────────────────────────────
 
@@ -50,7 +54,6 @@ const TopSpendingCategory = memo(function TopSpendingCategory({ analytics }) {
             <span className="text-xl font-bold tabular-nums text-danger-400">{amountFmt.format(top.total)}</span>
             <span className="text-xs text-slate-500">{top.share}% of spend</span>
           </div>
-          {/* Mini progress bar */}
           <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700" aria-hidden="true">
             <div className="h-full rounded-full bg-danger-500/60" style={{ width: `${top.share}%` }} />
           </div>
@@ -101,12 +104,11 @@ const HighestIncomeSource = memo(function HighestIncomeSource({ analytics }) {
 // ── Widget: Monthly Net Savings ────────────────────────────────────────────
 
 const MonthlyNetSavings = memo(function MonthlyNetSavings({ analytics }) {
-  // Current month
-  const now    = new Date();
-  const ymNow  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const now       = new Date();
+  const ymNow     = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const thisMonth = analytics.monthlyTotals.find(m => m.month === ymNow);
-  const netSav = thisMonth ? thisMonth.balance : 0;
-  const isPos  = netSav >= 0;
+  const netSav    = thisMonth ? thisMonth.balance : 0;
+  const isPos     = netSav >= 0;
 
   return (
     <Card padding="md" className="flex flex-col gap-3">
@@ -145,40 +147,20 @@ const MonthlyNetSavings = memo(function MonthlyNetSavings({ analytics }) {
   );
 });
 
-// ── Widget: Upcoming Budget (placeholder) ──────────────────────────────────
-
-const UpcomingBudget = memo(function UpcomingBudget() {
-  return (
-    <Card padding="md" className="flex flex-col gap-3">
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-        Budget Goals
-      </p>
-      <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-500/15" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-accent-400" aria-hidden="true">
-            <path fillRule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clipRule="evenodd" />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-slate-400">Budget tracking coming soon</p>
-        <p className="text-xs text-slate-600 max-w-[180px] leading-relaxed">
-          Set monthly limits per category and track your progress.
-        </p>
-      </div>
-    </Card>
-  );
-});
-
 // ── Inner page ─────────────────────────────────────────────────────────────
 
 function DashboardInner() {
   const { addExpense } = useExpenses();
   const { addIncome  } = useIncome();
   const { analytics  } = useAnalytics();
+  const { addBudget  } = useBudget();
 
-  const [expenseOpen, setExpenseOpen] = useState(false);
-  const [incomeOpen,  setIncomeOpen]  = useState(false);
-  const [savingExp,   setSavingExp]   = useState(false);
-  const [savingInc,   setSavingInc]   = useState(false);
+  const [expenseOpen,  setExpenseOpen]  = useState(false);
+  const [incomeOpen,   setIncomeOpen]   = useState(false);
+  const [budgetOpen,   setBudgetOpen]   = useState(false);
+  const [savingExp,    setSavingExp]    = useState(false);
+  const [savingInc,    setSavingInc]    = useState(false);
+  const [savingBud,    setSavingBud]    = useState(false);
 
   const handleAddExpense = useCallback((values) => {
     setSavingExp(true);
@@ -194,38 +176,49 @@ function DashboardInner() {
     setIncomeOpen(false);
   }, [addIncome]);
 
+  const handleAddBudget = useCallback((values) => {
+    setSavingBud(true);
+    addBudget({ ...values, spent: 0 });
+    setSavingBud(false);
+    setBudgetOpen(false);
+  }, [addBudget]);
+
   return (
     <>
       <div className="space-y-6">
-        {/* Greeting + financial health */}
+
+        {/* Greeting + financial health + budget alerts badge */}
         <WelcomeCard />
 
-        {/* Four KPI cards */}
+        {/* Six KPI cards (4 financial + 2 budget) */}
         <SummaryCards />
 
-        {/* Five shortcut buttons */}
+        {/* Seven shortcut buttons */}
         <QuickActions
           onAddExpense={() => setExpenseOpen(true)}
           onAddIncome={() => setIncomeOpen(true)}
+          onAddBudget={() => setBudgetOpen(true)}
         />
 
-        {/* Widgets row — 3 small cards */}
+        {/* Widgets row — 3 small analytics cards */}
         <div className="grid gap-4 sm:grid-cols-3">
           <TopSpendingCategory analytics={analytics} />
           <HighestIncomeSource analytics={analytics} />
           <MonthlyNetSavings   analytics={analytics} />
         </div>
 
-        {/* Bottom row — recent transactions + budget placeholder */}
+        {/* Budget intelligence row */}
         <div className="grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <RecentTransactions />
-          </div>
-          <UpcomingBudget />
+          <BudgetOverviewWidget />
+          <BudgetProgressWidget />
+          <BudgetAlertWidget />
         </div>
+
+        {/* Bottom row — recent transactions */}
+        <RecentTransactions />
       </div>
 
-      {/* Modals */}
+      {/* ── Modals ─────────────────────────────────────────────────────── */}
       <ExpenseModal isOpen={expenseOpen} onClose={() => setExpenseOpen(false)} title="Add Expense">
         <ExpenseForm onSubmit={handleAddExpense} onCancel={() => setExpenseOpen(false)} loading={savingExp} />
       </ExpenseModal>
@@ -233,6 +226,10 @@ function DashboardInner() {
       <IncomeModal isOpen={incomeOpen} onClose={() => setIncomeOpen(false)} title="Add Income">
         <IncomeForm onSubmit={handleAddIncome} onCancel={() => setIncomeOpen(false)} loading={savingInc} />
       </IncomeModal>
+
+      <BudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} title="Add Budget">
+        <BudgetForm onSubmit={handleAddBudget} onCancel={() => setBudgetOpen(false)} loading={savingBud} />
+      </BudgetModal>
     </>
   );
 }
@@ -242,8 +239,8 @@ function DashboardInner() {
 /**
  * Dashboard — authenticated landing page.
  *
- * Contexts (ExpenseContext, IncomeContext, AnalyticsContext) are provided
- * by App.jsx above the route tree.
+ * Contexts (ExpenseContext, IncomeContext, AnalyticsContext, BudgetContext)
+ * are provided by App.jsx above the route tree.
  */
 export default function Dashboard() {
   return (
