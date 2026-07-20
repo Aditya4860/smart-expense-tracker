@@ -1,109 +1,110 @@
-# Smart Expense Tracker
+## Expense Tracker App – Tech Stack Selection
 
-## Tech Stack
+Here’s a complete tech stack for an expense tracker app with 3D analytics, ML predictions, and real-time collaboration.
 
-- React 18
-- Vite
-- JavaScript
-- Tailwind CSS
-- React Router
-- Context API
-- localStorage
-- Axios (planned)
-- FastAPI (planned backend)
+### ⭐ Frontend
 
----
+* **Framework**: [Next.js 14](https://nextjs.org/) or [Remix](https://remix.run/)
+    * Next.js: Better for SEO, easier for AI integrations (server components).
+    * Remix: Better for complex state management and nested routing.
 
-## Project Goal
+* **UI Library**:
+    * **Option A**: [shadcn/ui](https://ui.shadcn.com/)
+        * Pros: Minimal, customizable, good for React-only apps.
+    * **Option B**: [Mantine UI](https://mantine.dev/)
+        * Pros: 3D charts built-in, good accessibility.
+    * **Option C**: [Tailwind CSS + Radix UI](https://www.radix-ui.com/)
+        * Pros: Full control, modern design.
 
-Build a production-quality Smart Expense Tracker with authentication,
-expense management, income management, analytics, budgeting, AI insights,
-and a FastAPI backend.
+* **3D Visualization**: [react-three/fiber](https://docs.pmnd.rs/react-three-fiber/getting-started/introduction)
+    * Required for:
+        * 3D Pie Chart (Top spending categories)
+        * 3D Bar Chart (Income vs Expenses)
+        * 3D Sunburst (Category breakdown)
+        * Interactive 3D Dashboard (Main view)
 
----
+* **Charts**: [Recharts](https://recharts.org/) or [Chart.js](https://www.chartjs.org/)
+    * For standard 2D charts (Net savings, trends).
 
-## Coding Rules
+* **State Management**:
+    * **Option A**: React Context (Simple apps)
+    * **Option B**: [Zustand](https://github.com/pmndrs/zustand) (Recommended for modern apps)
+    * **Option C**: Redux Toolkit (If you prefer structure)
 
-- JavaScript only
-- Functional components
-- React hooks
-- Context API
-- Reusable components
-- No duplicate code
-- Responsive
-- Accessible
-- No TODO comments
-- Every import must compile
+### 🔧 Backend
 
----
+* **Framework**: [NestJS](https://nestjs.com/)
+    * Pros: Modular, TypeScript support, built-in validation, good for AI integrations.
 
-## Completed Modules
+* **Database**:
+    * **Option A**: [PostgreSQL](https://www.postgresql.org/)
+        * Pros: Mature, supports JSONB for flexible data.
+    * **Option B**: [MongoDB](https://www.mongodb.com/)
+        * Pros: Flexible schema, easier for unstructured AI data.
 
-### Phase 1
+* **AI/ML Integration**:
+    * **Service**: [Google AI Platform](https://cloud.google.com/ai-platform)
+    * **Tools**: TensorFlow.js or PyTorch (if running Python backend)
 
-- Project setup
-- Tailwind
-- Routing
-- Folder structure
+* **Payment Gateway**: [Stripe](https://stripe.com/)
+    * For subscription payments (Pro features).
 
-### Phase 2
+### 🛠️ AI & Machine Learning
 
-- AuthContext
-- ProtectedRoute
-- Login
-- Register
-- Landing
-- Dashboard authentication
+* **Tools**:
+    * **Option A**: Google AI Platform (For predictions)
+    * **Option B**: OpenAI API (For smart summaries)
+    * **Option C**: TensorFlow.js (For browser-based predictions)
 
-### Phase 3
+* **Model Types**:
+    * **Category Prediction**: [K-Nearest Neighbors (KNN)](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html)
+    * **Fraud Detection**: [Isolation Forest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html)
+    * **Anomaly Detection**: [One-Class SVM](https://scikit-learn.org/stable/modules/generated/sklearn.svm.OneClassSVM.html)
+    * **Trend Forecasting**: [ARIMA](https://www.machinelearningplus.com/time-series/arima-in-python/)
 
-- DashboardLayout
-- Sidebar
-- TopNavbar
-- Dashboard Shell
-- Reusable UI components
+### 🚀 Deployment
 
-### Phase 4
+* **Frontend**: [Vercel](https://vercel.com/)
+    * Pros: One-click deploy for Next.js, global CDN.
 
-- ExpenseContext
-- Expense CRUD
-- Expense Search
-- Expense Filters
-- Expense Summary
-- Dashboard integration
+* **Backend**: [AWS EC2](https://aws.amazon.com/ec2/) or [Google Cloud Run](https://cloud.run/)
 
----
+* **Database**: [Supabase](https://supabase.com/) (Managed PostgreSQL)
 
-## Current Folder Structure
+### 📂 Folder Structure (Suggested)
 
-(Paste the project tree here.)
+```
+/expense-tracker
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   │   ├── 3d/
+│   │   │   ├── PieChart3D.jsx
+│   │   │   ├── BarChart3D.jsx
+│   │   │   ├── SunburstChart3D.jsx
+│   │   │   └── Dashboard3D.jsx
+│   │   ├── charts/
+│   │   ├── expenses/
+│   │   ├── incomes/
+│   │   └── layout/
+│   ├── store/            # Zustand store
+│   ├── services/         # API calls
+│   └── pages/            # All pages
+├── backend/
+│   ├── src/
+│   │   ├── ai/
+│   │   │   ├── ml.service.ts
+│   │   │   ├── models/
+│   │   │   └── utils/
+│   │   ├── categories/
+│   │   ├── expenses/
+│   │   ├── incomes/
+│   │   ├── predictions/
+│   │   └── shared/
+│   └── package.json
+├── analytics-data/       # CSV exports
+└── PROJECT_ROADMAP.md
+```
 
----
+This stack provides everything you need to build the advanced features described in your project plan.          
 
-## Current Phase
-
-Phase 5
-
-Income Management
-
----
-
-## Future Roadmap
-
-Phase 5
-Income
-
-Phase 6
-Analytics
-
-Phase 7
-Budget
-
-Phase 8
-Backend (FastAPI)
-
-Phase 9
-Deployment
-
-Phase 10
-AI Insights
