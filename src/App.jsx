@@ -13,12 +13,14 @@ import Expenses from './pages/Expenses';
 import Income from './pages/Income';
 import Analytics from './pages/Analytics';
 import Budget from './pages/Budget';
+import Goals from './pages/Goals';
+import { GoalProvider } from './context/GoalContext';
 
 /**
  * App.jsx — Root component.
  *
  * Provider hierarchy (outermost → innermost):
- *   AuthProvider → ExpenseProvider → IncomeProvider → AnalyticsProvider → BudgetProvider → BrowserRouter → Routes
+ *   AuthProvider → ExpenseProvider → IncomeProvider → AnalyticsProvider → BudgetProvider → GoalProvider → BrowserRouter → Routes
  *
  * Route structure:
  *   /            → Landing     (public)
@@ -29,6 +31,7 @@ import Budget from './pages/Budget';
  *   /income      → Income      (protected)
  *   /analytics   → Analytics   (protected)
  *   /budget      → Budget      (protected)
+ *   /goals       → Goals       (protected)
  */
 function App() {
   return (
@@ -37,7 +40,8 @@ function App() {
         <IncomeProvider>
           <AnalyticsProvider>
             <BudgetProvider>
-              <BrowserRouter>
+              <GoalProvider>
+                <BrowserRouter>
                 <Routes>
                   {/* Public routes */}
                   <Route path="/"         element={<Landing />}  />
@@ -51,12 +55,14 @@ function App() {
                     <Route path="/income"    element={<Income />}    />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/budget"    element={<Budget />}    />
+                    <Route path="/goals"     element={<Goals />}     />
                   </Route>
 
                   {/* Catch-all */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
-              </BrowserRouter>
+                </BrowserRouter>
+              </GoalProvider>
             </BudgetProvider>
           </AnalyticsProvider>
         </IncomeProvider>

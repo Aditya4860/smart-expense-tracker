@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
 import useBudget from '../../hooks/useBudget';
+import useGoals from '../../hooks/useGoals';
 import { formatCurrency } from '../../utils/formatters';
 import { computeBudgetStats } from '../../utils/budgetUtils';
 import Card from '../ui/Card';
@@ -69,6 +70,7 @@ const ICONS = {
 const SummaryCards = memo(function SummaryCards() {
   const { analytics } = useAnalytics();
   const { budgets }   = useBudget();
+  const { goals }     = useGoals();
 
   const {
     netBalance, totalIncome, totalExpense,
@@ -76,6 +78,15 @@ const SummaryCards = memo(function SummaryCards() {
   } = analytics;
 
   const budgetStats = useMemo(() => computeBudgetStats(budgets), [budgets]);
+  
+  const goalStats = useMemo(() => {
+    const totalGoals = goals.length;
+    const completedGoals = goals.filter(g => (Number(g.currentAmount) || 0) >= (Number(g.targetAmount) || 0)).length;
+    const totalTarget = goals.reduce((s, g) => s + (Number(g.targetAmount) || 0), 0);
+    const totalSaved = goals.reduce((s, g) => s + (Number(g.currentAmount) || 0), 0);
+    const overallProgress = totalTarget > 0 ? parseFloat(((totalSaved / totalTarget) * 100).toFixed(1)) : 0;
+    return { totalGoals, completedGoals, overallProgress };
+  }, [goals]);
 
   const cards = useMemo(() => {
     const expensePct = totalIncome > 0
@@ -197,14 +208,44 @@ const SummaryCards = memo(function SummaryCards() {
         iconText: budgetUtilColour,
         valueCls: budgetUtilColour,
       },
+      {
+        id:       'sc-goal-progress',
+        label:    'Goal Progress',
+        value:    `${goalStats.overallProgress}%`,
+        sub:      goalStats.totalGoals > 0 ? (goalStats.overallProgress >= 100 ? 'All goals reached!' : 'Keep saving') : 'No goals set',
+        positive: goalStats.overallProgress >= 50,
+        progress: goalStats.overallProgress,
+        barCls:   goalStats.overallProgress >= 50 ? 'bg-success-500' : 'bg-primary-500',
+        icon:     ICONS.savings,
+        iconBg:   goalStats.overallProgress >= 50 ? 'bg-success-500/15' : 'bg-primary-500/15',
+        iconText: goalStats.overallProgress >= 50 ? 'text-success-400' : 'text-primary-400',
+        valueCls: goalStats.overallProgress >= 50 ? 'text-success-400' : 'text-primary-400',
+      },
+      {
+        id:       'sc-goal-completed',
+        label:    'Completed Goals',
+        value:    `${goalStats.completedGoals} / ${goalStats.totalGoals}`,
+        sub:      goalStats.totalGoals > 0 ? (goalStats.completedGoals === goalStats.totalGoals ? 'Amazing job!' : 'Working on it') : '—',
+        positive: goalStats.completedGoals > 0,
+        progress: goalStats.totalGoals > 0 ? (goalStats.completedGoals / goalStats.totalGoals) * 100 : 0,
+        barCls:   'bg-indigo-500',
+        icon:     (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+            <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.524l2.078-.64A.75.75 0 0 0 18 12.25v-8.5a.75.75 0 0 0-.904-.734l-2.38.501a7.25 7.25 0 0 1-4.186-.363l-.502-.2a8.75 8.75 0 0 0-5.053-.439l-1.475.31V2.75Z" />
+          </svg>
+        ),
+        iconBg:   'bg-indigo-500/15',
+        iconText: 'text-indigo-400',
+        valueCls: 'text-indigo-400',
+      },
     ];
   }, [
     netBalance, totalIncome, totalExpense, savingsRate,
-    incomeCount, expenseCount, budgetStats,
+    incomeCount, expenseCount, budgetStats, goalStats,
   ]);
 
   return (
-    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
       {cards.map(card => (
         <Card
           key={card.id}

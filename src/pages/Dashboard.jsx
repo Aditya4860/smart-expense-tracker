@@ -13,11 +13,18 @@ import IncomeModal from '../components/income/IncomeModal';
 import IncomeForm from '../components/income/IncomeForm';
 import BudgetModal from '../components/budget/BudgetModal';
 import BudgetForm from '../components/budget/BudgetForm';
+import GoalsOverviewWidget from '../components/dashboard/GoalsOverviewWidget';
+import GoalProgressWidget from '../components/dashboard/GoalProgressWidget';
+import UpcomingGoalsWidget from '../components/dashboard/UpcomingGoalsWidget';
+import GoalInsightsWidget from '../components/dashboard/GoalInsightsWidget';
+import GoalModal from '../components/goals/GoalModal';
+import GoalForm from '../components/goals/GoalForm';
 import Card from '../components/ui/Card';
 import useExpenses from '../hooks/useExpenses';
 import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
 import useBudget from '../hooks/useBudget';
+import useGoals from '../hooks/useGoals';
 import { CATEGORY_MAP } from '../constants/expenseCategories';
 import { formatCurrency } from '../utils/formatters';
 
@@ -147,13 +154,17 @@ function DashboardInner() {
   const { addIncome  } = useIncome();
   const { analytics  } = useAnalytics();
   const { addBudget  } = useBudget();
+  const { addGoal    } = useGoals();
 
   const [expenseOpen,  setExpenseOpen]  = useState(false);
   const [incomeOpen,   setIncomeOpen]   = useState(false);
   const [budgetOpen,   setBudgetOpen]   = useState(false);
+  const [goalOpen,     setGoalOpen]     = useState(false);
+  
   const [savingExp,    setSavingExp]    = useState(false);
   const [savingInc,    setSavingInc]    = useState(false);
   const [savingBud,    setSavingBud]    = useState(false);
+  const [savingGoal,   setSavingGoal]   = useState(false);
 
   const handleAddExpense = useCallback((values) => {
     setSavingExp(true);
@@ -176,6 +187,13 @@ function DashboardInner() {
     setBudgetOpen(false);
   }, [addBudget]);
 
+  const handleAddGoal = useCallback((values) => {
+    setSavingGoal(true);
+    addGoal(values);
+    setSavingGoal(false);
+    setGoalOpen(false);
+  }, [addGoal]);
+
   return (
     <>
       <div className="space-y-6">
@@ -183,14 +201,15 @@ function DashboardInner() {
         {/* Greeting + financial health + budget alerts badge */}
         <WelcomeCard />
 
-        {/* Six KPI cards (4 financial + 2 budget) */}
+        {/* Eight KPI cards */}
         <SummaryCards />
 
-        {/* Seven shortcut buttons */}
+        {/* Quick Actions */}
         <QuickActions
           onAddExpense={() => setExpenseOpen(true)}
           onAddIncome={() => setIncomeOpen(true)}
           onAddBudget={() => setBudgetOpen(true)}
+          onAddGoal={() => setGoalOpen(true)}
         />
 
         {/* Widgets row — 3 small analytics cards */}
@@ -205,6 +224,14 @@ function DashboardInner() {
           <BudgetOverviewWidget />
           <BudgetProgressWidget />
           <BudgetAlertWidget />
+        </div>
+
+        {/* Savings goals intelligence row */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <GoalsOverviewWidget />
+          <GoalProgressWidget />
+          <UpcomingGoalsWidget />
+          <GoalInsightsWidget />
         </div>
 
         {/* Bottom row — recent transactions */}
@@ -223,6 +250,10 @@ function DashboardInner() {
       <BudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} title="Add Budget">
         <BudgetForm onSubmit={handleAddBudget} onCancel={() => setBudgetOpen(false)} loading={savingBud} />
       </BudgetModal>
+
+      <GoalModal isOpen={goalOpen} onClose={() => setGoalOpen(false)} title="Create Goal">
+        <GoalForm onSubmit={handleAddGoal} onCancel={() => setGoalOpen(false)} loading={savingGoal} />
+      </GoalModal>
     </>
   );
 }

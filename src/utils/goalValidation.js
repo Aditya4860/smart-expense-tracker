@@ -49,5 +49,5 @@ export function validateGoalForm(values) {
     }
   }
 
-  return errors;
+  return { valid: Object.keys(errors).length === 0, errors };
 }

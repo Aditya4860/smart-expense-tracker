@@ -120,15 +120,20 @@ export function GoalProvider({ children }) {
 
   const calculateProgress = useCallback((id) => {
     const goal = state.goals.find(g => g.id === id);
-    if (!goal || goal.targetAmount <= 0) return 0;
-    const pct = (goal.currentAmount / goal.targetAmount) * 100;
-    return parseFloat(Math.min(pct, 100).toFixed(2));
+    if (!goal) return 0;
+    const target = Number(goal.targetAmount) || 0;
+    const current = Number(goal.currentAmount) || 0;
+    if (target <= 0) return 0;
+    const pct = (current / target) * 100;
+    return parseFloat(Math.min(pct, 100).toFixed(2)) || 0;
   }, [state.goals]);
 
   const calculateRemainingAmount = useCallback((id) => {
     const goal = state.goals.find(g => g.id === id);
     if (!goal) return 0;
-    return parseFloat(Math.max(0, goal.targetAmount - goal.currentAmount).toFixed(2));
+    const target = Number(goal.targetAmount) || 0;
+    const current = Number(goal.currentAmount) || 0;
+    return parseFloat(Math.max(0, target - current).toFixed(2)) || 0;
   }, [state.goals]);
 
   const calculateRemainingMonths = useCallback((id) => {
@@ -145,7 +150,9 @@ export function GoalProvider({ children }) {
   const calculateMonthlyTarget = useCallback((id) => {
     const goal = state.goals.find(g => g.id === id);
     if (!goal) return 0;
-    const remainingAmt = Math.max(0, goal.targetAmount - goal.currentAmount);
+    const target = Number(goal.targetAmount) || 0;
+    const current = Number(goal.currentAmount) || 0;
+    const remainingAmt = Math.max(0, target - current);
     const remainingMths = calculateRemainingMonths(id);
     if (remainingMths <= 0) return remainingAmt;
     return parseFloat((remainingAmt / remainingMths).toFixed(2));

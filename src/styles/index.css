@@ -291,3 +291,50 @@
   @apply fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm;
   animation: fadeIn 0.2s ease-out both;
 }
+
+/* ============================================================
+   REACT-DATEPICKER OVERRIDES (DARK MODE)
+   ============================================================ */
+.react-datepicker {
+  @apply border border-surface-700 bg-surface-900 text-white font-sans text-sm rounded-xl shadow-xl;
+}
+.react-datepicker__header {
+  @apply bg-surface-800 border-b border-surface-700 rounded-t-xl pt-3 pb-2;
+}
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  @apply text-white font-semibold;
+}
+.react-datepicker__day-name {
+  @apply text-slate-400 font-medium w-8;
+}
+.react-datepicker__day {
+  @apply text-slate-300 w-8 rounded-lg transition-colors;
+}
+.react-datepicker__day:hover {
+  @apply bg-surface-700 text-white;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  @apply bg-primary-600 text-white font-semibold;
+}
+.react-datepicker__day--selected:hover,
+.react-datepicker__day--keyboard-selected:hover {
+  @apply bg-primary-500;
+}
+.react-datepicker__day--disabled {
+  @apply text-slate-600 cursor-not-allowed;
+}
+.react-datepicker__day--disabled:hover {
+  @apply bg-transparent;
+}
+.react-datepicker__navigation-icon::before {
+  @apply border-slate-400 transition-colors;
+}
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  @apply border-white;
+}
+.react-datepicker-wrapper {
+  @apply w-full block;
+}

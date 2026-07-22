@@ -97,6 +97,37 @@ const ACTIONS = [
       </svg>
     ),
   },
+  {
+    id:          'quick-add-goal',
+    label:       'Create Goal',
+    description: 'Set a savings target',
+    iconBg:      'bg-indigo-500/15',
+    iconText:    'text-indigo-400',
+    borderHover: 'hover:border-indigo-500/40',
+    labelCls:    'text-indigo-400',
+    handler:     'onAddGoal',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+        <path d="M10 1c-1.828 0-3.623.149-5.371.435a.75.75 0 0 0-.629.74v.387c-.827.157-1.642.345-2.445.564a.75.75 0 0 0-.552.698 5 5 0 0 0 4.503 5.152 6 6 0 0 0 2.946 1.822A6.451 6.451 0 0 1 7.768 13H7.5A1.5 1.5 0 0 0 6 14.5V17h-.75a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5H14v-2.5A1.5 1.5 0 0 0 12.5 13h-.268a6.453 6.453 0 0 1-.684-2.202 6 6 0 0 0 2.946-1.822 5 5 0 0 0 4.503-5.152.75.75 0 0 0-.552-.698A31.804 31.804 0 0 0 16 2.562v-.387a.75.75 0 0 0-.629-.74A33.227 33.227 0 0 0 10 1ZM2.525 4.422C3.012 4.3 3.504 4.19 4 4.09V5c0 .74.134 1.448.38 2.103a3.503 3.503 0 0 1-1.855-2.68Zm14.95 0a3.503 3.503 0 0 1-1.854 2.683C15.866 6.448 16 5.74 16 5v-.91c.496.099.988.21 1.475.332Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    id:          'quick-view-goals',
+    label:       'View Goals',
+    description: 'Track your progress',
+    iconBg:      'bg-purple-500/15',
+    iconText:    'text-purple-400',
+    borderHover: 'hover:border-purple-500/40',
+    labelCls:    'text-purple-400',
+    handler:     null,
+    to:          '/goals',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+        <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.524l2.078-.64A.75.75 0 0 0 18 12.25v-8.5a.75.75 0 0 0-.904-.734l-2.38.501a7.25 7.25 0 0 1-4.186-.363l-.502-.2a8.75 8.75 0 0 0-5.053-.439l-1.475.31V2.75Z" />
+      </svg>
+    ),
+  },
 ];
 
 // ── Shared UI ──────────────────────────────────────────────────────────────
@@ -126,15 +157,15 @@ const itemClass = (action) => [
  *   onAddIncome  — () => void  opens the Add Income modal
  *   onAddBudget  — () => void  opens the Add Budget modal
  */
-const QuickActions = memo(function QuickActions({ onAddExpense, onAddIncome, onAddBudget }) {
-  const handlerMap = { onAddExpense, onAddIncome, onAddBudget };
+const QuickActions = memo(function QuickActions({ onAddExpense, onAddIncome, onAddBudget, onAddGoal }) {
+  const handlerMap = { onAddExpense, onAddIncome, onAddBudget, onAddGoal };
 
   return (
     <section aria-label="Quick actions">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
         Quick Actions
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         {ACTIONS.map(action => {
           const inner = (
             <>

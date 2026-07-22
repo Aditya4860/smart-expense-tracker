@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import useAuth from '../../hooks/useAuth';
 import useAnalytics from '../../hooks/useAnalytics';
 import useBudget from '../../hooks/useBudget';
+import useGoals from '../../hooks/useGoals';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -59,6 +60,7 @@ const WelcomeCard = memo(function WelcomeCard() {
   const { user }      = useAuth();
   const { analytics } = useAnalytics();
   const { budgets, calculateBudgetProgress } = useBudget();
+  const { goals }     = useGoals();
 
   const firstName = user?.name?.split(' ')[0] ?? 'there';
   const message   = MESSAGES[new Date().getDay() % MESSAGES.length];
@@ -66,11 +68,23 @@ const WelcomeCard = memo(function WelcomeCard() {
   const hasData = analytics.incomeCount > 0 || analytics.expenseCount > 0;
   const health  = healthFromRate(analytics.savingsRate, hasData);
 
-  // Count budgets at ≥70 % utilization for the alert badge
+  // Count budgets at >=70 % utilization for the alert badge
   const alertCount = useMemo(() =>
     budgets.filter(b => calculateBudgetProgress(b.id) >= 70).length,
     [budgets, calculateBudgetProgress],
   );
+
+  // Count goals due in <= 7 days
+  const goalAlertCount = useMemo(() => {
+    const now = new Date();
+    return goals.filter(g => {
+      if ((Number(g.currentAmount) || 0) >= (Number(g.targetAmount) || 0)) return false;
+      if (!g.targetDate) return false;
+      const diffTime = new Date(g.targetDate) - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 7;
+    }).length;
+  }, [goals]);
 
   return (
     <div
@@ -117,6 +131,17 @@ const WelcomeCard = memo(function WelcomeCard() {
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400" aria-hidden="true" />
                 {alertCount} Budget {alertCount === 1 ? 'Alert' : 'Alerts'}
+              </span>
+            )}
+
+            {/* Goal alert badge */}
+            {goalAlertCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full bg-indigo-400/20 px-2.5 py-1 text-xs font-semibold text-indigo-300"
+                aria-label={`${goalAlertCount} goal ${goalAlertCount === 1 ? 'deadline' : 'deadlines'} soon`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
+                {goalAlertCount} Goal {goalAlertCount === 1 ? 'Deadline' : 'Deadlines'} Soon
               </span>
             )}
           </div>
