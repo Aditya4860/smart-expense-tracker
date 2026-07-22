@@ -237,8 +237,8 @@ export function calculateTopIncomeSources(income, limit = 5) {
  */
 export function calculateRecentTransactions(income, expenses, limit = 10) {
   const tagged = [
-    ...income.map(r   => ({ ...r, type: 'income'  })),
-    ...expenses.map(e => ({ ...e, type: 'expense' })),
+    ...income.map(r   => ({ ...r, type: r.type || 'income'  })),
+    ...expenses.map(e => ({ ...e, type: e.type || 'expense' })),
   ];
 
   tagged.sort((a, b) => {

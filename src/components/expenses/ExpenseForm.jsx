@@ -66,9 +66,10 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
       id="expense-form"
       onSubmit={handleSubmit}
       noValidate
-      className="space-y-4"
+      className="flex flex-col h-full"
     >
-      {/* Title */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Title */}
       <div>
         <FormLabel htmlFor="ef-title" required>Title</FormLabel>
         <input
@@ -185,8 +186,10 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
         </div>
       </div>
 
+      </div>
+
       {/* Footer */}
-      <div className="flex items-center justify-end gap-3 border-t border-surface-700/60 pt-4">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

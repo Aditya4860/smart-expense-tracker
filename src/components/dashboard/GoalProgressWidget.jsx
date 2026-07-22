@@ -11,12 +11,12 @@ const GoalProgressWidget = memo(function GoalProgressWidget() {
     return goals
       .filter(g => (Number(g.currentAmount) || 0) < (Number(g.targetAmount) || 0))
       .sort((a, b) => {
-        const pA = (Number(a.currentAmount) || 0) / (Number(a.targetAmount) || 1);
-        const pB = (Number(b.currentAmount) || 0) / (Number(b.targetAmount) || 1);
+        const pA = calculateProgress(a.id);
+        const pB = calculateProgress(b.id);
         return pB - pA; // highest progress first
       })
       .slice(0, 3);
-  }, [goals]);
+  }, [goals, calculateProgress]);
 
   return (
     <Card padding="md" className="flex flex-col gap-4 h-full">

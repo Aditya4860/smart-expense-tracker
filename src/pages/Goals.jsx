@@ -5,6 +5,8 @@ import GoalTable from '../components/goals/GoalTable';
 import GoalCard from '../components/goals/GoalCard';
 import GoalModal from '../components/goals/GoalModal';
 import GoalForm from '../components/goals/GoalForm';
+import GoalDetailsModal from '../components/goals/GoalDetailsModal';
+import AddSavingModal from '../components/goals/AddSavingModal';
 import GoalEmptyState from '../components/goals/GoalEmptyState';
 import Button from '../components/ui/Button';
 import useGoals from '../hooks/useGoals';
@@ -28,15 +30,16 @@ const GridIcon = (
 );
 
 function GoalsInner() {
-  const { goals, addGoal, updateGoal, deleteGoal, updateProgress } = useGoals();
   const [addOpen,    setAddOpen]    = useState(false);
   const [editGoal,   setEditGoal]   = useState(null);
   const [delGoal,    setDelGoal]    = useState(null);
-  const [progressGoal, setProgressGoal] = useState(null);
+  const [selectedGoal, setSelectedGoal] = useState(null); // For Details
+  const [addSavingGoal, setAddSavingGoal] = useState(null); // For Add Custom Saving
+  
   const [saving,     setSaving]     = useState(false);
   const [viewMode,   setViewMode]   = useState('table'); // 'table' | 'grid'
-  
-  const [newAmount, setNewAmount] = useState('');
+
+  const { goals, addGoal, updateGoal, deleteGoal, addGoalSaving } = useGoals();
 
   const handleAdd = useCallback((values) => {
     setSaving(true);
@@ -57,22 +60,20 @@ function GoalsInner() {
     if (!delGoal) return;
     deleteGoal(delGoal.id);
     setDelGoal(null);
+    setSelectedGoal(null); // Close details if open
   }, [delGoal, deleteGoal]);
   
-  const handleUpdateProgressSubmit = useCallback((e) => {
-    e.preventDefault();
-    if (!progressGoal) return;
-    setSaving(true);
-    updateProgress(progressGoal.id, parseFloat(newAmount));
-    setSaving(false);
-    setProgressGoal(null);
-    setNewAmount('');
-  }, [progressGoal, newAmount, updateProgress]);
+  const handleAddMonthly = useCallback((goal) => {
+    addGoalSaving(goal.id, goal.monthlyContribution, 'monthly', 'Monthly contribution');
+  }, [addGoalSaving]);
 
-  const openUpdateProgress = useCallback((goal) => {
-    setProgressGoal(goal);
-    setNewAmount(goal.currentAmount);
-  }, []);
+  const handleAddCustomSubmit = useCallback((data) => {
+    if (!addSavingGoal) return;
+    setSaving(true);
+    addGoalSaving(addSavingGoal.id, data.amount, data.type, data.notes, data.date);
+    setSaving(false);
+    setAddSavingGoal(null);
+  }, [addSavingGoal, addGoalSaving]);
 
   return (
     <div className="space-y-6">
@@ -119,14 +120,20 @@ function GoalsInner() {
       </div>
 
       {viewMode === 'table' ? (
-        <GoalTable onEdit={setEditGoal} onDelete={setDelGoal} onUpdateProgress={openUpdateProgress} />
+        <GoalTable onEdit={setEditGoal} onDelete={setDelGoal} onClickRow={setSelectedGoal} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {goals.length === 0 ? (
             <div className="col-span-full"><GoalEmptyState /></div>
           ) : (
             goals.map(goal => (
-              <GoalCard key={goal.id} goal={goal} onEdit={() => setEditGoal(goal)} onDelete={() => setDelGoal(goal)} onUpdateProgress={() => openUpdateProgress(goal)} />
+              <GoalCard 
+                key={goal.id} 
+                goal={goal} 
+                onEdit={() => setEditGoal(goal)} 
+                onDelete={() => setDelGoal(goal)} 
+                onClick={() => setSelectedGoal(goal)} 
+              />
             ))
           )}
         </div>
@@ -142,25 +149,23 @@ function GoalsInner() {
         <GoalForm initialValues={editGoal} onSubmit={handleEdit} onCancel={() => setEditGoal(null)} loading={saving} />
       </GoalModal>
       
-      {/* Update Progress Modal */}
-      <GoalModal isOpen={Boolean(progressGoal)} onClose={() => setProgressGoal(null)} title="Update Progress">
-        <form onSubmit={handleUpdateProgressSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="gp-amount" className="mb-1 block text-sm font-medium text-slate-300">
-              New Saved Amount (₹)
-            </label>
-            <input
-              id="gp-amount" name="newAmount" type="number" min="0" step="0.01" required
-              value={newAmount} onChange={(e) => setNewAmount(e.target.value)}
-              className="w-full rounded-xl border border-surface-700/60 bg-surface-900 px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-3 border-t border-surface-700/60 pt-4">
-            <Button type="button" variant="ghost" onClick={() => setProgressGoal(null)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={saving}>Update</Button>
-          </div>
-        </form>
-      </GoalModal>
+      {/* Details Modal */}
+      <GoalDetailsModal 
+        isOpen={Boolean(selectedGoal)} 
+        onClose={() => setSelectedGoal(null)} 
+        goal={selectedGoal ? goals.find(g => g.id === selectedGoal.id) : null}
+        onAddMonthly={handleAddMonthly}
+        onAddCustom={(goal) => setAddSavingGoal(goal)}
+      />
+
+      {/* Add Custom Saving Modal */}
+      <AddSavingModal
+        isOpen={Boolean(addSavingGoal)}
+        onClose={() => setAddSavingGoal(null)}
+        goalTitle={addSavingGoal?.title}
+        onSubmit={handleAddCustomSubmit}
+        loading={saving}
+      />
 
       {/* Delete Confirmation Modal */}
       <GoalModal isOpen={Boolean(delGoal)} onClose={() => setDelGoal(null)} title="Delete Goal">

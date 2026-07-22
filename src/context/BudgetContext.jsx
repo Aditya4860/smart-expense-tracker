@@ -4,6 +4,8 @@ import {
   useReducer,
   useCallback,
   useMemo,
+  useState,
+  useEffect
 } from 'react';
 import {
   loadBudgets,
@@ -107,11 +109,25 @@ export function BudgetProvider({ children }) {
   // ── Derived computations ───────────────────────────────────────────────
 
   const { expenses } = useExpenses();
+  const [includeSavings, setIncludeSavings] = useState(() => {
+    return localStorage.getItem('sxp_include_savings_budget') !== 'false';
+  });
+
+  const toggleIncludeSavings = useCallback(() => {
+    setIncludeSavings(prev => {
+      const next = !prev;
+      localStorage.setItem('sxp_include_savings_budget', String(next));
+      return next;
+    });
+  }, []);
 
   const enrichedBudgets = useMemo(() => {
     return state.budgets.map(budget => {
       // 1. Sum spent by matching category and month/year
       const spent = expenses.reduce((sum, e) => {
+        // Skip savings contributions if the toggle is OFF
+        if (!includeSavings && e.type === 'savings_contribution') return sum;
+        
         if (e.category !== budget.category) return sum;
         
         const [eYear, eMonth] = e.date.split('-');
@@ -178,17 +194,22 @@ export function BudgetProvider({ children }) {
     deleteBudget,
     getBudget,
     clearBudgets,
+    // Settings
+    includeSavings,
+    toggleIncludeSavings,
     // Derived
     calculateRemainingBudget,
     calculateSpentBudget,
     calculateBudgetProgress,
   }), [
     enrichedBudgets,
+    includeSavings,
     addBudget,
     updateBudget,
     deleteBudget,
     getBudget,
     clearBudgets,
+    toggleIncludeSavings,
     calculateRemainingBudget,
     calculateSpentBudget,
     calculateBudgetProgress,

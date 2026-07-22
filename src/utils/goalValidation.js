@@ -15,11 +15,23 @@ export function validateGoalForm(values) {
   const titleErr = validateTitle(values.title, 'Title');
   if (titleErr) errors.title = titleErr;
 
-  const targetAmtErr = validateAmount(values.targetAmount);
-  if (targetAmtErr) errors.targetAmount = targetAmtErr;
+  const targetVal = parseFloat(values.targetAmount);
+  if (isNaN(targetVal) || targetVal <= 0) {
+    errors.targetAmount = 'Must be greater than zero';
+  } else {
+    const targetAmtErr = validateAmount(values.targetAmount);
+    if (targetAmtErr) errors.targetAmount = targetAmtErr;
+  }
 
-  const contribErr = validateAmount(values.monthlyContribution);
-  if (contribErr) errors.monthlyContribution = contribErr;
+  const contribVal = parseFloat(values.monthlyContribution);
+  if (isNaN(contribVal) || contribVal <= 0) {
+    errors.monthlyContribution = 'Must be greater than zero';
+  } else if (!isNaN(targetVal) && contribVal > targetVal) {
+    errors.monthlyContribution = 'Cannot exceed target amount';
+  } else {
+    const contribErr = validateAmount(values.monthlyContribution);
+    if (contribErr) errors.monthlyContribution = contribErr;
+  }
 
   if (!values.targetDate) {
     errors.targetDate = 'Target date is required';

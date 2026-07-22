@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { validateGoalForm } from '../../utils/goalValidation';
 import { FieldError, FormLabel } from '../ui/FormField';
 import Button from '../ui/Button';
+import CurrencyInput from '../ui/CurrencyInput';
 import useFormState from '../../hooks/useFormState';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -72,7 +73,8 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
   const selectedDate = values.targetDate ? new Date(values.targetDate + 'T00:00:00') : null;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full" id="goal-form">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
       {/* Title */}
       <div>
         <FormLabel htmlFor="gf-title" required>Goal Name</FormLabel>
@@ -99,10 +101,12 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
         {/* Target Amount */}
         <div>
           <FormLabel htmlFor="gf-target" required>Target Amount (₹)</FormLabel>
-          <input
-            id="gf-target" name="targetAmount" type="number" min="0" step="0.01"
+          <CurrencyInput
+            id="gf-target" name="targetAmount"
             value={values.targetAmount} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('targetAmount')} placeholder="0.00"
+            className={inputClass('targetAmount')}
+            aria-invalid={!!err('targetAmount')}
+            aria-describedby={err('targetAmount') ? 'gf-target-error' : undefined}
           />
           <FieldError id="gf-target-error" message={err('targetAmount')} />
         </div>
@@ -110,10 +114,12 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
         {/* Current Amount */}
         <div>
           <FormLabel htmlFor="gf-current">Current Saved (₹)</FormLabel>
-          <input
-            id="gf-current" name="currentAmount" type="number" min="0" step="0.01"
+          <CurrencyInput
+            id="gf-current" name="currentAmount"
             value={values.currentAmount} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('currentAmount')} placeholder="0.00"
+            className={inputClass('currentAmount')}
+            aria-invalid={!!err('currentAmount')}
+            aria-describedby={err('currentAmount') ? 'gf-current-error' : undefined}
           />
           <FieldError id="gf-current-error" message={err('currentAmount')} />
         </div>
@@ -123,10 +129,12 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
         {/* Monthly Contribution */}
         <div>
           <FormLabel htmlFor="gf-monthly" required>Monthly Contribution (₹)</FormLabel>
-          <input
-            id="gf-monthly" name="monthlyContribution" type="number" min="0" step="0.01"
+          <CurrencyInput
+            id="gf-monthly" name="monthlyContribution"
             value={values.monthlyContribution} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('monthlyContribution')} placeholder="0.00"
+            className={inputClass('monthlyContribution')}
+            aria-invalid={!!err('monthlyContribution')}
+            aria-describedby={err('monthlyContribution') ? 'gf-monthly-error' : undefined}
           />
           <FieldError id="gf-monthly-error" message={err('monthlyContribution')} />
         </div>
@@ -135,17 +143,20 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
         <div>
           <FormLabel htmlFor="gf-date" required>Target Date</FormLabel>
           <div className="relative">
-            <DatePicker
-              id="gf-date"
-              name="targetDate"
-              selected={selectedDate}
-              onChange={handleDateChange}
-              onBlur={handleDateBlur}
-              className={inputClass('targetDate', 'input h-10 w-full pl-10 text-sm')}
-              placeholderText="Select a target date"
-              dateFormat="yyyy-MM-dd"
-              minDate={new Date()}
-            />
+              <DatePicker
+                id="gf-date"
+                name="targetDate"
+                selected={selectedDate}
+                onChange={handleDateChange}
+                onBlur={handleDateBlur}
+                className={inputClass('targetDate', 'input h-10 w-full pl-10 text-sm')}
+                placeholderText="Select a target date"
+                dateFormat="dd MMM yyyy"
+                minDate={new Date()}
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+              />
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-400" aria-hidden="true">
                 <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
@@ -171,7 +182,9 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
         <FieldError id="gf-priority-error" message={err('priority')} />
       </div>
 
-      <div className="flex items-center justify-end gap-3 border-t border-surface-700/60 pt-4">
+      </div>
+      
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
         <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
         <Button type="submit" variant="primary" loading={loading}>
           {isEdit ? 'Save Changes' : 'Create Goal'}

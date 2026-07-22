@@ -37,7 +37,6 @@ export function buildGoal(values, existingId, existingCreatedAt) {
     title:               values.title.trim(),
     description:         values.description ? values.description.trim() : '',
     targetAmount:        parseFloat(Number(values.targetAmount || 0).toFixed(2)),
-    currentAmount:       parseFloat(Number(values.currentAmount || 0).toFixed(2)),
     monthlyContribution: parseFloat(Number(values.monthlyContribution || 0).toFixed(2)),
     targetDate:          values.targetDate,
     priority:            values.priority ?? 'medium',

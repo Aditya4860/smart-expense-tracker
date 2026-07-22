@@ -22,8 +22,9 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving,     setSaving]     = useState(false);
 
-  const cat     = CATEGORY_MAP[expense.category]           ?? CATEGORY_MAP.other;
-  const payment = PAYMENT_METHOD_MAP[expense.paymentMethod] ?? { label: expense.paymentMethod };
+  const isSavings = expense.type === 'savings_contribution';
+  const cat     = isSavings ? { bg: 'bg-primary-500/20', color: 'text-primary-400', icon: '🏦', name: 'Savings Transfer' } : (CATEGORY_MAP[expense.category] ?? CATEGORY_MAP.other);
+  const payment = isSavings ? { label: 'Internal Transfer' } : (PAYMENT_METHOD_MAP[expense.paymentMethod] ?? { label: expense.paymentMethod });
 
   const handleEdit = useCallback((values) => {
     setSaving(true);
@@ -59,7 +60,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
 
         {/* Amount */}
         <td className="px-4 py-3 text-right">
-          <span className="text-sm font-semibold tabular-nums text-danger-400">
+          <span className={`text-sm font-semibold tabular-nums ${isSavings ? 'text-primary-400' : 'text-danger-400'}`}>
             {formatCurrency(expense.amount)}
           </span>
         </td>

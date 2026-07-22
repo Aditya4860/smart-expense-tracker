@@ -31,7 +31,7 @@ const GridIcon = (
 // ── Inner page (consumes BudgetContext) ────────────────────────────────────
 
 function BudgetInner() {
-  const { budgets, addBudget, updateBudget, deleteBudget } = useBudget();
+  const { budgets, addBudget, updateBudget, deleteBudget, includeSavings, toggleIncludeSavings } = useBudget();
   const [addOpen,    setAddOpen]    = useState(false);
   const [editBudget, setEditBudget] = useState(null);
   const [delBudget,  setDelBudget]  = useState(null);
@@ -98,7 +98,18 @@ function BudgetInner() {
           )}
         </p>
 
-        <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1">
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300 hover:text-white transition-colors">
+            <input 
+              type="checkbox" 
+              className="rounded border-surface-600 bg-surface-900 text-primary-500 focus:ring-primary-500 focus:ring-offset-surface-800"
+              checked={includeSavings}
+              onChange={toggleIncludeSavings}
+            />
+            <span>Include Savings</span>
+          </label>
+
+          <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1">
           <button
             id="budget-view-table"
             type="button"
@@ -131,6 +142,7 @@ function BudgetInner() {
           >
             {GridIcon}
           </button>
+        </div>
         </div>
       </div>
 

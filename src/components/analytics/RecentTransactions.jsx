@@ -9,9 +9,13 @@ import Card from '../ui/Card';
 
 function TransactionRow({ txn }) {
   const isIncome  = txn.type === 'income';
+  const isSavings = txn.type === 'savings_contribution';
+  
   const catMeta   = isIncome
     ? (INCOME_CATEGORY_MAP[txn.category] ?? { icon: '📦', name: txn.category, bg: 'bg-slate-500/15', color: 'text-slate-400' })
-    : (CATEGORY_MAP[txn.category]        ?? { icon: '📦', name: txn.category, bg: 'bg-slate-500/15', color: 'text-slate-400' });
+    : isSavings 
+      ? { icon: '🏦', name: 'Savings Transfer', bg: 'bg-primary-500/20', color: 'text-primary-400' }
+      : (CATEGORY_MAP[txn.category]      ?? { icon: '📦', name: txn.category, bg: 'bg-slate-500/15', color: 'text-slate-400' });
 
   return (
     <li className="flex items-center gap-4 py-3 border-b border-surface-700/40 last:border-0">
@@ -35,10 +39,12 @@ function TransactionRow({ txn }) {
           'hidden flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium sm:inline-flex',
           isIncome
             ? 'bg-success-500/15 text-success-400'
-            : 'bg-danger-500/15 text-danger-400',
+            : isSavings 
+              ? 'bg-primary-500/15 text-primary-400'
+              : 'bg-danger-500/15 text-danger-400',
         ].join(' ')}
       >
-        {isIncome ? 'Income' : 'Expense'}
+        {isIncome ? 'Income' : isSavings ? 'Savings' : 'Expense'}
       </span>
 
       {/* Date — hidden on xs */}
@@ -49,7 +55,7 @@ function TransactionRow({ txn }) {
       {/* Amount */}
       <p className={[
         'flex-shrink-0 text-sm font-semibold tabular-nums',
-        isIncome ? 'text-success-400' : 'text-danger-400',
+        isIncome ? 'text-success-400' : isSavings ? 'text-primary-400' : 'text-danger-400',
       ].join(' ')}>
         {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
       </p>

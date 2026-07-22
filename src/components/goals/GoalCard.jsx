@@ -17,13 +17,25 @@ const UPDATE_ICON = (
   </svg>
 );
 
-const GoalCard = memo(function GoalCard({ goal, onEdit, onDelete, onUpdateProgress }) {
+const GoalCard = memo(function GoalCard({ goal, onEdit, onDelete, onClick }) {
   const { calculateProgress, calculateRemainingAmount } = useGoals();
   const pct = calculateProgress(goal.id);
   const remaining = calculateRemainingAmount(goal.id);
 
   return (
-    <Card padding="md" className="flex flex-col gap-4">
+    <Card 
+      padding="md" 
+      className="flex flex-col gap-4 cursor-pointer hover:border-primary-500/50 transition-colors"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -45,15 +57,7 @@ const GoalCard = memo(function GoalCard({ goal, onEdit, onDelete, onUpdateProgre
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={onUpdateProgress}
-            aria-label={`Update progress for ${goal.title}`}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-success-500/10 hover:text-success-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-500"
-          >
-            {UPDATE_ICON}
-          </button>
-          <button
-            type="button"
-            onClick={onEdit}
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
             aria-label={`Edit ${goal.title}`}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-primary-500/10 hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
@@ -61,7 +65,7 @@ const GoalCard = memo(function GoalCard({ goal, onEdit, onDelete, onUpdateProgre
           </button>
           <button
             type="button"
-            onClick={onDelete}
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
             aria-label={`Delete ${goal.title}`}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-danger-500/10 hover:text-danger-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
           >

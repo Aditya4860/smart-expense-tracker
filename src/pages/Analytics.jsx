@@ -10,6 +10,7 @@ import MonthlyTrend from '../components/analytics/MonthlyTrend';
 import RecentTransactions from '../components/analytics/RecentTransactions';
 import CategoryBreakdown from '../components/analytics/CategoryBreakdown';
 import AnalyticsEmptyState from '../components/analytics/AnalyticsEmptyState';
+import GoalAnalytics from '../components/analytics/GoalAnalytics';
 
 // ── Inner page — consumes all three contexts ───────────────────────────────
 
@@ -39,6 +40,9 @@ function AnalyticsInner() {
 
       {/* 1. Financial Summary — show as soon as any data exists */}
       {hasData && <FinancialSummary />}
+
+      {/* Goal Analytics */}
+      <GoalAnalytics />
 
       {/* 2. Monthly Cash Flow — both needed for meaningful bars */}
       {hasData && <MonthlyCashFlowChart />}

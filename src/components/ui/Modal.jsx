@@ -106,8 +106,8 @@ export default function Modal({ isOpen, onClose, title, titleId = 'modal-title',
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6">
+        {/* Body */}
+        <div className="flex-1 min-h-0 flex flex-col">
           {children}
         </div>
       </div>
