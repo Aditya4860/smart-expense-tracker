@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { validateBudget, defaultBudgetValues } from '../../utils/budgetValidation';
+import { FieldError, FormLabel } from '../ui/FormField';
 import CategoryBudgetSelect from './CategoryBudgetSelect';
 import Button from '../ui/Button';
 import useBudget from '../../hooks/useBudget';
@@ -23,29 +24,6 @@ const MONTHS = [
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 11 }, (_, i) => CURRENT_YEAR - 5 + i);
-
-// ── Sub-components ─────────────────────────────────────────────────────────
-
-function FieldError({ id, message }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="mt-1 text-xs text-danger-400">
-      {message}
-    </p>
-  );
-}
-
-function Label({ htmlFor, children, required }) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="mb-1.5 block text-sm font-medium text-slate-300"
-    >
-      {children}
-      {required && <span className="ml-0.5 text-danger-400" aria-hidden="true">*</span>}
-    </label>
-  );
-}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -132,7 +110,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
     >
       {/* Category */}
       <div>
-        <Label htmlFor="bf-category" required>Category</Label>
+        <FormLabel htmlFor="bf-category" required>Category</FormLabel>
         <CategoryBudgetSelect
           id="bf-category"
           value={values.category}
@@ -145,7 +123,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
 
       {/* Monthly Limit */}
       <div>
-        <Label htmlFor="bf-monthlyLimit" required>Monthly Limit (₹)</Label>
+        <FormLabel htmlFor="bf-monthlyLimit" required>Monthly Limit (₹)</FormLabel>
         <input
           id="bf-monthlyLimit"
           name="monthlyLimit"
@@ -166,7 +144,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
       {/* Month + Year */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="bf-month" required>Month</Label>
+          <FormLabel htmlFor="bf-month" required>Month</FormLabel>
           <select
             id="bf-month"
             name="month"
@@ -185,7 +163,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
         </div>
 
         <div>
-          <Label htmlFor="bf-year" required>Year</Label>
+          <FormLabel htmlFor="bf-year" required>Year</FormLabel>
           <select
             id="bf-year"
             name="year"

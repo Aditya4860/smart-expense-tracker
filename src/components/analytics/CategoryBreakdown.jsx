@@ -1,15 +1,9 @@
 import { memo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
 import { CATEGORY_MAP } from '../../constants/expenseCategories';
+import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
 
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
 
 // ── Bar item ───────────────────────────────────────────────────────────────
 
@@ -29,7 +23,7 @@ function CategoryBar({ item, maxTotal }) {
         <div className="flex flex-shrink-0 items-center gap-2">
           <span className="text-xs text-slate-500">{item.share}%</span>
           <span className="text-sm font-semibold tabular-nums text-danger-400">
-            {amountFmt.format(item.total)}
+            {formatCurrency(item.total)}
           </span>
         </div>
       </div>

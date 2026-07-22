@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import useBudget from '../../hooks/useBudget';
+import { MONTH_NAMES } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 // ── Alert thresholds ───────────────────────────────────────────────────────
@@ -7,13 +8,6 @@ import Card from '../ui/Card';
 const THRESHOLD_EXCEEDED  = 100;
 const THRESHOLD_CRITICAL  = 90;
 const THRESHOLD_WARNING   = 70;
-
-// ── Month labels ───────────────────────────────────────────────────────────
-
-const MONTH_NAMES = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
 
 // ── Alert severity theme ───────────────────────────────────────────────────
 

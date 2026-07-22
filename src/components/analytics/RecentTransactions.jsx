@@ -2,21 +2,8 @@ import { memo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
 import { CATEGORY_MAP } from '../../constants/expenseCategories';
 import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
+import { formatCurrency, formatLocalDate } from '../../utils/formatters';
 import Card from '../ui/Card';
-
-// ── Formatters ─────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
-
-function formatDate(dateStr) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  });
-}
 
 // ── Transaction row ────────────────────────────────────────────────────────
 
@@ -56,7 +43,7 @@ function TransactionRow({ txn }) {
 
       {/* Date — hidden on xs */}
       <p className="hidden flex-shrink-0 text-xs text-slate-500 sm:block w-24 text-right">
-        {formatDate(txn.date)}
+        {formatLocalDate(txn.date)}
       </p>
 
       {/* Amount */}
@@ -64,7 +51,7 @@ function TransactionRow({ txn }) {
         'flex-shrink-0 text-sm font-semibold tabular-nums',
         isIncome ? 'text-success-400' : 'text-danger-400',
       ].join(' ')}>
-        {isIncome ? '+' : '-'}{amountFmt.format(txn.amount)}
+        {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
       </p>
     </li>
   );

@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import useAnalytics from '../../hooks/useAnalytics';
+import { formatCurrency, formatCompactCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 // ── Palette ────────────────────────────────────────────────────────────────
@@ -19,20 +20,6 @@ const COLORS = {
   expense: '#f87171',
 };
 
-// ── Formatters ─────────────────────────────────────────────────────────────
-
-const compactFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-  notation:              'compact',
-});
-
-const fullFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
 
 // ── Custom tooltip ─────────────────────────────────────────────────────────
 
@@ -46,7 +33,7 @@ function TrendTooltip({ active, payload, label }) {
           <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="text-slate-400 capitalize">{entry.name}:</span>
           <span className="ml-auto pl-4 font-semibold tabular-nums" style={{ color: entry.color }}>
-            {fullFmt.format(entry.value)}
+            {formatCurrency(entry.value)}
           </span>
         </div>
       ))}
@@ -88,7 +75,7 @@ const MonthlyTrend = memo(function MonthlyTrend() {
             tickLine={false}
           />
           <YAxis
-            tickFormatter={v => compactFmt.format(v)}
+            tickFormatter={v => formatCompactCurrency(v)}
             tick={{ fill: '#64748b', fontSize: 11 }}
             axisLine={false}
             tickLine={false}

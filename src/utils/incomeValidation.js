@@ -6,15 +6,7 @@
  */
 
 import { INCOME_CATEGORY_IDS } from '../constants/incomeCategories';
-
-/** Returns today's date string in 'YYYY-MM-DD' format using local time. */
-function todayString() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+import { todayString } from './formatters';
 
 /**
  * Validate raw income form values.

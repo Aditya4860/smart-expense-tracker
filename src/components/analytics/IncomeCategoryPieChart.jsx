@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import useIncome from '../../hooks/useIncome';
 import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
+import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
 
 // ── Hex palette mapped from income category ids ────────────────────────────
@@ -30,14 +31,6 @@ const INCOME_CATEGORY_HEX = {
 
 const DEFAULT_HEX = '#6366f1';
 
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const fullFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
-
 // ── Custom tooltip ─────────────────────────────────────────────────────────
 
 function PieTooltip({ active, payload }) {
@@ -49,7 +42,7 @@ function PieTooltip({ active, payload }) {
         <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: inner.fill }} />
         <span className="font-semibold text-white">{name}</span>
       </div>
-      <p className="text-success-400 font-semibold tabular-nums">{fullFmt.format(value)}</p>
+      <p className="text-success-400 font-semibold tabular-nums">{formatCurrency(value)}</p>
       <p className="text-slate-500 text-xs">{inner.share}% of total</p>
     </div>
   );

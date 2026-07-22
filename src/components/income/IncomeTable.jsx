@@ -1,65 +1,22 @@
 import { memo } from 'react';
 import useIncome from '../../hooks/useIncome';
+import { SORT_OPTIONS } from '../../constants/sortOptions';
+import EmptyState from '../ui/EmptyState';
 import IncomeRow from './IncomeRow';
 
-// ── Sort options ───────────────────────────────────────────────────────────
+// ── Empty-state SVG icons ──────────────────────────────────────────────────
 
-const SORT_OPTIONS = [
-  { value: 'newest',  label: 'Newest first'   },
-  { value: 'oldest',  label: 'Oldest first'   },
-  { value: 'highest', label: 'Highest amount' },
-  { value: 'lowest',  label: 'Lowest amount'  },
-];
+const NO_DATA_ICON = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+  </svg>
+);
 
-// ── Empty states ───────────────────────────────────────────────────────────
-
-function EmptyNoData() {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-700/50">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="h-8 w-8 text-slate-500"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-      </div>
-      <p className="text-base font-semibold text-white">No income recorded yet</p>
-      <p className="mt-1 max-w-xs text-sm text-slate-500">
-        Add your first income entry using the button above to start tracking.
-      </p>
-    </div>
-  );
-}
-
-function EmptyNoMatch() {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-700/50">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="h-8 w-8 text-slate-500"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 15.803M10.5 7.5v6m3-3h-6" />
-        </svg>
-      </div>
-      <p className="text-base font-semibold text-white">No matching records</p>
-      <p className="mt-1 text-sm text-slate-500">
-        Try adjusting your search or filters.
-      </p>
-    </div>
-  );
-}
+const NO_MATCH_ICON = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 15.803M10.5 7.5v6m3-3h-6" />
+  </svg>
+);
 
 // ── Column header helper ───────────────────────────────────────────────────
 
@@ -119,9 +76,17 @@ const IncomeTable = memo(function IncomeTable() {
 
       {/* Content */}
       {income.length === 0 ? (
-        <EmptyNoData />
+        <EmptyState
+          icon={NO_DATA_ICON}
+          title="No income recorded yet"
+          description="Add your first income entry using the button above to start tracking."
+        />
       ) : processedIncome.length === 0 ? (
-        <EmptyNoMatch />
+        <EmptyState
+          icon={NO_MATCH_ICON}
+          title="No matching records"
+          description="Try adjusting your search or filters."
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px]" aria-label="Income records">

@@ -6,26 +6,10 @@ import ExpenseForm from '../components/expenses/ExpenseForm';
 import ExpenseFilters from '../components/expenses/ExpenseFilters';
 import ExpenseSearch from '../components/expenses/ExpenseSearch';
 import Button from '../components/ui/Button';
+import StatCard from '../components/ui/StatCard';
 import useExpenses from '../hooks/useExpenses';
+import { formatCurrency } from '../utils/formatters';
 
-// ── Stat card ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
-
-function StatCard({ id, label, value, sub, accentClass }) {
-  return (
-    <div
-      id={id}
-      className="rounded-2xl border border-surface-700/60 bg-surface-800 p-5 shadow-card-dark"
-    >
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-bold tracking-tight ${accentClass}`}>{value}</p>
-      {sub && <p className="mt-1 text-xs text-slate-500">{sub}</p>}
-    </div>
-  );
-}
 
 // ── Filter icon ────────────────────────────────────────────────────────────
 
@@ -85,30 +69,30 @@ function ExpensesInner() {
         <StatCard
           id="stat-total"
           label="Total Spent"
-          value={amountFmt.format(summary.total)}
+          value={formatCurrency(summary.total)}
           sub={`${summary.count} ${summary.count === 1 ? 'expense' : 'expenses'}`}
-          accentClass="text-danger-400"
+          valueCls="text-danger-400"
         />
         <StatCard
           id="stat-count"
           label="Transactions"
           value={String(summary.count)}
           sub="All time"
-          accentClass="text-white"
+          valueCls="text-white"
         />
         <StatCard
           id="stat-largest"
           label="Largest"
-          value={summary.count > 0 ? amountFmt.format(summary.largest) : '—'}
+          value={summary.count > 0 ? formatCurrency(summary.largest) : '—'}
           sub="Single expense"
-          accentClass="text-yellow-400"
+          valueCls="text-yellow-400"
         />
         <StatCard
           id="stat-average"
           label="Average"
-          value={summary.count > 0 ? amountFmt.format(summary.average) : '—'}
+          value={summary.count > 0 ? formatCurrency(summary.average) : '—'}
           sub="Per transaction"
-          accentClass="text-accent-400"
+          valueCls="text-accent-400"
         />
       </div>
 

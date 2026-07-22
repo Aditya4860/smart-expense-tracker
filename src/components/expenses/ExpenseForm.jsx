@@ -1,15 +1,10 @@
 import { useState, useCallback } from 'react';
 import { PAYMENT_METHODS } from '../../constants/expenseCategories';
 import { validateExpense, defaultExpenseValues } from '../../utils/expenseValidation';
+import { todayString } from '../../utils/formatters';
+import { FieldError, FormLabel } from '../ui/FormField';
 import CategorySelect from './CategorySelect';
 import Button from '../ui/Button';
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-function todayString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 function valuesFromExpense(expense) {
   return {
@@ -20,30 +15,6 @@ function valuesFromExpense(expense) {
     paymentMethod: expense.paymentMethod,
     notes:         expense.notes ?? '',
   };
-}
-
-// ── Sub-components ─────────────────────────────────────────────────────────
-
-function FieldError({ id, message }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="mt-1 text-xs text-danger-400">
-      {message}
-    </p>
-  );
-}
-
-function Label({ htmlFor, children, required, optional }) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="mb-1.5 block text-sm font-medium text-slate-300"
-    >
-      {children}
-      {required && <span className="ml-0.5 text-danger-400" aria-hidden="true">*</span>}
-      {optional && <span className="ml-1 text-xs font-normal text-slate-500">(optional)</span>}
-    </label>
-  );
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -115,7 +86,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
     >
       {/* Title */}
       <div>
-        <Label htmlFor="ef-title" required>Title</Label>
+        <FormLabel htmlFor="ef-title" required>Title</FormLabel>
         <input
           id="ef-title"
           name="title"
@@ -135,7 +106,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
       {/* Amount + Date */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="ef-amount" required>Amount (₹)</Label>
+          <FormLabel htmlFor="ef-amount" required>Amount (₹)</FormLabel>
           <input
             id="ef-amount"
             name="amount"
@@ -154,7 +125,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
         </div>
 
         <div>
-          <Label htmlFor="ef-date" required>Date</Label>
+          <FormLabel htmlFor="ef-date" required>Date</FormLabel>
           <input
             id="ef-date"
             name="date"
@@ -173,7 +144,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
 
       {/* Category */}
       <div>
-        <Label htmlFor="ef-category" required>Category</Label>
+        <FormLabel htmlFor="ef-category" required>Category</FormLabel>
         <CategorySelect
           id="ef-category"
           value={values.category}
@@ -186,7 +157,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
 
       {/* Payment Method */}
       <div>
-        <Label htmlFor="ef-paymentMethod" required>Payment Method</Label>
+        <FormLabel htmlFor="ef-paymentMethod" required>Payment Method</FormLabel>
         <select
           id="ef-paymentMethod"
           name="paymentMethod"
@@ -212,7 +183,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
 
       {/* Notes */}
       <div>
-        <Label htmlFor="ef-notes" optional>Notes</Label>
+        <FormLabel htmlFor="ef-notes" optional>Notes</FormLabel>
         <textarea
           id="ef-notes"
           name="notes"

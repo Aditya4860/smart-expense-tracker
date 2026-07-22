@@ -1,16 +1,9 @@
 import { memo, useMemo } from 'react';
 import useExpenses from '../../hooks/useExpenses';
-import Card from '../ui/Card';
+import { formatCurrency } from '../../utils/formatters';
+import StatCard from '../ui/StatCard';
 
-// ── Formatter (created once — never recreated) ─────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
-
-// ── Icons (JSX literals outside render — stable references) ───────────────
+// ── Icons (stable module-level constants) ─────────────────────────────────
 
 const ICONS = {
   total: (
@@ -50,7 +43,7 @@ const ExpenseSummary = memo(function ExpenseSummary() {
     {
       id:       'es-total',
       label:    'Total Expenses',
-      value:    amountFmt.format(total),
+      value:    formatCurrency(total),
       sub:      count === 0 ? 'No expenses recorded' : `${count} ${count === 1 ? 'expense' : 'expenses'} recorded`,
       icon:     ICONS.total,
       iconBg:   'bg-danger-500/15',
@@ -70,7 +63,7 @@ const ExpenseSummary = memo(function ExpenseSummary() {
     {
       id:       'es-largest',
       label:    'Largest Expense',
-      value:    count > 0 ? amountFmt.format(largest) : '—',
+      value:    count > 0 ? formatCurrency(largest) : '—',
       sub:      'Single biggest spend',
       icon:     ICONS.largest,
       iconBg:   'bg-yellow-500/15',
@@ -80,7 +73,7 @@ const ExpenseSummary = memo(function ExpenseSummary() {
     {
       id:       'es-average',
       label:    'Average Expense',
-      value:    count > 0 ? amountFmt.format(average) : '—',
+      value:    count > 0 ? formatCurrency(average) : '—',
       sub:      'Per transaction',
       icon:     ICONS.average,
       iconBg:   'bg-accent-500/15',
@@ -92,31 +85,7 @@ const ExpenseSummary = memo(function ExpenseSummary() {
   return (
     <section aria-label="Expense summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map(card => (
-        <Card key={card.id} id={card.id} padding="md" className="flex flex-col gap-3">
-          {/* Top row: label + icon */}
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              {card.label}
-            </p>
-            <div
-              className={[
-                'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl',
-                card.iconBg,
-                card.iconText,
-              ].join(' ')}
-            >
-              {card.icon}
-            </div>
-          </div>
-
-          {/* Value */}
-          <p className={`text-2xl font-bold tracking-tight tabular-nums ${card.valueCls}`}>
-            {card.value}
-          </p>
-
-          {/* Sub-label */}
-          <p className="text-xs text-slate-500">{card.sub}</p>
-        </Card>
+        <StatCard key={card.id} {...card} />
       ))}
     </section>
   );

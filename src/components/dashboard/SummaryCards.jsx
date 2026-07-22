@@ -1,15 +1,9 @@
 import { memo, useMemo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
 import useBudget from '../../hooks/useBudget';
+import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
 
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
 
 // ── Trend indicator ────────────────────────────────────────────────────────
 
@@ -111,7 +105,7 @@ const SummaryCards = memo(function SummaryCards() {
       {
         id:       'sc-balance',
         label:    'Net Balance',
-        value:    amountFmt.format(netBalance),
+        value:    formatCurrency(netBalance),
         sub:      netBalance >= 0 ? 'Surplus this period' : 'Deficit this period',
         positive: netBalance >= 0,
         progress: Math.max(0, Math.min(100, savingsRate)),
@@ -124,7 +118,7 @@ const SummaryCards = memo(function SummaryCards() {
       {
         id:       'sc-income',
         label:    'Total Income',
-        value:    amountFmt.format(totalIncome),
+        value:    formatCurrency(totalIncome),
         sub:      `${incomeCount} ${incomeCount === 1 ? 'record' : 'records'} logged`,
         positive: true,
         progress: 100,
@@ -137,7 +131,7 @@ const SummaryCards = memo(function SummaryCards() {
       {
         id:       'sc-expense',
         label:    'Total Expenses',
-        value:    amountFmt.format(totalExpense),
+        value:    formatCurrency(totalExpense),
         sub:      `${expenseCount} ${expenseCount === 1 ? 'expense' : 'expenses'} logged`,
         positive: totalExpense === 0,
         progress: expensePct,
@@ -173,8 +167,8 @@ const SummaryCards = memo(function SummaryCards() {
         label:    'Budget Remaining',
         value:    budgetStats.hasBudgets
           ? (budgetStats.totalRemain >= 0
-              ? amountFmt.format(budgetStats.totalRemain)
-              : `−${amountFmt.format(Math.abs(budgetStats.totalRemain))}`)
+              ? formatCurrency(budgetStats.totalRemain)
+              : `−${formatCurrency(Math.abs(budgetStats.totalRemain))}`)
           : '—',
         sub:      budgetStats.hasBudgets
           ? (budgetStats.totalRemain >= 0 ? 'Still available' : 'Over budget')

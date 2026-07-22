@@ -1,14 +1,7 @@
 import { memo, useMemo } from 'react';
 import useIncome from '../../hooks/useIncome';
-import Card from '../ui/Card';
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
+import { formatCurrency } from '../../utils/formatters';
+import StatCard from '../ui/StatCard';
 
 // ── Icons (stable module-level constants) ─────────────────────────────────
 
@@ -50,7 +43,7 @@ const IncomeSummary = memo(function IncomeSummary() {
     {
       id:       'is-total',
       label:    'Total Income',
-      value:    amountFmt.format(total),
+      value:    formatCurrency(total),
       sub:      count === 0
         ? 'No income recorded'
         : `${count} ${count === 1 ? 'record' : 'records'} logged`,
@@ -72,7 +65,7 @@ const IncomeSummary = memo(function IncomeSummary() {
     {
       id:       'is-largest',
       label:    'Largest Income',
-      value:    count > 0 ? amountFmt.format(largest) : '—',
+      value:    count > 0 ? formatCurrency(largest) : '—',
       sub:      'Single highest entry',
       icon:     ICONS.largest,
       iconBg:   'bg-yellow-500/15',
@@ -82,7 +75,7 @@ const IncomeSummary = memo(function IncomeSummary() {
     {
       id:       'is-average',
       label:    'Average Income',
-      value:    count > 0 ? amountFmt.format(average) : '—',
+      value:    count > 0 ? formatCurrency(average) : '—',
       sub:      'Per transaction',
       icon:     ICONS.average,
       iconBg:   'bg-accent-500/15',
@@ -94,20 +87,7 @@ const IncomeSummary = memo(function IncomeSummary() {
   return (
     <section aria-label="Income summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map(card => (
-        <Card key={card.id} id={card.id} padding="md" className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              {card.label}
-            </p>
-            <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${card.iconBg} ${card.iconText}`}>
-              {card.icon}
-            </div>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight tabular-nums ${card.valueCls}`}>
-            {card.value}
-          </p>
-          <p className="text-xs text-slate-500">{card.sub}</p>
-        </Card>
+        <StatCard key={card.id} {...card} />
       ))}
     </section>
   );

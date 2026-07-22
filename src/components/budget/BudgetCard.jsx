@@ -1,19 +1,9 @@
 import { memo, useMemo } from 'react';
 import { BUDGET_CATEGORY_MAP } from '../../constants/budgetCategories';
+import { formatCurrency, MONTH_NAMES } from '../../utils/formatters';
 import useBudget from '../../hooks/useBudget';
 import BudgetProgressBar from './BudgetProgressBar';
 import Card from '../ui/Card';
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
-
-const MONTH_NAMES = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
 
 // ── Main component ─────────────────────────────────────────────────────────
 
@@ -83,21 +73,21 @@ const BudgetCard = memo(function BudgetCard({ budget, onEdit, onDelete }) {
         <div>
           <p className="text-xs text-slate-500">Limit</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-white">
-            {amountFmt.format(budget.monthlyLimit)}
+            {formatCurrency(budget.monthlyLimit)}
           </p>
         </div>
         <div>
           <p className="text-xs text-slate-500">Spent</p>
           <p className="mt-0.5 text-sm font-bold tabular-nums text-danger-400">
-            {amountFmt.format(budget.spent)}
+            {formatCurrency(budget.spent)}
           </p>
         </div>
         <div>
           <p className="text-xs text-slate-500">Left</p>
           <p className={`mt-0.5 text-sm font-bold tabular-nums ${budget.remaining >= 0 ? 'text-success-400' : 'text-danger-400'}`}>
             {budget.remaining >= 0
-              ? amountFmt.format(budget.remaining)
-              : `−${amountFmt.format(Math.abs(budget.remaining))}`}
+              ? formatCurrency(budget.remaining)
+              : `−${formatCurrency(Math.abs(budget.remaining))}`}
           </p>
         </div>
       </div>

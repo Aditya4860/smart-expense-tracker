@@ -1,14 +1,8 @@
 import { memo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
+import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
 
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
 
 // ── Stat item ──────────────────────────────────────────────────────────────
 
@@ -58,26 +52,26 @@ const FinancialSummary = memo(function FinancialSummary() {
       <div className="mb-6 grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatItem
           label="Total Income"
-          value={amountFmt.format(totalIncome)}
+          value={formatCurrency(totalIncome)}
           valueCls="text-success-400"
           sub={`${incomeCount} records`}
         />
         <StatItem
           label="Total Expenses"
-          value={amountFmt.format(totalExpense)}
+          value={formatCurrency(totalExpense)}
           valueCls="text-danger-400"
           sub={`${expenseCount} records`}
         />
         <StatItem
           label="Net Balance"
-          value={amountFmt.format(netBalance)}
+          value={formatCurrency(netBalance)}
           valueCls={balanceCls}
           sub={netBalance >= 0 ? 'Surplus' : 'Deficit'}
           subCls={balanceCls}
         />
         <StatItem
           label="Savings"
-          value={amountFmt.format(Math.max(0, netBalance))}
+          value={formatCurrency(Math.max(0, netBalance))}
           valueCls={netBalance >= 0 ? 'text-white' : 'text-slate-500'}
         />
         <StatItem
@@ -100,22 +94,22 @@ const FinancialSummary = memo(function FinancialSummary() {
       <div className="grid grid-cols-2 gap-y-6 gap-x-4 sm:grid-cols-4">
         <StatItem
           label="Largest Expense"
-          value={expenseCount > 0 ? amountFmt.format(largestExpense) : '—'}
+          value={expenseCount > 0 ? formatCurrency(largestExpense) : '—'}
           valueCls="text-danger-400"
         />
         <StatItem
           label="Avg Expense"
-          value={expenseCount > 0 ? amountFmt.format(averageExpense) : '—'}
+          value={expenseCount > 0 ? formatCurrency(averageExpense) : '—'}
           valueCls="text-slate-300"
         />
         <StatItem
           label="Largest Income"
-          value={incomeCount > 0 ? amountFmt.format(largestIncome) : '—'}
+          value={incomeCount > 0 ? formatCurrency(largestIncome) : '—'}
           valueCls="text-success-400"
         />
         <StatItem
           label="Avg Income"
-          value={incomeCount > 0 ? amountFmt.format(averageIncome) : '—'}
+          value={incomeCount > 0 ? formatCurrency(averageIncome) : '—'}
           valueCls="text-slate-300"
         />
       </div>
@@ -124,3 +118,4 @@ const FinancialSummary = memo(function FinancialSummary() {
 });
 
 export default FinancialSummary;
+

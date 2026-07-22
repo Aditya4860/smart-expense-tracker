@@ -1,12 +1,7 @@
 import { memo, useMemo } from 'react';
 import useBudget from '../../hooks/useBudget';
+import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
 
 // ── Colour helper ──────────────────────────────────────────────────────────
 
@@ -66,7 +61,7 @@ const BudgetOverviewWidget = memo(function BudgetOverviewWidget() {
           {/* Total budget */}
           <div>
             <p className="text-2xl font-bold tabular-nums text-white">
-              {amountFmt.format(stats.totalLimit)}
+              {formatCurrency(stats.totalLimit)}
             </p>
             <p className="mt-0.5 text-xs text-slate-500">
               {stats.count} {stats.count === 1 ? 'budget' : 'budgets'} active
@@ -78,15 +73,15 @@ const BudgetOverviewWidget = memo(function BudgetOverviewWidget() {
             <div>
               <p className="text-[10px] text-slate-500">Spent</p>
               <p className="mt-0.5 text-sm font-semibold tabular-nums text-danger-400">
-                {amountFmt.format(stats.totalSpent)}
+                {formatCurrency(stats.totalSpent)}
               </p>
             </div>
             <div>
               <p className="text-[10px] text-slate-500">Remaining</p>
               <p className={`mt-0.5 text-sm font-semibold tabular-nums ${stats.totalRemain >= 0 ? 'text-success-400' : 'text-danger-400'}`}>
                 {stats.totalRemain >= 0
-                  ? amountFmt.format(stats.totalRemain)
-                  : `−${amountFmt.format(Math.abs(stats.totalRemain))}`}
+                  ? formatCurrency(stats.totalRemain)
+                  : `−${formatCurrency(Math.abs(stats.totalRemain))}`}
               </p>
             </div>
           </div>

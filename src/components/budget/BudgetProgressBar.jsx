@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { formatCurrency } from '../../utils/formatters';
 
 // ── Colour thresholds ──────────────────────────────────────────────────────
 
@@ -13,12 +14,6 @@ function themeForPct(pct) {
   if (pct > 70) return { bar: 'bg-yellow-500',  text: 'text-yellow-400',  label: 'High usage'  };
   return              { bar: 'bg-success-500',  text: 'text-success-400', label: 'On track'    };
 }
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
 
 // ── Main component ─────────────────────────────────────────────────────────
 
@@ -69,12 +64,12 @@ const BudgetProgressBar = memo(function BudgetProgressBar({
       {/* Labels row */}
       <div className="flex items-center justify-between gap-2">
         <span className={`text-xs font-medium tabular-nums ${theme.text}`}>
-          {amountFmt.format(spent)} spent
+          {formatCurrency(spent)} spent
         </span>
         <span className="text-xs tabular-nums text-slate-500">
           {remaining >= 0
-            ? `${amountFmt.format(remaining)} left`
-            : `${amountFmt.format(Math.abs(remaining))} over`}
+            ? `${formatCurrency(remaining)} left`
+            : `${formatCurrency(Math.abs(remaining))} over`}
         </span>
       </div>
 

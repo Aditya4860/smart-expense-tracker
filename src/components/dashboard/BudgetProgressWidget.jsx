@@ -1,20 +1,10 @@
 import { memo, useMemo } from 'react';
 import { BUDGET_CATEGORY_MAP } from '../../constants/budgetCategories';
+import { formatCurrency, MONTH_NAMES } from '../../utils/formatters';
 import useBudget from '../../hooks/useBudget';
 import Card from '../ui/Card';
 
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
-
-const MONTH_NAMES = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
-// ── Colour helper ──────────────────────────────────────────────────────────
+// ── Colour helpers ─────────────────────────────────────────────────────────
 
 function barColour(pct) {
   if (pct > 90) return 'bg-danger-500';
@@ -110,12 +100,12 @@ const BudgetProgressWidget = memo(function BudgetProgressWidget() {
               {/* Amounts */}
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-[10px] text-danger-400 tabular-nums">
-                  {amountFmt.format(item.spent)} spent
+                  {formatCurrency(item.spent)} spent
                 </span>
                 <span className={`text-[10px] tabular-nums ${item.remain >= 0 ? 'text-success-400' : 'text-danger-400'}`}>
                   {item.remain >= 0
-                    ? `${amountFmt.format(item.remain)} left`
-                    : `${amountFmt.format(Math.abs(item.remain))} over`}
+                    ? `${formatCurrency(item.remain)} left`
+                    : `${formatCurrency(Math.abs(item.remain))} over`}
                 </span>
               </div>
             </li>

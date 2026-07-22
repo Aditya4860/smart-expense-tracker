@@ -1,12 +1,7 @@
 import { memo, useMemo } from 'react';
 import useBudget from '../../hooks/useBudget';
-import Card from '../ui/Card';
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-});
+import { formatCurrency } from '../../utils/formatters';
+import StatCard from '../ui/StatCard';
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -43,7 +38,7 @@ const ICONS = {
 /**
  * BudgetSummary — five stat cards driven by live BudgetContext data.
  *
- * Cards: Total Budget · Total Spent · Remaining Budget · Top Category · Utilization %
+ * Cards: Total Budget · Total Spent · Remaining Budget · Utilization % · Highest Budget
  */
 const BudgetSummary = memo(function BudgetSummary() {
   const { budgets } = useBudget();
@@ -68,7 +63,7 @@ const BudgetSummary = memo(function BudgetSummary() {
     {
       id:       'bs-total',
       label:    'Total Budget',
-      value:    amountFmt.format(stats.totalLimit),
+      value:    formatCurrency(stats.totalLimit),
       sub:      stats.count === 0
         ? 'No budgets set'
         : `${stats.count} ${stats.count === 1 ? 'budget' : 'budgets'} active`,
@@ -80,7 +75,7 @@ const BudgetSummary = memo(function BudgetSummary() {
     {
       id:       'bs-spent',
       label:    'Total Spent',
-      value:    amountFmt.format(stats.totalSpent),
+      value:    formatCurrency(stats.totalSpent),
       sub:      'Across all budgets',
       icon:     ICONS.spent,
       iconBg:   'bg-danger-500/15',
@@ -91,8 +86,8 @@ const BudgetSummary = memo(function BudgetSummary() {
       id:       'bs-remaining',
       label:    'Remaining',
       value:    stats.totalRemain >= 0
-        ? amountFmt.format(stats.totalRemain)
-        : `−${amountFmt.format(Math.abs(stats.totalRemain))}`,
+        ? formatCurrency(stats.totalRemain)
+        : `−${formatCurrency(Math.abs(stats.totalRemain))}`,
       sub:      stats.totalRemain >= 0 ? 'Still available' : 'Over budget',
       icon:     ICONS.remaining,
       iconBg:   stats.totalRemain >= 0 ? 'bg-success-500/15' : 'bg-danger-500/15',
@@ -128,7 +123,7 @@ const BudgetSummary = memo(function BudgetSummary() {
     {
       id:       'bs-top',
       label:    'Highest Budget',
-      value:    stats.topBudget ? amountFmt.format(stats.topBudget.monthlyLimit) : '—',
+      value:    stats.topBudget ? formatCurrency(stats.topBudget.monthlyLimit) : '—',
       sub:      stats.topBudget ? stats.topBudget.category : 'No budgets yet',
       icon:     ICONS.trophy,
       iconBg:   'bg-yellow-500/15',
@@ -140,26 +135,7 @@ const BudgetSummary = memo(function BudgetSummary() {
   return (
     <section aria-label="Budget summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {cards.map(card => (
-        <Card key={card.id} id={card.id} padding="md" className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              {card.label}
-            </p>
-            <div
-              className={[
-                'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl',
-                card.iconBg,
-                card.iconText,
-              ].join(' ')}
-            >
-              {card.icon}
-            </div>
-          </div>
-          <p className={`text-2xl font-bold tracking-tight tabular-nums ${card.valueCls}`}>
-            {card.value}
-          </p>
-          <p className="text-xs text-slate-500">{card.sub}</p>
-        </Card>
+        <StatCard key={card.id} {...card} />
       ))}
     </section>
   );

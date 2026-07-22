@@ -19,14 +19,7 @@ import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
 import useBudget from '../hooks/useBudget';
 import { CATEGORY_MAP } from '../constants/expenseCategories';
-
-// ── Formatter ──────────────────────────────────────────────────────────────
-
-const amountFmt = new Intl.NumberFormat('en-IN', {
-  style:                 'currency',
-  currency:              'INR',
-  maximumFractionDigits: 0,
-});
+import { formatCurrency } from '../utils/formatters';
 
 // ── Widget: Top Spending Category ──────────────────────────────────────────
 
@@ -51,7 +44,7 @@ const TopSpendingCategory = memo(function TopSpendingCategory({ analytics }) {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold tabular-nums text-danger-400">{amountFmt.format(top.total)}</span>
+            <span className="text-xl font-bold tabular-nums text-danger-400">{formatCurrency(top.total)}</span>
             <span className="text-xs text-slate-500">{top.share}% of spend</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700" aria-hidden="true">
@@ -87,7 +80,7 @@ const HighestIncomeSource = memo(function HighestIncomeSource({ analytics }) {
             </div>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold tabular-nums text-success-400">{amountFmt.format(top.total)}</span>
+            <span className="text-xl font-bold tabular-nums text-success-400">{formatCurrency(top.total)}</span>
             <span className="text-xs text-slate-500">{top.share}% of income</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700" aria-hidden="true">
@@ -126,7 +119,7 @@ const MonthlyNetSavings = memo(function MonthlyNetSavings({ analytics }) {
         </div>
         <div className="min-w-0">
           <p className={`text-2xl font-bold tabular-nums ${isPos ? 'text-white' : 'text-danger-400'}`}>
-            {amountFmt.format(Math.abs(netSav))}
+            {formatCurrency(Math.abs(netSav))}
           </p>
           <p className="text-xs text-slate-500">{isPos ? 'Saved this month' : 'Over budget this month'}</p>
         </div>
@@ -135,11 +128,11 @@ const MonthlyNetSavings = memo(function MonthlyNetSavings({ analytics }) {
         <div className="grid grid-cols-2 gap-2 pt-1">
           <div className="rounded-lg bg-success-500/10 px-3 py-1.5">
             <p className="text-[10px] text-slate-500">Income</p>
-            <p className="text-sm font-semibold tabular-nums text-success-400">{amountFmt.format(thisMonth.income)}</p>
+            <p className="text-sm font-semibold tabular-nums text-success-400">{formatCurrency(thisMonth.income)}</p>
           </div>
           <div className="rounded-lg bg-danger-500/10 px-3 py-1.5">
             <p className="text-[10px] text-slate-500">Expenses</p>
-            <p className="text-sm font-semibold tabular-nums text-danger-400">{amountFmt.format(thisMonth.expense)}</p>
+            <p className="text-sm font-semibold tabular-nums text-danger-400">{formatCurrency(thisMonth.expense)}</p>
           </div>
         </div>
       )}
