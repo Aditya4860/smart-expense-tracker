@@ -5,6 +5,7 @@ import { todayString } from '../../utils/formatters';
 import { FieldError, FormLabel } from '../ui/FormField';
 import CategorySelect from './CategorySelect';
 import Button from '../ui/Button';
+import useFormState from '../../hooks/useFormState';
 
 function valuesFromExpense(expense) {
   return {
@@ -31,24 +32,20 @@ function valuesFromExpense(expense) {
 export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading = false }) {
   const isEdit = Boolean(initialValues);
 
-  const [values,  setValues]  = useState(() =>
-    initialValues ? valuesFromExpense(initialValues) : defaultExpenseValues()
+  const {
+    values,
+    errors,
+    setErrors,
+    touched,
+    setTouched,
+    handleChange,
+    handleBlur,
+    err,
+    inputClass,
+  } = useFormState(
+    initialValues ? valuesFromExpense(initialValues) : defaultExpenseValues(),
+    validateExpense
   );
-  const [errors,  setErrors]  = useState({});
-  const [touched, setTouched] = useState({});
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setValues(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => prev[name] ? { ...prev, [name]: '' } : prev);
-  }, []);
-
-  const handleBlur = useCallback((e) => {
-    const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-  }, []);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
@@ -60,20 +57,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
       return;
     }
     onSubmit(values);
-  }, [values, onSubmit]);
-
-  // ── Field helpers ─────────────────────────────────────────────────────────
-
-  function err(name) {
-    return touched[name] ? errors[name] : '';
-  }
-
-  function inputClass(name) {
-    return [
-      'input h-10 text-sm',
-      err(name) ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20' : '',
-    ].filter(Boolean).join(' ');
-  }
+  }, [values, onSubmit, setTouched, setErrors]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 

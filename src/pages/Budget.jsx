@@ -40,7 +40,7 @@ function BudgetInner() {
 
   const handleAdd = useCallback((values) => {
     setSaving(true);
-    addBudget({ ...values, spent: 0 });
+    addBudget(values);
     setSaving(false);
     setAddOpen(false);
   }, [addBudget]);
@@ -48,7 +48,7 @@ function BudgetInner() {
   const handleEdit = useCallback((values) => {
     if (!editBudget) return;
     setSaving(true);
-    updateBudget(editBudget.id, { ...values, spent: editBudget.spent });
+    updateBudget(editBudget.id, values);
     setSaving(false);
     setEditBudget(null);
   }, [editBudget, updateBudget]);

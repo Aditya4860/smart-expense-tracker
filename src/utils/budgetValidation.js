@@ -6,6 +6,7 @@
  */
 
 import { BUDGET_CATEGORY_IDS } from '../constants/budgetCategories';
+import { validateAmount } from './validationUtils';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -50,18 +51,10 @@ export function validateBudget(values, existingBudgets = [], editingId = null) {
   }
 
   // ── Monthly limit ─────────────────────────────────────────────────────────
-  const rawLimit = values.monthlyLimit;
-  if (rawLimit === '' || rawLimit === null || rawLimit === undefined) {
-    errors.monthlyLimit = 'Monthly limit is required.';
-  } else {
-    const limit = parseFloat(rawLimit);
-    if (isNaN(limit)) {
-      errors.monthlyLimit = 'Monthly limit must be a valid number.';
-    } else if (limit <= 0) {
-      errors.monthlyLimit = 'Monthly limit must be greater than zero.';
-    } else if (limit > 100_000_000) {
-      errors.monthlyLimit = 'Monthly limit exceeds the maximum allowed value.';
-    }
+  const limitErr = validateAmount(values.monthlyLimit, 100_000_000);
+  if (limitErr) {
+    // Override message to refer to "Monthly limit" instead of "Amount" if validateAmount returns generic text
+    errors.monthlyLimit = limitErr.replace('Amount', 'Monthly limit');
   }
 
   // ── Month ─────────────────────────────────────────────────────────────────

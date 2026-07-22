@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import useBudget from '../../hooks/useBudget';
 import { formatCurrency } from '../../utils/formatters';
+import { computeBudgetStats } from '../../utils/budgetUtils';
 import StatCard from '../ui/StatCard';
 
 // ── Icons ──────────────────────────────────────────────────────────────────
@@ -43,21 +44,7 @@ const ICONS = {
 const BudgetSummary = memo(function BudgetSummary() {
   const { budgets } = useBudget();
 
-  const stats = useMemo(() => {
-    const count        = budgets.length;
-    const totalLimit   = budgets.reduce((s, b) => s + b.monthlyLimit, 0);
-    const totalSpent   = budgets.reduce((s, b) => s + b.spent,        0);
-    const totalRemain  = totalLimit - totalSpent;
-    const utilization  = totalLimit > 0
-      ? parseFloat(((totalSpent / totalLimit) * 100).toFixed(1))
-      : 0;
-
-    const topBudget = budgets.length > 0
-      ? budgets.reduce((prev, cur) => cur.monthlyLimit > prev.monthlyLimit ? cur : prev)
-      : null;
-
-    return { count, totalLimit, totalSpent, totalRemain, utilization, topBudget };
-  }, [budgets]);
+  const stats = useMemo(() => computeBudgetStats(budgets), [budgets]);
 
   const cards = useMemo(() => [
     {

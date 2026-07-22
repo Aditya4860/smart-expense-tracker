@@ -171,7 +171,7 @@ function DashboardInner() {
 
   const handleAddBudget = useCallback((values) => {
     setSavingBud(true);
-    addBudget({ ...values, spent: 0 });
+    addBudget(values);
     setSavingBud(false);
     setBudgetOpen(false);
   }, [addBudget]);

@@ -5,45 +5,15 @@
  * No React imports — usable outside the component tree.
  */
 
+import { makeStorageHelpers } from '../utils/storageUtils';
+
 const STORAGE_KEY = 'sxp_budgets_v1';
 
-// ── Core persistence ───────────────────────────────────────────────────────
-
-/**
- * Load all budgets from localStorage.
- * Returns an empty array on error or when storage is empty.
- * @returns {object[]}
- */
-export function loadBudgets() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Persist the full budgets array to localStorage.
- * Silently swallows quota errors (storage may be full).
- * @param {object[]} budgets
- */
-export function saveBudgets(budgets) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
-  } catch (err) {
-    console.error('[budgetStorage] saveBudgets failed:', err);
-  }
-}
-
-/**
- * Remove all budgets from localStorage.
- */
-export function clearBudgets() {
-  localStorage.removeItem(STORAGE_KEY);
-}
+export const { 
+  load: loadBudgets, 
+  save: saveBudgets, 
+  clear: clearBudgets 
+} = makeStorageHelpers(STORAGE_KEY, 'budgetStorage');
 
 // ── Factory helpers ────────────────────────────────────────────────────────
 
@@ -66,13 +36,10 @@ export function generateBudgetId() {
 export function buildBudget(values, existingId, existingCreatedAt) {
   const now  = new Date().toISOString();
   const limit = parseFloat(parseFloat(values.monthlyLimit).toFixed(2));
-  const spent = parseFloat(parseFloat(values.spent ?? 0).toFixed(2));
   return {
     id:           existingId        ?? generateBudgetId(),
     category:     values.category,
     monthlyLimit: limit,
-    spent,
-    remaining:    parseFloat((limit - spent).toFixed(2)),
     month:        Number(values.month),
     year:         Number(values.year),
     createdAt:    existingCreatedAt ?? now,

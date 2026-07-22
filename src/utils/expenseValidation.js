@@ -7,6 +7,7 @@
 
 import { CATEGORY_IDS, PAYMENT_METHOD_IDS } from '../constants/expenseCategories';
 import { todayString } from './formatters';
+import { validateTitle, validateAmount, validateDate, validateNotes } from './validationUtils';
 
 /**
  * Validate raw expense form values.
@@ -25,29 +26,12 @@ export function validateExpense(values) {
   const errors = {};
 
   // ── Title ────────────────────────────────────────────────────────────────
-  const title = (values.title ?? '').trim();
-  if (!title) {
-    errors.title = 'Title is required.';
-  } else if (title.length < 2) {
-    errors.title = 'Title must be at least 2 characters.';
-  } else if (title.length > 100) {
-    errors.title = 'Title must be 100 characters or fewer.';
-  }
+  const titleErr = validateTitle(values.title);
+  if (titleErr) errors.title = titleErr;
 
   // ── Amount ───────────────────────────────────────────────────────────────
-  const rawAmount = values.amount;
-  if (rawAmount === '' || rawAmount === null || rawAmount === undefined) {
-    errors.amount = 'Amount is required.';
-  } else {
-    const amt = parseFloat(rawAmount);
-    if (isNaN(amt)) {
-      errors.amount = 'Amount must be a valid number.';
-    } else if (amt <= 0) {
-      errors.amount = 'Amount must be greater than zero.';
-    } else if (amt > 10_000_000) {
-      errors.amount = 'Amount exceeds the maximum allowed value.';
-    }
-  }
+  const amountErr = validateAmount(values.amount, 10_000_000);
+  if (amountErr) errors.amount = amountErr;
 
   // ── Category ─────────────────────────────────────────────────────────────
   if (!values.category) {
@@ -57,13 +41,8 @@ export function validateExpense(values) {
   }
 
   // ── Date ─────────────────────────────────────────────────────────────────
-  if (!values.date) {
-    errors.date = 'Date is required.';
-  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(values.date)) {
-    errors.date = 'Date must be in YYYY-MM-DD format.';
-  } else if (values.date > todayString()) {
-    errors.date = 'Expense date cannot be in the future.';
-  }
+  const dateErr = validateDate(values.date);
+  if (dateErr) errors.date = dateErr;
 
   // ── Payment method ───────────────────────────────────────────────────────
   if (!values.paymentMethod) {
@@ -73,9 +52,8 @@ export function validateExpense(values) {
   }
 
   // ── Notes (optional) ─────────────────────────────────────────────────────
-  if (values.notes && values.notes.length > 500) {
-    errors.notes = 'Notes must be 500 characters or fewer.';
-  }
+  const notesErr = validateNotes(values.notes);
+  if (notesErr) errors.notes = notesErr;
 
   return { valid: Object.keys(errors).length === 0, errors };
 }

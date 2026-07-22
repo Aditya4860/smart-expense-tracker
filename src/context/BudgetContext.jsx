@@ -11,6 +11,7 @@ import {
   clearBudgets as storageClear,
   buildBudget,
 } from '../services/budgetStorage';
+import useExpenses from '../hooks/useExpenses';
 
 // ── Action types ───────────────────────────────────────────────────────────
 
@@ -105,16 +106,42 @@ export function BudgetProvider({ children }) {
 
   // ── Derived computations ───────────────────────────────────────────────
 
+  const { expenses } = useExpenses();
+
+  const enrichedBudgets = useMemo(() => {
+    return state.budgets.map(budget => {
+      // 1. Sum spent by matching category and month/year
+      const spent = expenses.reduce((sum, e) => {
+        if (e.category !== budget.category) return sum;
+        
+        const [eYear, eMonth] = e.date.split('-');
+        if (Number(eMonth) === budget.month && Number(eYear) === budget.year) {
+          return sum + e.amount;
+        }
+        return sum;
+      }, 0);
+
+      const parsedSpent = parseFloat(spent.toFixed(2));
+      const parsedRemaining = parseFloat((budget.monthlyLimit - parsedSpent).toFixed(2));
+
+      return {
+        ...budget,
+        spent: parsedSpent,
+        remaining: parsedRemaining
+      };
+    });
+  }, [state.budgets, expenses]);
+
   /**
    * Calculate the remaining amount for a specific budget by id.
    * @param {string} id
    * @returns {number}
    */
   const calculateRemainingBudget = useCallback((id) => {
-    const budget = state.budgets.find(b => b.id === id);
+    const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget) return 0;
-    return parseFloat((budget.monthlyLimit - budget.spent).toFixed(2));
-  }, [state.budgets]);
+    return budget.remaining;
+  }, [enrichedBudgets]);
 
   /**
    * Calculate the spent amount for a specific budget by id.
@@ -122,10 +149,10 @@ export function BudgetProvider({ children }) {
    * @returns {number}
    */
   const calculateSpentBudget = useCallback((id) => {
-    const budget = state.budgets.find(b => b.id === id);
+    const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget) return 0;
     return budget.spent;
-  }, [state.budgets]);
+  }, [enrichedBudgets]);
 
   /**
    * Calculate progress (0–100) as a percentage of limit spent.
@@ -134,17 +161,17 @@ export function BudgetProvider({ children }) {
    * @returns {number}
    */
   const calculateBudgetProgress = useCallback((id) => {
-    const budget = state.budgets.find(b => b.id === id);
+    const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget || budget.monthlyLimit <= 0) return 0;
     const pct = (budget.spent / budget.monthlyLimit) * 100;
     return parseFloat(Math.min(pct, 100).toFixed(2));
-  }, [state.budgets]);
+  }, [enrichedBudgets]);
 
   // ── Context value ──────────────────────────────────────────────────────
 
   const value = useMemo(() => ({
-    // Raw state
-    budgets: state.budgets,
+    // Raw state (now enriched)
+    budgets: enrichedBudgets,
     // Mutations
     addBudget,
     updateBudget,
@@ -156,7 +183,7 @@ export function BudgetProvider({ children }) {
     calculateSpentBudget,
     calculateBudgetProgress,
   }), [
-    state.budgets,
+    enrichedBudgets,
     addBudget,
     updateBudget,
     deleteBudget,

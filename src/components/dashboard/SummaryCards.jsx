@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
 import useBudget from '../../hooks/useBudget';
 import { formatCurrency } from '../../utils/formatters';
+import { computeBudgetStats } from '../../utils/budgetUtils';
 import Card from '../ui/Card';
 
 
@@ -74,15 +75,7 @@ const SummaryCards = memo(function SummaryCards() {
     savingsRate, incomeCount, expenseCount,
   } = analytics;
 
-  const budgetStats = useMemo(() => {
-    const totalLimit  = budgets.reduce((s, b) => s + b.monthlyLimit, 0);
-    const totalSpent  = budgets.reduce((s, b) => s + b.spent,        0);
-    const totalRemain = totalLimit - totalSpent;
-    const utilization = totalLimit > 0
-      ? parseFloat(((totalSpent / totalLimit) * 100).toFixed(1))
-      : 0;
-    return { totalLimit, totalRemain, utilization, hasBudgets: budgets.length > 0 };
-  }, [budgets]);
+  const budgetStats = useMemo(() => computeBudgetStats(budgets), [budgets]);
 
   const cards = useMemo(() => {
     const expensePct = totalIncome > 0

@@ -5,45 +5,15 @@
  * No React imports — usable outside the component tree.
  */
 
+import { makeStorageHelpers } from '../utils/storageUtils';
+
 const STORAGE_KEY = 'sxp_expenses_v1';
 
-// ── Core CRUD ──────────────────────────────────────────────────────────────
-
-/**
- * Load all expenses from localStorage.
- * Returns an empty array on error or when storage is empty.
- * @returns {import('./expenseStorage').Expense[]}
- */
-export function loadExpenses() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Persist the full expenses array to localStorage.
- * Silently swallows quota errors (storage may be full).
- * @param {object[]} expenses
- */
-export function saveExpenses(expenses) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-  } catch (err) {
-    console.error('[expenseStorage] saveExpenses failed:', err);
-  }
-}
-
-/**
- * Remove all expenses from localStorage.
- */
-export function clearExpenses() {
-  localStorage.removeItem(STORAGE_KEY);
-}
+export const { 
+  load: loadExpenses, 
+  save: saveExpenses, 
+  clear: clearExpenses 
+} = makeStorageHelpers(STORAGE_KEY, 'expenseStorage');
 
 // ── Factory helpers ────────────────────────────────────────────────────────
 

@@ -4,6 +4,7 @@ import { FieldError, FormLabel } from '../ui/FormField';
 import CategoryBudgetSelect from './CategoryBudgetSelect';
 import Button from '../ui/Button';
 import useBudget from '../../hooks/useBudget';
+import useFormState from '../../hooks/useFormState';
 
 // ── Month/year data ────────────────────────────────────────────────────────
 
@@ -51,24 +52,20 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
   const { budgets } = useBudget();
   const isEdit      = Boolean(initialValues);
 
-  const [values,  setValues]  = useState(() =>
-    initialValues ? valuesFromBudget(initialValues) : defaultBudgetValues()
+  const {
+    values,
+    errors,
+    setErrors,
+    touched,
+    setTouched,
+    handleChange,
+    handleBlur,
+    err,
+    inputClass,
+  } = useFormState(
+    initialValues ? valuesFromBudget(initialValues) : defaultBudgetValues(),
+    (v) => validateBudget(v, budgets, isEdit ? initialValues.id : null)
   );
-  const [errors,  setErrors]  = useState({});
-  const [touched, setTouched] = useState({});
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setValues(prev => ({ ...prev, [name]: value }));
-    setErrors(prev => prev[name] ? { ...prev, [name]: '' } : prev);
-  }, []);
-
-  const handleBlur = useCallback((e) => {
-    const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-  }, []);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
@@ -84,20 +81,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
       return;
     }
     onSubmit(values);
-  }, [values, budgets, isEdit, initialValues, onSubmit]);
-
-  // ── Field helpers ─────────────────────────────────────────────────────────
-
-  function err(name) {
-    return touched[name] ? errors[name] : '';
-  }
-
-  function inputClass(name) {
-    return [
-      'input h-10 text-sm',
-      err(name) ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20' : '',
-    ].filter(Boolean).join(' ');
-  }
+  }, [values, budgets, isEdit, initialValues, onSubmit, setTouched, setErrors]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 

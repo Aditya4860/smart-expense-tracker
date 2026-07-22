@@ -5,45 +5,15 @@
  * No React imports — usable outside the component tree.
  */
 
+import { makeStorageHelpers } from '../utils/storageUtils';
+
 const STORAGE_KEY = 'sxp_income_v1';
 
-// ── Core persistence ───────────────────────────────────────────────────────
-
-/**
- * Load all income records from localStorage.
- * Returns an empty array on error or when storage is empty.
- * @returns {object[]}
- */
-export function loadIncome() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Persist the full income array to localStorage.
- * Silently swallows quota errors (storage may be full).
- * @param {object[]} income
- */
-export function saveIncome(income) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(income));
-  } catch (err) {
-    console.error('[incomeStorage] saveIncome failed:', err);
-  }
-}
-
-/**
- * Remove all income records from localStorage.
- */
-export function clearIncome() {
-  localStorage.removeItem(STORAGE_KEY);
-}
+export const { 
+  load: loadIncome, 
+  save: saveIncome, 
+  clear: clearIncome 
+} = makeStorageHelpers(STORAGE_KEY, 'incomeStorage');
 
 // ── Factory helpers ────────────────────────────────────────────────────────
 
