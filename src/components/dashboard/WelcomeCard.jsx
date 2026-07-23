@@ -89,12 +89,20 @@ const WelcomeCard = memo(function WelcomeCard() {
   return (
     <div
       id="welcome-card"
-      className="relative overflow-hidden rounded-2xl bg-gradient-brand p-6 text-white shadow-glow-primary/50"
+      className="relative overflow-hidden rounded-[10px] bg-surface-950 p-6 text-white shadow-card-dark border border-surface-700"
     >
-      {/* Decorative circles */}
-      <div aria-hidden="true" className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/[0.06]" />
-      <div aria-hidden="true" className="absolute -right-4 -bottom-10 h-40 w-40 rounded-full bg-white/[0.04]" />
-      <div aria-hidden="true" className="absolute left-1/2 -top-8 h-32 w-32 rounded-full bg-white/[0.04]" />
+      {/* Subtle grid/wireframe background */}
+      <div 
+        aria-hidden="true" 
+        className="absolute inset-0 opacity-[0.15] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(to right, var(--tw-colors-surface-800) 1px, transparent 1px), linear-gradient(to bottom, var(--tw-colors-surface-800) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px'
+        }}
+      />
+      
+      {/* Glow effect */}
+      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-success-500/10 blur-[80px] pointer-events-none" />
 
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Text */}
@@ -147,14 +155,13 @@ const WelcomeCard = memo(function WelcomeCard() {
           </div>
         </div>
 
-        {/* Coin icon badge */}
+        {/* Illustration/Icon */}
         <div
-          className="flex-shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20"
+          className="flex-shrink-0 hidden md:flex h-20 w-20 items-center justify-center rounded-[12px] bg-surface-900 border border-surface-700 text-surface-400"
           aria-hidden="true"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-white/90">
-            <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 0 1-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004ZM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 0 1-.921.42Z" />
-            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v.816a3.836 3.836 0 0 0-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 0 1-.921-.421l-.879-.66a.75.75 0 0 0-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 0 0 1.5 0v-.81a4.124 4.124 0 0 0 1.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 0 0-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 0 0 .933-1.175l-.415-.33a3.836 3.836 0 0 0-1.719-.755V6Z" clipRule="evenodd" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-10 w-10">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
           </svg>
         </div>
       </div>

@@ -50,7 +50,7 @@ const BudgetTable = memo(function BudgetTable() {
   const { budgets } = useBudget();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-800">
+    <div className="overflow-hidden card">
 
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-surface-700/60 px-4 py-3">

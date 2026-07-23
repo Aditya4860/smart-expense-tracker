@@ -5,6 +5,8 @@ import { todayString } from '../../utils/formatters';
 import { FieldError, FormLabel } from '../ui/FormField';
 import CategorySelect from './CategorySelect';
 import Button from '../ui/Button';
+import DateSelect from '../ui/DateSelect';
+import Select from '../ui/Select';
 import useFormState from '../../hooks/useFormState';
 
 function valuesFromExpense(expense) {
@@ -69,102 +71,93 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
       className="flex flex-col h-full"
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {/* Title */}
-      <div>
-        <FormLabel htmlFor="ef-title" required>Title</FormLabel>
-        <input
-          id="ef-title"
-          name="title"
-          type="text"
-          value={values.title}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="e.g. Grocery shopping"
-          autoComplete="off"
-          aria-invalid={!!err('title')}
-          aria-describedby={err('title') ? 'ef-title-error' : undefined}
-          className={inputClass('title')}
-        />
-        <FieldError id="ef-title-error" message={err('title')} />
-      </div>
+        {/* Main Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          {/* Title */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <FormLabel htmlFor="ef-title" required>Title</FormLabel>
+            <input
+              id="ef-title"
+              name="title"
+              type="text"
+              value={values.title}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g. Grocery shopping"
+              autoComplete="off"
+              aria-invalid={!!err('title')}
+              aria-describedby={err('title') ? 'ef-title-error' : undefined}
+              className={inputClass('title')}
+            />
+            <FieldError id="ef-title-error" message={err('title')} />
+          </div>
 
-      {/* Amount + Date */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <FormLabel htmlFor="ef-amount" required>Amount (₹)</FormLabel>
-          <input
-            id="ef-amount"
-            name="amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={values.amount}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="0.00"
-            aria-invalid={!!err('amount')}
-            aria-describedby={err('amount') ? 'ef-amount-error' : undefined}
-            className={inputClass('amount')}
-          />
-          <FieldError id="ef-amount-error" message={err('amount')} />
+          {/* Amount */}
+          <div>
+            <FormLabel htmlFor="ef-amount" required>Amount (₹)</FormLabel>
+            <input
+              id="ef-amount"
+              name="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={values.amount}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              aria-invalid={!!err('amount')}
+              aria-describedby={err('amount') ? 'ef-amount-error' : undefined}
+              className={inputClass('amount')}
+            />
+            <FieldError id="ef-amount-error" message={err('amount')} />
+          </div>
+
+          {/* Date */}
+          <div>
+            <FormLabel htmlFor="ef-date" required>Date</FormLabel>
+            <DateSelect
+              id="ef-date"
+              name="date"
+              value={values.date}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              max={todayString()}
+              error={err('date')}
+            />
+            <FieldError id="ef-date-error" message={err('date')} />
+          </div>
+
+          {/* Category */}
+          <div>
+            <FormLabel htmlFor="ef-category" required>Category</FormLabel>
+            <CategorySelect
+              id="ef-category"
+              value={values.category}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('category')}
+            />
+            <FieldError id="ef-category-error" message={err('category')} />
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <FormLabel htmlFor="ef-paymentMethod" required>Payment Method</FormLabel>
+            <Select
+              id="ef-paymentMethod"
+              name="paymentMethod"
+              value={values.paymentMethod}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('paymentMethod')}
+              options={[
+                { value: '', label: 'Select method' },
+                ...PAYMENT_METHODS.map(p => ({ value: p.id, label: p.label }))
+              ]}
+            />
+            <FieldError id="ef-paymentMethod-error" message={err('paymentMethod')} />
+          </div>
         </div>
-
-        <div>
-          <FormLabel htmlFor="ef-date" required>Date</FormLabel>
-          <input
-            id="ef-date"
-            name="date"
-            type="date"
-            value={values.date}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            max={todayString()}
-            aria-invalid={!!err('date')}
-            aria-describedby={err('date') ? 'ef-date-error' : undefined}
-            className={inputClass('date')}
-          />
-          <FieldError id="ef-date-error" message={err('date')} />
-        </div>
-      </div>
-
-      {/* Category */}
-      <div>
-        <FormLabel htmlFor="ef-category" required>Category</FormLabel>
-        <CategorySelect
-          id="ef-category"
-          value={values.category}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={err('category')}
-        />
-        <FieldError id="ef-category-error" message={err('category')} />
-      </div>
-
-      {/* Payment Method */}
-      <div>
-        <FormLabel htmlFor="ef-paymentMethod" required>Payment Method</FormLabel>
-        <select
-          id="ef-paymentMethod"
-          name="paymentMethod"
-          value={values.paymentMethod}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          aria-invalid={!!err('paymentMethod')}
-          aria-describedby={err('paymentMethod') ? 'ef-paymentMethod-error' : undefined}
-          className={[
-            'input h-10 text-sm',
-            err('paymentMethod')
-              ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20'
-              : '',
-          ].filter(Boolean).join(' ')}
-        >
-          <option value="">Select payment method</option>
-          {PAYMENT_METHODS.map(p => (
-            <option key={p.id} value={p.id}>{p.label}</option>
-          ))}
-        </select>
-        <FieldError id="ef-paymentMethod-error" message={err('paymentMethod')} />
-      </div>
 
       {/* Notes */}
       <div>
@@ -189,7 +182,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import useIncome from '../../hooks/useIncome';
 import { SORT_OPTIONS } from '../../constants/sortOptions';
 import EmptyState from '../ui/EmptyState';
+import Select from '../ui/Select';
 import IncomeRow from './IncomeRow';
 
 // ── Empty-state SVG icons ──────────────────────────────────────────────────
@@ -42,7 +43,7 @@ const IncomeTable = memo(function IncomeTable() {
   const { income, processedIncome, sortOrder, setSortOrder } = useIncome();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-800">
+    <div className="overflow-hidden card">
 
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-surface-700/60 px-4 py-3">
@@ -60,18 +61,14 @@ const IncomeTable = memo(function IncomeTable() {
           )}
         </p>
 
-        <select
+        <Select
           id="income-sort"
+          name="sortOrder"
           value={sortOrder}
           onChange={e => setSortOrder(e.target.value)}
-          aria-label="Sort income records"
-          disabled={income.length === 0}
-          className="input h-8 min-w-[140px] px-2 py-0 text-xs disabled:opacity-40"
-        >
-          {SORT_OPTIONS.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          options={SORT_OPTIONS}
+          className="h-8 min-w-[140px]"
+        />
       </div>
 
       {/* Content */}

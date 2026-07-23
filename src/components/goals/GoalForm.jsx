@@ -3,9 +3,9 @@ import { validateGoalForm } from '../../utils/goalValidation';
 import { FieldError, FormLabel } from '../ui/FormField';
 import Button from '../ui/Button';
 import CurrencyInput from '../ui/CurrencyInput';
+import DateSelect from '../ui/DateSelect';
+import Select from '../ui/Select';
 import useFormState from '../../hooks/useFormState';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 
 const PRIORITIES = [
   { value: 'high', label: 'High' },
@@ -61,131 +61,110 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
     onSubmit(values);
   }, [values, onSubmit, setTouched, setErrors]);
 
-  const handleDateChange = useCallback((date) => {
-    const dateString = date ? date.toLocaleDateString('en-CA') : '';
-    handleChange({ target: { name: 'targetDate', value: dateString } });
-  }, [handleChange]);
-
-  const handleDateBlur = useCallback(() => {
-    handleBlur({ target: { name: 'targetDate' } });
-  }, [handleBlur]);
-
-  const selectedDate = values.targetDate ? new Date(values.targetDate + 'T00:00:00') : null;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full" id="goal-form">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      {/* Title */}
-      <div>
-        <FormLabel htmlFor="gf-title" required>Goal Name</FormLabel>
-        <input
-          id="gf-title" name="title" type="text"
-          value={values.title} onChange={handleChange} onBlur={handleBlur}
-          className={inputClass('title')} placeholder="e.g. New Car"
-        />
-        <FieldError id="gf-title-error" message={err('title')} />
-      </div>
-      
-      {/* Description */}
-      <div>
-        <FormLabel htmlFor="gf-description">Description</FormLabel>
-        <input
-          id="gf-description" name="description" type="text"
-          value={values.description} onChange={handleChange} onBlur={handleBlur}
-          className={inputClass('description')} placeholder="Optional details..."
-        />
-        <FieldError id="gf-desc-error" message={err('description')} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Target Amount */}
-        <div>
-          <FormLabel htmlFor="gf-target" required>Target Amount (₹)</FormLabel>
-          <CurrencyInput
-            id="gf-target" name="targetAmount"
-            value={values.targetAmount} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('targetAmount')}
-            aria-invalid={!!err('targetAmount')}
-            aria-describedby={err('targetAmount') ? 'gf-target-error' : undefined}
-          />
-          <FieldError id="gf-target-error" message={err('targetAmount')} />
-        </div>
-
-        {/* Current Amount */}
-        <div>
-          <FormLabel htmlFor="gf-current">Current Saved (₹)</FormLabel>
-          <CurrencyInput
-            id="gf-current" name="currentAmount"
-            value={values.currentAmount} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('currentAmount')}
-            aria-invalid={!!err('currentAmount')}
-            aria-describedby={err('currentAmount') ? 'gf-current-error' : undefined}
-          />
-          <FieldError id="gf-current-error" message={err('currentAmount')} />
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Monthly Contribution */}
-        <div>
-          <FormLabel htmlFor="gf-monthly" required>Monthly Contribution (₹)</FormLabel>
-          <CurrencyInput
-            id="gf-monthly" name="monthlyContribution"
-            value={values.monthlyContribution} onChange={handleChange} onBlur={handleBlur}
-            className={inputClass('monthlyContribution')}
-            aria-invalid={!!err('monthlyContribution')}
-            aria-describedby={err('monthlyContribution') ? 'gf-monthly-error' : undefined}
-          />
-          <FieldError id="gf-monthly-error" message={err('monthlyContribution')} />
-        </div>
-
-        {/* Target Date */}
-        <div>
-          <FormLabel htmlFor="gf-date" required>Target Date</FormLabel>
-          <div className="relative">
-              <DatePicker
-                id="gf-date"
-                name="targetDate"
-                selected={selectedDate}
-                onChange={handleDateChange}
-                onBlur={handleDateBlur}
-                className={inputClass('targetDate', 'input h-10 w-full pl-10 text-sm')}
-                placeholderText="Select a target date"
-                dateFormat="dd MMM yyyy"
-                minDate={new Date()}
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-              />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-400" aria-hidden="true">
-                <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
-              </svg>
-            </div>
+        {/* Main Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Title */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <FormLabel htmlFor="gf-title" required>Goal Name</FormLabel>
+            <input
+              id="gf-title" name="title" type="text"
+              value={values.title} onChange={handleChange} onBlur={handleBlur}
+              className={inputClass('title')} placeholder="e.g. New Car"
+            />
+            <FieldError id="gf-title-error" message={err('title')} />
           </div>
-          <FieldError id="gf-date-error" message={err('targetDate')} />
+
+          {/* Target Amount */}
+          <div>
+            <FormLabel htmlFor="gf-target" required>Target Amount (₹)</FormLabel>
+            <CurrencyInput
+              id="gf-target" name="targetAmount"
+              value={values.targetAmount} onChange={handleChange} onBlur={handleBlur}
+              className={inputClass('targetAmount')}
+              aria-invalid={!!err('targetAmount')}
+              aria-describedby={err('targetAmount') ? 'gf-target-error' : undefined}
+            />
+            <FieldError id="gf-target-error" message={err('targetAmount')} />
+          </div>
+
+          {/* Current Amount */}
+          <div>
+            <FormLabel htmlFor="gf-current">Current Saved (₹)</FormLabel>
+            <CurrencyInput
+              id="gf-current" name="currentAmount"
+              value={values.currentAmount} onChange={handleChange} onBlur={handleBlur}
+              className={inputClass('currentAmount')}
+              aria-invalid={!!err('currentAmount')}
+              aria-describedby={err('currentAmount') ? 'gf-current-error' : undefined}
+            />
+            <FieldError id="gf-current-error" message={err('currentAmount')} />
+          </div>
+
+          {/* Monthly Contribution */}
+          <div>
+            <FormLabel htmlFor="gf-monthly" required>Monthly Contribution (₹)</FormLabel>
+            <CurrencyInput
+              id="gf-monthly" name="monthlyContribution"
+              value={values.monthlyContribution} onChange={handleChange} onBlur={handleBlur}
+              className={inputClass('monthlyContribution')}
+              aria-invalid={!!err('monthlyContribution')}
+              aria-describedby={err('monthlyContribution') ? 'gf-monthly-error' : undefined}
+            />
+            <FieldError id="gf-monthly-error" message={err('monthlyContribution')} />
+          </div>
+
+          {/* Target Date */}
+          <div>
+            <FormLabel htmlFor="gf-date" required>Target Date</FormLabel>
+            <DateSelect
+              id="gf-date"
+              name="targetDate"
+              value={values.targetDate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              min={todayString()}
+              error={err('targetDate')}
+            />
+            <FieldError id="gf-date-error" message={err('targetDate')} />
+          </div>
+
+          {/* Priority */}
+          <div>
+            <FormLabel htmlFor="gf-priority">Priority</FormLabel>
+            <Select
+              id="gf-priority"
+              name="priority"
+              value={values.priority}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('priority')}
+              options={PRIORITIES.map(p => ({ value: p.value, label: p.label }))}
+            />
+            <FieldError id="gf-priority-error" message={err('priority')} />
+          </div>
+        </div>
+
+        {/* Description */}
+        <div>
+          <FormLabel htmlFor="gf-description">Description</FormLabel>
+          <input
+            id="gf-description" name="description" type="text"
+            value={values.description} onChange={handleChange} onBlur={handleBlur}
+            className={inputClass('description')} placeholder="Optional details..."
+          />
+          <FieldError id="gf-desc-error" message={err('description')} />
         </div>
       </div>
-
-      {/* Priority */}
-      <div>
-        <FormLabel htmlFor="gf-priority">Priority</FormLabel>
-        <select
-          id="gf-priority" name="priority"
-          value={values.priority} onChange={handleChange} onBlur={handleBlur}
-          className={inputClass('priority')}
-        >
-          {PRIORITIES.map(p => (
-            <option key={p.value} value={p.value}>{p.label}</option>
-          ))}
-        </select>
-        <FieldError id="gf-priority-error" message={err('priority')} />
-      </div>
-
-      </div>
       
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
-        <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+      {/* Footer */}
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
         <Button type="submit" variant="primary" loading={loading}>
           {isEdit ? 'Save Changes' : 'Create Goal'}
         </Button>

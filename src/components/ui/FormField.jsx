@@ -38,10 +38,10 @@ export function FieldError({ id, message }) {
  */
 export function FormLabel({ htmlFor, children, required, optional }) {
   return (
-    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-slate-300">
+    <label htmlFor={htmlFor} className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-slate-400">
       {children}
       {required && <span className="ml-0.5 text-danger-400" aria-hidden="true">*</span>}
-      {optional && <span className="ml-1 text-xs font-normal text-slate-500">(optional)</span>}
+      {optional && <span className="ml-1 text-[10px] font-normal text-slate-500 normal-case">(optional)</span>}
     </label>
   );
 }

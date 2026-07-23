@@ -113,10 +113,10 @@ const SummaryCards = memo(function SummaryCards() {
         sub:      netBalance >= 0 ? 'Surplus this period' : 'Deficit this period',
         positive: netBalance >= 0,
         progress: Math.max(0, Math.min(100, savingsRate)),
-        barCls:   'bg-gradient-brand',
+        barCls:   'bg-white',
         icon:     ICONS.balance,
-        iconBg:   'bg-primary-500/15',
-        iconText: 'text-primary-400',
+        iconBg:   'bg-slate-500/15',
+        iconText: 'text-white',
         valueCls: netBalance >= 0 ? 'text-white' : 'text-danger-400',
       },
       {
@@ -160,11 +160,11 @@ const SummaryCards = memo(function SummaryCards() {
           : 'Over budget',
         positive: savingsRate >= 20,
         progress: Math.max(0, savingsRate),
-        barCls:   'bg-accent-500',
+        barCls:   'bg-primary-500',
         icon:     ICONS.savings,
-        iconBg:   'bg-accent-500/15',
-        iconText: 'text-accent-400',
-        valueCls: 'text-accent-400',
+        iconBg:   'bg-primary-500/15',
+        iconText: 'text-primary-400',
+        valueCls: 'text-primary-400',
       },
       {
         id:       'sc-budget-remain',
@@ -245,25 +245,25 @@ const SummaryCards = memo(function SummaryCards() {
   ]);
 
   return (
-    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+    <section aria-label="Financial summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {cards.map(card => (
         <Card
           key={card.id}
           id={card.id}
-          padding="md"
+          padding="lg"
           hover
           className="flex flex-col justify-between"
         >
           {/* Label + icon */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-widest text-surface-400">
                 {card.label}
               </p>
-              <p className={`mt-2.5 text-2xl font-bold tracking-tight tabular-nums ${card.valueCls}`}>
+              <p className={`mt-2 font-mono text-[28px] font-medium tracking-tight ${card.valueCls}`}>
                 {card.value}
               </p>
-              <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${card.positive ? 'text-success-400' : 'text-danger-400'}`}>
+              <div className={`mt-1 flex items-center gap-1 text-[13px] font-medium ${card.positive ? 'text-success-500' : 'text-danger-500'}`}>
                 <TrendArrow positive={card.positive} />
                 {card.sub}
               </div>
@@ -274,14 +274,14 @@ const SummaryCards = memo(function SummaryCards() {
           </div>
 
           {/* Progress bar */}
-          <div className="mt-4" aria-hidden="true">
-            <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700">
+          <div className="mt-5" aria-hidden="true">
+            <div className="h-1 w-full overflow-hidden rounded-full bg-surface-700/50">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${card.barCls}`}
+                className={`h-full rounded-full transition-all duration-700 shadow-sm ${card.barCls}`}
                 style={{ width: `${card.progress}%` }}
               />
             </div>
-            <p className="mt-1 text-right text-[10px] text-slate-600">{card.progress}%</p>
+            <p className="mt-1.5 text-right font-mono text-[10px] text-surface-500">{card.progress}%</p>
           </div>
         </Card>
       ))}

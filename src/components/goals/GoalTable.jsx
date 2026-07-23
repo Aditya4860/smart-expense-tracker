@@ -111,7 +111,7 @@ const GoalTable = memo(function GoalTable({ onEdit, onDelete, onClickRow }) {
   const { goals } = useGoals();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-800">
+    <div className="overflow-hidden card">
       <div className="flex items-center justify-between border-b border-surface-700/60 px-4 py-3">
         <p className="text-sm text-slate-400">
           {goals.length === 0 ? (

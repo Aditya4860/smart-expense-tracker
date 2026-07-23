@@ -3,6 +3,7 @@ import { validateBudget, defaultBudgetValues } from '../../utils/budgetValidatio
 import { FieldError, FormLabel } from '../ui/FormField';
 import CategoryBudgetSelect from './CategoryBudgetSelect';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import useBudget from '../../hooks/useBudget';
 import useFormState from '../../hooks/useFormState';
 
@@ -93,84 +94,76 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
       className="flex flex-col h-full"
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {/* Category */}
-      <div>
-        <FormLabel htmlFor="bf-category" required>Category</FormLabel>
-        <CategoryBudgetSelect
-          id="bf-category"
-          value={values.category}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={err('category')}
-        />
-        <FieldError id="bf-category-error" message={err('category')} />
-      </div>
+        {/* Main Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Category */}
+          <div>
+            <FormLabel htmlFor="bf-category" required>Category</FormLabel>
+            <CategoryBudgetSelect
+              id="bf-category"
+              value={values.category}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('category')}
+            />
+            <FieldError id="bf-category-error" message={err('category')} />
+          </div>
 
-      {/* Monthly Limit */}
-      <div>
-        <FormLabel htmlFor="bf-monthlyLimit" required>Monthly Limit (₹)</FormLabel>
-        <input
-          id="bf-monthlyLimit"
-          name="monthlyLimit"
-          type="number"
-          min="0.01"
-          step="0.01"
-          value={values.monthlyLimit}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="0.00"
-          aria-invalid={!!err('monthlyLimit')}
-          aria-describedby={err('monthlyLimit') ? 'bf-monthlyLimit-error' : undefined}
-          className={inputClass('monthlyLimit')}
-        />
-        <FieldError id="bf-monthlyLimit-error" message={err('monthlyLimit')} />
-      </div>
+          {/* Monthly Limit */}
+          <div>
+            <FormLabel htmlFor="bf-monthlyLimit" required>Monthly Limit (₹)</FormLabel>
+            <input
+              id="bf-monthlyLimit"
+              name="monthlyLimit"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={values.monthlyLimit}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              aria-invalid={!!err('monthlyLimit')}
+              aria-describedby={err('monthlyLimit') ? 'bf-monthlyLimit-error' : undefined}
+              className={inputClass('monthlyLimit')}
+            />
+            <FieldError id="bf-monthlyLimit-error" message={err('monthlyLimit')} />
+          </div>
 
-      {/* Month + Year */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <FormLabel htmlFor="bf-month" required>Month</FormLabel>
-          <select
-            id="bf-month"
-            name="month"
-            value={values.month}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={!!err('month')}
-            aria-describedby={err('month') ? 'bf-month-error' : undefined}
-            className={inputClass('month')}
-          >
-            {MONTHS.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-          <FieldError id="bf-month-error" message={err('month')} />
+          {/* Month */}
+          <div>
+            <FormLabel htmlFor="bf-month" required>Month</FormLabel>
+            <Select
+              id="bf-month"
+              name="month"
+              value={values.month}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('month')}
+              options={MONTHS.map(m => ({ value: m.value, label: m.label }))}
+            />
+            <FieldError id="bf-month-error" message={err('month')} />
+          </div>
+
+          {/* Year */}
+          <div>
+            <FormLabel htmlFor="bf-year" required>Year</FormLabel>
+            <Select
+              id="bf-year"
+              name="year"
+              value={values.year}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('year')}
+              options={YEARS.map(y => ({ value: y, label: String(y) }))}
+            />
+            <FieldError id="bf-year-error" message={err('year')} />
+          </div>
         </div>
-
-        <div>
-          <FormLabel htmlFor="bf-year" required>Year</FormLabel>
-          <select
-            id="bf-year"
-            name="year"
-            value={values.year}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={!!err('year')}
-            aria-describedby={err('year') ? 'bf-year-error' : undefined}
-            className={inputClass('year')}
-          >
-            {YEARS.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <FieldError id="bf-year-error" message={err('year')} />
-        </div>
-      </div>
 
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

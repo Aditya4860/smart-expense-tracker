@@ -10,17 +10,17 @@ export default {
       colors: {
         // Brand palette
         primary: {
-          50:  '#f0f4ff',
-          100: '#e0e9ff',
-          200: '#c7d6fe',
-          300: '#a5b8fc',
-          400: '#8193f8',
-          500: '#6370f1',
-          600: '#4f4ee6',
-          700: '#423fcb',
-          800: '#3735a4',
-          900: '#302f81',
-          950: '#1e1d4c',
+          50:  '#e6f4ea',
+          100: '#cce9d5',
+          200: '#99d3ab',
+          300: '#66be81',
+          400: '#33a856',
+          500: '#009246', // Italian Green
+          600: '#007a3b',
+          700: '#00612f',
+          800: '#004923',
+          900: '#003017',
+          950: '#00180b',
         },
         accent: {
           50:  '#f5f3ff',
@@ -35,43 +35,45 @@ export default {
           900: '#4c1d95',
           950: '#2e1065',
         },
+        // Accent colors (Standard Tailwind colors)
         success: {
-          50:  '#ecfdf5',
-          100: '#d1fae5',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
+          400: '#4ade80',
+          500: '#22c55e', // Requested green
+          600: '#16a34a',
         },
         danger: {
-          50:  '#fff1f2',
-          100: '#ffe4e6',
-          400: '#fb7185',
-          500: '#f43f5e',
-          600: '#e11d48',
-          700: '#be123c',
+          400: '#f87171',
+          500: '#ef4444', // Requested red
+          600: '#dc2626',
         },
         warning: {
-          50:  '#fffbeb',
-          100: '#fef3c7',
           400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
+          500: '#facc15', // Requested yellow
+          600: '#eab308',
         },
-        // Surface colors for dark mode
+        info: {
+          400: '#60a5fa',
+          500: '#3b82f6', // Requested blue
+          600: '#2563eb',
+        },
+        // Surface colors for the new theme
         surface: {
-          50:  '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          700: '#1e2535',
-          800: '#151c2c',
-          900: '#0f1623',
-          950: '#090d17',
+          50:  '#F3F4F6', // Light background
+          100: '#E5E7EB',
+          200: '#D1D5DB',
+          300: '#9CA3AF',
+          400: '#A1A1AA', // Secondary Text
+          500: '#6B7280', // Muted Text
+          600: '#374151',
+          700: '#242B36', // Borders
+          800: '#11151D', // Cards
+          900: '#0E1118', // Secondary Background
+          950: '#07090D', // Background
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        mono: ['IBM Plex Mono', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
@@ -82,21 +84,21 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        'glow-primary': '0 0 20px rgba(99, 112, 241, 0.35)',
+        'glow-primary': '0 0 20px rgba(0, 146, 70, 0.35)',
         'glow-accent':  '0 0 20px rgba(139, 92, 246, 0.35)',
-        'glow-success': '0 0 20px rgba(16, 185, 129, 0.35)',
-        'glow-danger':  '0 0 20px rgba(244, 63, 94, 0.35)',
+        'glow-success': '0 0 20px rgba(0, 146, 70, 0.35)',
+        'glow-danger':  '0 0 20px rgba(206, 43, 55, 0.35)',
         'card':         '0 4px 24px rgba(0, 0, 0, 0.08)',
         'card-dark':    '0 4px 24px rgba(0, 0, 0, 0.4)',
         'float':        '0 8px 32px rgba(0, 0, 0, 0.12)',
       },
       backgroundImage: {
-        'gradient-brand':    'linear-gradient(135deg, #6370f1 0%, #8b5cf6 100%)',
-        'gradient-success':  'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-        'gradient-danger':   'linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)',
+        'gradient-brand':    'linear-gradient(135deg, #009246 0%, #33a856 100%)',
+        'gradient-success':  'linear-gradient(135deg, #009246 0%, #33a856 100%)',
+        'gradient-danger':   'linear-gradient(135deg, #ce2b37 0%, #e56f6a 100%)',
         'gradient-warning':  'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
-        'gradient-dark':     'linear-gradient(135deg, #1e2535 0%, #151c2c 100%)',
-        'gradient-surface':  'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+        'gradient-dark':     'linear-gradient(135deg, #11151F 0%, #161C29 100%)',
+        'gradient-surface':  'linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%)',
       },
       animation: {
         'fade-in':       'fadeIn 0.3s ease-in-out',

@@ -72,11 +72,11 @@ export default function Modal({ isOpen, onClose, title, titleId = 'modal-title',
         ref={panelRef}
         className={[
           'relative z-10 w-full bg-surface-900',
-          'border border-surface-700/60',
-          'rounded-t-3xl sm:rounded-2xl',
+          'border border-surface-700',
+          'rounded-t-[10px] sm:rounded-[10px]',
           'shadow-2xl shadow-black/50',
-          'sm:max-w-lg',
-          'max-h-[92dvh] flex flex-col',
+          'sm:max-w-[900px]',
+          'max-h-[92dvh] flex flex-col w-[95vw]',
         ].join(' ')}
       >
         {/* Mobile drag handle */}
@@ -95,9 +95,9 @@ export default function Modal({ isOpen, onClose, title, titleId = 'modal-title',
             type="button"
             onClick={onClose}
             className={[
-              'flex h-8 w-8 items-center justify-center rounded-lg',
-              'text-slate-500 transition-colors',
-              'hover:bg-white/5 hover:text-white',
+              'flex h-8 w-8 items-center justify-center rounded-[8px]',
+              'text-surface-400 transition-colors',
+              'hover:bg-surface-800 hover:text-white',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
             ].join(' ')}
             aria-label="Close modal"

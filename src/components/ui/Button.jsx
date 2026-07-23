@@ -9,11 +9,11 @@ const SIZE_CLASSES = {
 };
 
 const VARIANT_CLASSES = {
-  primary:   'bg-gradient-brand text-white shadow-glow-primary hover:shadow-glow-accent hover:scale-[1.02] active:scale-[0.98]',
-  secondary: 'border border-surface-700 bg-surface-800 text-slate-300 hover:border-primary-500/50 hover:bg-surface-700 hover:text-white',
+  primary:   'bg-primary-500 text-white shadow-glow-primary hover:shadow-glow-primary hover:scale-[1.02] active:scale-[0.98]',
+  secondary: 'border-[1.5px] border-surface-700 bg-surface-800 text-slate-300 hover:border-primary-500/50 hover:bg-surface-700 hover:text-white',
   ghost:     'text-slate-400 hover:bg-white/5 hover:text-white',
-  danger:    'bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800',
-  success:   'bg-success-600 text-white hover:bg-success-700 active:bg-success-800',
+  danger:    'bg-danger-600 text-white hover:shadow-glow-danger hover:scale-[1.02] active:scale-[0.98]',
+  success:   'bg-success-600 text-white hover:shadow-glow-success hover:scale-[1.02] active:scale-[0.98]',
 };
 
 /**
@@ -38,7 +38,7 @@ const Button = memo(function Button({
   ...rest
 }) {
   const base = [
-    'inline-flex items-center justify-center rounded-xl font-medium',
+    'inline-flex items-center justify-center rounded-[8px] font-medium',
     'transition-all duration-200',
     'disabled:cursor-not-allowed disabled:opacity-50',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-900',

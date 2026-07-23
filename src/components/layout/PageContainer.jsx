@@ -8,9 +8,9 @@ export default function PageContainer({ children }) {
   return (
     <main
       id="page-container"
-      className="flex-1 overflow-y-auto px-4 py-6 md:px-6 lg:px-8 bg-surface-950"
+      className="flex-1 px-4 py-6 md:px-8 lg:px-10 bg-surface-950"
     >
-      <div className="mx-auto max-w-7xl animate-fade-up">
+      <div className="mx-auto w-full max-w-[1600px] animate-fade-up">
         {children}
       </div>
     </main>

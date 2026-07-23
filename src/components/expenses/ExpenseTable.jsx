@@ -2,6 +2,7 @@ import { memo } from 'react';
 import useExpenses from '../../hooks/useExpenses';
 import { SORT_OPTIONS } from '../../constants/sortOptions';
 import EmptyState from '../ui/EmptyState';
+import Select from '../ui/Select';
 import ExpenseRow from './ExpenseRow';
 
 // ── Empty-state SVG icons ──────────────────────────────────────────────────
@@ -40,7 +41,7 @@ const ExpenseTable = memo(function ExpenseTable() {
   const { expenses, processedExpenses, sortOrder, setSortOrder } = useExpenses();
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-800">
+    <div className="overflow-hidden card">
 
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-surface-700/60 px-4 py-3">
@@ -58,18 +59,14 @@ const ExpenseTable = memo(function ExpenseTable() {
           )}
         </p>
 
-        <select
+        <Select
           id="expense-sort"
+          name="sortOrder"
           value={sortOrder}
           onChange={e => setSortOrder(e.target.value)}
-          aria-label="Sort expenses"
-          disabled={expenses.length === 0}
-          className="input h-8 min-w-[140px] px-2 py-0 text-xs disabled:opacity-40"
-        >
-          {SORT_OPTIONS.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+          options={SORT_OPTIONS}
+          className="h-8 min-w-[140px]"
+        />
       </div>
 
       {/* Content */}

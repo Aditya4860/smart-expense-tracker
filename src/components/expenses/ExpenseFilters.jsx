@@ -1,6 +1,8 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { CATEGORIES, PAYMENT_METHODS } from '../../constants/expenseCategories';
 import useExpenses from '../../hooks/useExpenses';
+import DateSelect from '../ui/DateSelect';
+import Select from '../ui/Select';
 
 // ── Label helper ───────────────────────────────────────────────────────────
 
@@ -69,60 +71,56 @@ const ExpenseFilters = memo(function ExpenseFilters({ onClose }) {
         {/* Category */}
         <div>
           <FilterLabel htmlFor="filter-category">Category</FilterLabel>
-          <select
+          <Select
             id="filter-category"
-            value={filters.category}
+            name="category"
+            value={filters.category || ''}
             onChange={handle('category')}
-            className="input h-9 text-sm"
-          >
-            <option value="">All categories</option>
-            {CATEGORIES.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.icon}  {c.name}
-              </option>
-            ))}
-          </select>
+            options={useMemo(() => [
+              { value: '', label: 'All categories' },
+              ...CATEGORIES.map(c => ({ value: c.id, label: `${c.icon}  ${c.name}` }))
+            ], [])}
+            className="h-9"
+          />
         </div>
 
         {/* Payment Method */}
         <div>
           <FilterLabel htmlFor="filter-payment">Payment Method</FilterLabel>
-          <select
+          <Select
             id="filter-payment"
-            value={filters.paymentMethod}
+            name="paymentMethod"
+            value={filters.paymentMethod || ''}
             onChange={handle('paymentMethod')}
-            className="input h-9 text-sm"
-          >
-            <option value="">All methods</option>
-            {PAYMENT_METHODS.map(p => (
-              <option key={p.id} value={p.id}>{p.label}</option>
-            ))}
-          </select>
+            options={useMemo(() => [
+              { value: '', label: 'All methods' },
+              ...PAYMENT_METHODS.map(p => ({ value: p.id, label: p.label }))
+            ], [])}
+            className="h-9"
+          />
         </div>
 
         {/* Date from */}
         <div>
           <FilterLabel htmlFor="filter-date-from">From date</FilterLabel>
-          <input
+          <DateSelect
             id="filter-date-from"
-            type="date"
+            name="dateFrom"
             value={filters.dateFrom}
             onChange={handle('dateFrom')}
             max={filters.dateTo || undefined}
-            className="input h-9 text-sm"
           />
         </div>
 
         {/* Date to */}
         <div>
           <FilterLabel htmlFor="filter-date-to">To date</FilterLabel>
-          <input
+          <DateSelect
             id="filter-date-to"
-            type="date"
+            name="dateTo"
             value={filters.dateTo}
             onChange={handle('dateTo')}
             min={filters.dateFrom || undefined}
-            className="input h-9 text-sm"
           />
         </div>
       </div>

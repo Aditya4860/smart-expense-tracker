@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { IncomeProvider } from './context/IncomeContext';
@@ -37,6 +38,7 @@ import Goals from './pages/Goals';
 function App() {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <TransactionProvider>
         <ExpenseProvider>
           <IncomeProvider>
@@ -70,6 +72,7 @@ function App() {
           </IncomeProvider>
         </ExpenseProvider>
       </TransactionProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

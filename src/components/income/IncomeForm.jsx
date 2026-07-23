@@ -4,6 +4,7 @@ import { todayString } from '../../utils/formatters';
 import { FieldError, FormLabel } from '../ui/FormField';
 import CategorySelect from './CategorySelect';
 import Button from '../ui/Button';
+import DateSelect from '../ui/DateSelect';
 import useFormState from '../../hooks/useFormState';
 
 function valuesFromIncome(record) {
@@ -68,95 +69,94 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
       className="flex flex-col h-full"
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {/* Title */}
-      <div>
-        <FormLabel htmlFor="if-title" required>Title</FormLabel>
-        <input
-          id="if-title"
-          name="title"
-          type="text"
-          value={values.title}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="e.g. Monthly salary"
-          autoComplete="off"
-          aria-invalid={!!err('title')}
-          aria-describedby={err('title') ? 'if-title-error' : undefined}
-          className={inputClass('title')}
-        />
-        <FieldError id="if-title-error" message={err('title')} />
-      </div>
+        {/* Main Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          {/* Title */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <FormLabel htmlFor="if-title" required>Title</FormLabel>
+            <input
+              id="if-title"
+              name="title"
+              type="text"
+              value={values.title}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g. Monthly salary"
+              autoComplete="off"
+              aria-invalid={!!err('title')}
+              aria-describedby={err('title') ? 'if-title-error' : undefined}
+              className={inputClass('title')}
+            />
+            <FieldError id="if-title-error" message={err('title')} />
+          </div>
 
-      {/* Amount + Date */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <FormLabel htmlFor="if-amount" required>Amount (₹)</FormLabel>
-          <input
-            id="if-amount"
-            name="amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={values.amount}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            placeholder="0.00"
-            aria-invalid={!!err('amount')}
-            aria-describedby={err('amount') ? 'if-amount-error' : undefined}
-            className={inputClass('amount')}
-          />
-          <FieldError id="if-amount-error" message={err('amount')} />
+          {/* Amount */}
+          <div>
+            <FormLabel htmlFor="if-amount" required>Amount (₹)</FormLabel>
+            <input
+              id="if-amount"
+              name="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={values.amount}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="0.00"
+              aria-invalid={!!err('amount')}
+              aria-describedby={err('amount') ? 'if-amount-error' : undefined}
+              className={inputClass('amount')}
+            />
+            <FieldError id="if-amount-error" message={err('amount')} />
+          </div>
+
+          {/* Date */}
+          <div>
+            <FormLabel htmlFor="if-date" required>Date</FormLabel>
+            <DateSelect
+              id="if-date"
+              name="date"
+              value={values.date}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              max={todayString()}
+              error={err('date')}
+            />
+            <FieldError id="if-date-error" message={err('date')} />
+          </div>
+
+          {/* Category */}
+          <div>
+            <FormLabel htmlFor="if-category" required>Category</FormLabel>
+            <CategorySelect
+              id="if-category"
+              value={values.category}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={err('category')}
+            />
+            <FieldError id="if-category-error" message={err('category')} />
+          </div>
+
+          {/* Source */}
+          <div>
+            <FormLabel htmlFor="if-source" optional>Source</FormLabel>
+            <input
+              id="if-source"
+              name="source"
+              type="text"
+              value={values.source}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g. Acme Corp..."
+              autoComplete="off"
+              aria-invalid={!!err('source')}
+              aria-describedby={err('source') ? 'if-source-error' : undefined}
+              className={inputClass('source')}
+            />
+            <FieldError id="if-source-error" message={err('source')} />
+          </div>
         </div>
-
-        <div>
-          <FormLabel htmlFor="if-date" required>Date</FormLabel>
-          <input
-            id="if-date"
-            name="date"
-            type="date"
-            value={values.date}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            max={todayString()}
-            aria-invalid={!!err('date')}
-            aria-describedby={err('date') ? 'if-date-error' : undefined}
-            className={inputClass('date')}
-          />
-          <FieldError id="if-date-error" message={err('date')} />
-        </div>
-      </div>
-
-      {/* Category */}
-      <div>
-        <FormLabel htmlFor="if-category" required>Category</FormLabel>
-        <CategorySelect
-          id="if-category"
-          value={values.category}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={err('category')}
-        />
-        <FieldError id="if-category-error" message={err('category')} />
-      </div>
-
-      {/* Source */}
-      <div>
-        <FormLabel htmlFor="if-source" optional>Source</FormLabel>
-        <input
-          id="if-source"
-          name="source"
-          type="text"
-          value={values.source}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          placeholder="e.g. Acme Corp, Client name…"
-          autoComplete="off"
-          aria-invalid={!!err('source')}
-          aria-describedby={err('source') ? 'if-source-error' : undefined}
-          className={inputClass('source')}
-        />
-        <FieldError id="if-source-error" message={err('source')} />
-      </div>
 
       {/* Notes */}
       <div>
@@ -181,7 +181,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

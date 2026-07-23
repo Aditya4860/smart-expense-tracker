@@ -1,5 +1,6 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { INCOME_CATEGORIES } from '../../constants/incomeCategories';
+import Select from '../ui/Select';
 
 /**
  * CategorySelect — styled income category <select>.
@@ -18,29 +19,24 @@ const CategorySelect = memo(function CategorySelect({
   onBlur,
   error,
 }) {
+  const options = useMemo(() => [
+    { value: '', label: 'Select a category' },
+    ...INCOME_CATEGORIES.map(cat => ({
+      value: cat.id,
+      label: `${cat.icon}  ${cat.name}`
+    }))
+  ], []);
+
   return (
-    <select
+    <Select
       id={id}
       name="category"
       value={value}
       onChange={onChange}
       onBlur={onBlur}
-      aria-invalid={!!error}
-      aria-describedby={error ? `${id}-error` : undefined}
-      className={[
-        'input h-10 text-sm',
-        error
-          ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/20'
-          : '',
-      ].filter(Boolean).join(' ')}
-    >
-      <option value="">Select a category</option>
-      {INCOME_CATEGORIES.map(cat => (
-        <option key={cat.id} value={cat.id}>
-          {cat.icon}  {cat.name}
-        </option>
-      ))}
-    </select>
+      error={error}
+      options={options}
+    />
   );
 });
 
