@@ -25,91 +25,297 @@ A production-quality full-stack expense tracking application built for software 
 
 ---
 
-## Getting Started
-
-### 1. Clone the repository
+# ⚡ Quick Start
 
 ```bash
-git clone https://github.com/your-username/expense-tracker.git
+git clone <repository-url>
 cd expense-tracker
+
+# Backend
+cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m uvicorn main:app --reload
 ```
 
-### 2. Install dependencies
+Open a new terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend:
+http://localhost:5173
+
+Backend:
+http://127.0.0.1:8000
+
+API Docs:
+http://127.0.0.1:8000/docs
+
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Make sure the following software is installed before running the project.
+
+### Frontend
+
+- Node.js 22.x or later
+- npm (comes with Node.js)
+
+### Backend
+
+- Python 3.12.x (recommended)
+- PostgreSQL 16+
+- Git
+
+> **Note:** Python 3.14 is currently not recommended because some dependencies (such as `asyncpg`) may have compatibility issues.
+
+---
+
+# 📁 Project Structure
+
+```
+expense-tracker/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── ...
+│
+├── backend/
+│   ├── app/
+│   ├── alembic/
+│   ├── tests/
+│   ├── requirements.txt
+│   ├── main.py
+│   └── ...
+│
+├── README.md
+└── .gitignore
+```
+
+---
+
+# ⚙️ Backend Setup
+
+## 1. Navigate to the backend
+
+```bash
+cd backend
+```
+
+## 2. Create a virtual environment
+
+```bash
+py -3.12 -m venv .venv
+```
+
+## 3. Activate the virtual environment
+
+### Windows
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### Linux/macOS
+
+```bash
+source .venv/bin/activate
+```
+
+---
+
+## 4. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 5. Configure environment variables
+
+Create a `.env` file inside the `backend` directory.
+
+Example:
+
+```env
+PROJECT_NAME=Smart Expense Tracker API
+
+SECRET_KEY=your-super-secret-key
+
+DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/expense_tracker
+
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+REFRESH_TOKEN_EXPIRE_MINUTES=10080
+
+ALGORITHM=HS256
+
+BACKEND_CORS_ORIGINS=["http://localhost:5173"]
+```
+
+---
+
+## 6. Run the backend
+
+```bash
+python -m uvicorn main:app --reload
+```
+
+Backend API
+
+```
+http://127.0.0.1:8000
+```
+
+Swagger Documentation
+
+```
+http://127.0.0.1:8000/docs
+```
+
+OpenAPI JSON
+
+```
+http://127.0.0.1:8000/openapi.json
+```
+
+---
+
+# 💻 Frontend Setup
+
+## 1. Navigate to frontend
+
+```bash
+cd frontend
+```
+
+## 2. Install packages
 
 ```bash
 npm install
 ```
 
-### 3. Start the development server
+## 3. Run the development server
 
 ```bash
 npm run dev
 ```
 
-The app will open at [http://localhost:3000](http://localhost:3000).
-
----
-
-## Available Scripts
-
-| Script | Description |
-|---|---|
-| `npm run dev` | Start development server on port 3000 |
-| `npm run build` | Build production bundle to `dist/` |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint across all source files |
-
----
-
-## Project Structure
+Frontend
 
 ```
-src/
-├── api/            # Axios instance + per-domain API modules
-├── assets/         # Static assets (icons, images)
-├── components/     # Shared reusable UI components
-├── constants/      # App-wide constant values
-├── context/        # React Context providers
-├── hooks/          # Custom React hooks
-├── layouts/        # Page layout shells (AppShell, Sidebar, Navbar)
-├── pages/          # Route-level page components
-├── services/       # Business logic layer (pure functions)
-├── styles/         # Global CSS (design tokens, animations)
-├── utils/          # Pure utility helpers
-├── App.jsx         # Root component with router
-└── main.jsx        # Application entry point
+http://localhost:5173
 ```
 
 ---
 
-## Phase Roadmap
+# 🗄 Database Setup
 
-| Phase | Status | Scope |
-|---|---|---|
-| 1 — Foundation | ✅ Complete | Scaffold, Tailwind, routing, layout |
-| 2 — Auth | 🔲 Planned | Login, Register, JWT, ProtectedRoute |
-| 3 — Expenses | 🔲 Planned | Expense CRUD, categories, filters |
-| 4 — Income | 🔲 Planned | Income CRUD |
-| 5 — Dashboard | 🔲 Planned | Summary cards, recent transactions |
-| 6 — Analytics | 🔲 Planned | Charts, trends, breakdowns |
-| 7 — Budget | 🔲 Planned | Budget goals, progress tracking |
-| 8 — AI Insights | 🔲 Planned | GPT-backed suggestions |
-| 9 — Reports | 🔲 Planned | PDF/CSV export |
-| 10 — Backend | 🔲 Planned | FastAPI, PostgreSQL, JWT |
-| 11 — Deployment | 🔲 Planned | Docker, CI/CD, cloud |
+Create a PostgreSQL database.
 
----
+Example
 
-## Environment Variables
+```sql
+CREATE DATABASE expense_tracker;
+```
 
-Create a `.env.local` file in the project root for environment-specific config:
+Update the `DATABASE_URL` inside `.env`.
 
-```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+Run database migrations.
+
+```bash
+alembic upgrade head
 ```
 
 ---
 
-## License
+# 🧪 Running Tests
 
-MIT
+Backend
+
+```bash
+pytest
+```
+
+Frontend
+
+```bash
+npm test
+```
+
+---
+
+# 🔧 Common Commands
+
+### Backend
+
+```bash
+python -m uvicorn main:app --reload
+```
+
+```bash
+alembic revision --autogenerate -m "Migration Name"
+```
+
+```bash
+alembic upgrade head
+```
+
+---
+
+### Frontend
+
+```bash
+npm run dev
+```
+
+```bash
+npm run build
+```
+
+```bash
+npm run preview
+```
+
+---
+
+# 🛠 Technology Stack
+
+## Frontend
+
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- React Router
+- Axios
+
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- AsyncPG
+- JWT Authentication
+- Pydantic
+
+---
+
+# 📌 Development Notes
+
+- Use **Python 3.12.x** for backend development.
+- Keep the virtual environment activated while working on the backend.
+- Do not commit `.env`, `.venv`, `node_modules`, or `dist`.
+- Use migrations for all database schema changes.
