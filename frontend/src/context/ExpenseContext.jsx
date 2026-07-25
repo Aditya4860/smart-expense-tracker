@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { useTransactionContext } from './TransactionContext';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { expenseApi } from '../services/api/expenseApi';
 
 const INITIAL_FILTERS = {
   category:      '',
@@ -11,52 +11,135 @@ const INITIAL_FILTERS = {
 const ExpenseContext = createContext(null);
 
 export function ExpenseProvider({ children }) {
-  const { transactions, addTransaction, updateTransaction, deleteTransaction, clearTransactions: clearAllTrx } = useTransactionContext();
-  
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const [searchQuery, setSearchQueryRaw] = useState('');
   const [filters, setFiltersRaw] = useState(INITIAL_FILTERS);
   const [sortOrder, setSortOrderRaw] = useState('newest');
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(100);
 
-  const expenses = useMemo(() => 
-    transactions.filter(t => t.type === 'expense' || t.type === 'savings_contribution'),
-  [transactions]);
+  // ── Fetching Data ───────────────────────────────────────────────────────
 
-  // ── Mutations ──────────────────────────────────────────────────────────
+  const fetchExpenses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (searchQuery.trim()) {
+        const data = await expenseApi.searchExpenses(searchQuery.trim());
+        setExpenses(data);
+      } else {
+        const skip = (page - 1) * limit;
+        const params = { skip, limit };
+        if (filters.category) params.category = filters.category;
+        if (filters.dateFrom) params.start_date = filters.dateFrom;
+        if (filters.dateTo) params.end_date = filters.dateTo;
+        
+        const data = await expenseApi.getExpenses(params);
+        setExpenses(data);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch expenses');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, filters, page, limit]);
 
-  const addExpense = useCallback((values) => {
-    return addTransaction({ ...values, type: 'expense' });
-  }, [addTransaction]);
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
 
-  const updateExpense = useCallback((id, values) => {
-    // preserve the type if it was savings_contribution
-    const existing = expenses.find(e => e.id === id);
-    return updateTransaction(id, { 
-      ...values, 
-      type: existing?.type || 'expense',
-      linkedGoalId: existing?.linkedGoalId 
-    });
-  }, [updateTransaction, expenses]);
+  // ── Mutations (Optimistic) ──────────────────────────────────────────────
 
-  // Note: deleteExpense just deletes the transaction (even if it's a savings contribution)
-  const deleteExpense = deleteTransaction;
+  const addExpense = useCallback(async (values) => {
+    const tempId = `temp-${Date.now()}`;
+    const optimisticExpense = { ...values, id: tempId, amount: Number(values.amount), type: 'expense' };
+    
+    // Optimistic update
+    setExpenses(prev => [optimisticExpense, ...prev]);
+    
+    try {
+      const created = await expenseApi.createExpense(values);
+      setExpenses(prev => prev.map(e => e.id === tempId ? created : e));
+    } catch (err) {
+      // Rollback
+      setExpenses(prev => prev.filter(e => e.id !== tempId));
+      setError('Failed to add expense');
+      throw err;
+    }
+  }, []);
+
+  const updateExpense = useCallback(async (id, values) => {
+    // Save original for rollback
+    const originalExpense = expenses.find(e => e.id === id);
+    const updatedExpense = { ...originalExpense, ...values, amount: Number(values.amount) };
+    
+    // Optimistic update
+    setExpenses(prev => prev.map(e => e.id === id ? updatedExpense : e));
+    
+    try {
+      const updated = await expenseApi.updateExpense(id, values);
+      setExpenses(prev => prev.map(e => e.id === id ? updated : e));
+    } catch (err) {
+      // Rollback
+      if (originalExpense) {
+        setExpenses(prev => prev.map(e => e.id === id ? originalExpense : e));
+      }
+      setError('Failed to update expense');
+      throw err;
+    }
+  }, [expenses]);
+
+  const deleteExpense = useCallback(async (id) => {
+    // Save original for rollback
+    const originalExpense = expenses.find(e => e.id === id);
+    
+    // Optimistic delete
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    
+    try {
+      await expenseApi.deleteExpense(id);
+    } catch (err) {
+      // Rollback
+      if (originalExpense) {
+        setExpenses(prev => [originalExpense, ...prev]);
+      }
+      setError('Failed to delete expense');
+      throw err;
+    }
+  }, [expenses]);
 
   const getExpense = useCallback((id) => {
     return expenses.find(e => e.id === id) ?? null;
   }, [expenses]);
 
   const clearExpenses = useCallback(() => {
-    expenses.forEach(e => deleteTransaction(e.id));
-  }, [expenses, deleteTransaction]);
+    expenses.forEach(e => deleteExpense(e.id).catch(() => {}));
+  }, [expenses, deleteExpense]);
 
   // ── Search / filter / sort ─────────────────────────────────────────────
 
-  const setSearchQuery = useCallback((query) => setSearchQueryRaw(query), []);
-  const setFilters = useCallback((partial) => setFiltersRaw(prev => ({ ...prev, ...partial })), []);
+  const setSearchQuery = useCallback((query) => {
+    setSearchQueryRaw(query);
+    setPage(1); // Reset to page 1 on search
+  }, []);
+  
+  const setFilters = useCallback((partial) => {
+    setFiltersRaw(prev => ({ ...prev, ...partial }));
+    setPage(1); // Reset to page 1 on filter
+  }, []);
+  
   const resetFilters = useCallback(() => {
     setFiltersRaw(INITIAL_FILTERS);
     setSearchQueryRaw('');
     setSortOrderRaw('newest');
+    setPage(1);
   }, []);
+  
   const setSortOrder = useCallback((order) => setSortOrderRaw(order), []);
 
   // ── Derived data ───────────────────────────────────────────────────────
@@ -64,19 +147,12 @@ export function ExpenseProvider({ children }) {
   const processedExpenses = useMemo(() => {
     let list = [...expenses];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      list = list.filter(
-        e => e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
-      );
+    // Local filter for anything backend didn't handle (like paymentMethod)
+    if (filters.paymentMethod) {
+      list = list.filter(e => e.paymentMethod === filters.paymentMethod);
     }
 
-    const { category, paymentMethod, dateFrom, dateTo } = filters;
-    if (category)      list = list.filter(e => e.category      === category);
-    if (paymentMethod) list = list.filter(e => e.paymentMethod === paymentMethod);
-    if (dateFrom)      list = list.filter(e => e.date          >= dateFrom);
-    if (dateTo)        list = list.filter(e => e.date          <= dateTo);
-
+    // Sort order (backend only sorts by date desc by default)
     switch (sortOrder) {
       case 'oldest':  list.sort((a, b) => a.date.localeCompare(b.date));  break;
       case 'highest': list.sort((a, b) => b.amount - a.amount);           break;
@@ -85,23 +161,27 @@ export function ExpenseProvider({ children }) {
     }
 
     return list;
-  }, [expenses, searchQuery, filters, sortOrder]);
+  }, [expenses, filters.paymentMethod, sortOrder]);
 
   const summary = useMemo(() => {
-    if (!expenses.length) return { total: 0, count: 0, largest: 0, average: 0 };
-    const total   = expenses.reduce((s, e) => s + e.amount, 0);
-    const largest = Math.max(...expenses.map(e => e.amount));
-    return { total, count: expenses.length, largest, average: total / expenses.length };
-  }, [expenses]);
+    if (!processedExpenses.length) return { total: 0, count: 0, largest: 0, average: 0 };
+    const total   = processedExpenses.reduce((s, e) => s + e.amount, 0);
+    const largest = Math.max(...processedExpenses.map(e => e.amount));
+    return { total, count: processedExpenses.length, largest, average: total / processedExpenses.length };
+  }, [processedExpenses]);
 
   // ── Context value ──────────────────────────────────────────────────────
 
   const value = useMemo(() => ({
     // Raw state
     expenses,
+    loading,
+    error,
     searchQuery,
     filters,
     sortOrder,
+    page,
+    limit,
     // Derived
     processedExpenses,
     summary,
@@ -111,16 +191,22 @@ export function ExpenseProvider({ children }) {
     deleteExpense,
     getExpense,
     clearExpenses,
-    // Search / filter / sort
+    // Actions
     setSearchQuery,
     setFilters,
     resetFilters,
     setSortOrder,
+    setPage,
+    refreshExpenses: fetchExpenses
   }), [
     expenses,
+    loading,
+    error,
     searchQuery,
     filters,
     sortOrder,
+    page,
+    limit,
     processedExpenses,
     summary,
     addExpense,
@@ -132,6 +218,8 @@ export function ExpenseProvider({ children }) {
     setFilters,
     resetFilters,
     setSortOrder,
+    setPage,
+    fetchExpenses
   ]);
 
   return (
