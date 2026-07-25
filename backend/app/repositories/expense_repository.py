@@ -2,7 +2,7 @@ from typing import Optional, Sequence
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_
+from sqlalchemy import and_, func, extract
 from app.models.expense import Expense
 from app.schemas.expense_schema import ExpenseCreate, ExpenseUpdate
 
@@ -113,3 +113,48 @@ class ExpenseRepository:
             ).order_by(Expense.amount.desc())
         )
         return result.scalars().all()
+
+    async def get_monthly_summary(self, user_id: str, year: int, month: int) -> float:
+        result = await self.db.execute(
+            select(func.sum(Expense.amount)).where(
+                and_(
+                    Expense.user_id == user_id,
+                    extract('year', Expense.transaction_date) == year,
+                    extract('month', Expense.transaction_date) == month
+                )
+            )
+        )
+        return result.scalar() or 0.0
+
+    async def get_statistics(self, user_id: str, start_date: date, end_date: date) -> dict:
+        result = await self.db.execute(
+            select(
+                func.count(Expense.id).label('total_transactions'),
+                func.sum(Expense.amount).label('total_amount'),
+                func.avg(Expense.amount).label('average_amount'),
+                func.max(Expense.amount).label('max_amount'),
+                func.min(Expense.amount).label('min_amount')
+            ).where(
+                and_(
+                    Expense.user_id == user_id,
+                    Expense.transaction_date >= start_date,
+                    Expense.transaction_date <= end_date
+                )
+            )
+        )
+        row = result.first()
+        if row and row.total_transactions > 0:
+            return {
+                "total_transactions": row.total_transactions,
+                "total_amount": float(row.total_amount),
+                "average_amount": float(row.average_amount),
+                "max_amount": float(row.max_amount),
+                "min_amount": float(row.min_amount)
+            }
+        return {
+            "total_transactions": 0,
+            "total_amount": 0.0,
+            "average_amount": 0.0,
+            "max_amount": 0.0,
+            "min_amount": 0.0
+        }
