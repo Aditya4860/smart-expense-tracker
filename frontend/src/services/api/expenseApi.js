@@ -1,11 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('set_auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import apiClient from './apiClient';
 
 const mapToFrontend = (apiExpense) => ({
   id: apiExpense.id,
@@ -33,60 +26,44 @@ const mapToBackend = (uiExpense) => ({
 
 export const expenseApi = {
   getExpenses: async (params = {}) => {
-    const response = await axios.get(`${API_BASE_URL}/expenses`, {
-      headers: getAuthHeaders(),
-      params,
-    });
+    const response = await apiClient.get('/expenses', { params });
     return response.data.map(mapToFrontend);
   },
 
   searchExpenses: async (query) => {
-    const response = await axios.get(`${API_BASE_URL}/expenses/search`, {
-      headers: getAuthHeaders(),
-      params: { q: query },
-    });
+    const response = await apiClient.get('/expenses/search', { params: { q: query } });
     return response.data.map(mapToFrontend);
   },
 
   getExpenseById: async (id) => {
-    const response = await axios.get(`${API_BASE_URL}/expenses/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await apiClient.get(`/expenses/${id}`);
     return mapToFrontend(response.data);
   },
 
   createExpense: async (data) => {
-    const response = await axios.post(`${API_BASE_URL}/expenses`, mapToBackend(data), {
-      headers: getAuthHeaders(),
-    });
+    const response = await apiClient.post('/expenses', mapToBackend(data));
     return mapToFrontend(response.data);
   },
 
   updateExpense: async (id, data) => {
-    const response = await axios.put(`${API_BASE_URL}/expenses/${id}`, mapToBackend(data), {
-      headers: getAuthHeaders(),
-    });
+    const response = await apiClient.put(`/expenses/${id}`, mapToBackend(data));
     return mapToFrontend(response.data);
   },
 
   deleteExpense: async (id) => {
-    const response = await axios.delete(`${API_BASE_URL}/expenses/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await apiClient.delete(`/expenses/${id}`);
     return response.data;
   },
 
   getStatistics: async (startDate, endDate) => {
-    const response = await axios.get(`${API_BASE_URL}/expenses/statistics`, {
-      headers: getAuthHeaders(),
+    const response = await apiClient.get('/expenses/statistics', {
       params: { start_date: startDate, end_date: endDate },
     });
     return response.data;
   },
 
   getMonthlySummary: async (year, month) => {
-    const response = await axios.get(`${API_BASE_URL}/expenses/monthly-summary`, {
-      headers: getAuthHeaders(),
+    const response = await apiClient.get('/expenses/monthly-summary', {
       params: { year, month },
     });
     return response.data;

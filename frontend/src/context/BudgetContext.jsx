@@ -1,110 +1,112 @@
 import {
   createContext,
   useContext,
-  useReducer,
   useCallback,
   useMemo,
   useState,
   useEffect
 } from 'react';
-import {
-  loadBudgets,
-  saveBudgets,
-  clearBudgets as storageClear,
-  buildBudget,
-} from '../services/budgetStorage';
+import { budgetApi } from '../services/api/budgetApi';
 import useExpenses from '../hooks/useExpenses';
-
-// ── Action types ───────────────────────────────────────────────────────────
-
-const ADD    = 'ADD';
-const UPDATE = 'UPDATE';
-const DELETE = 'DELETE';
-const CLEAR  = 'CLEAR';
-
-// ── Initial state ──────────────────────────────────────────────────────────
-
-function makeInitialState() {
-  return {
-    budgets: loadBudgets(),
-  };
-}
-
-// ── Reducer ────────────────────────────────────────────────────────────────
-
-function reducer(state, action) {
-  switch (action.type) {
-
-    case ADD: {
-      const next = [action.payload, ...state.budgets];
-      saveBudgets(next);
-      return { ...state, budgets: next };
-    }
-
-    case UPDATE: {
-      const next = state.budgets.map(b =>
-        b.id === action.payload.id ? action.payload : b
-      );
-      saveBudgets(next);
-      return { ...state, budgets: next };
-    }
-
-    case DELETE: {
-      const next = state.budgets.filter(b => b.id !== action.id);
-      saveBudgets(next);
-      return { ...state, budgets: next };
-    }
-
-    case CLEAR: {
-      storageClear();
-      return { ...state, budgets: [] };
-    }
-
-    default:
-      return state;
-  }
-}
 
 // ── Context ────────────────────────────────────────────────────────────────
 
 const BudgetContext = createContext(null);
 
-/**
- * BudgetProvider — wraps the app and makes budget state available everywhere.
- *
- * Persists to localStorage automatically on every mutation.
- * Restores state from localStorage on first render.
- */
 export function BudgetProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, null, makeInitialState);
+  const [budgets, setBudgets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // ── Mutations ──────────────────────────────────────────────────────────
+  // ── Fetching Data ───────────────────────────────────────────────────────
 
-  const addBudget = useCallback((values) => {
-    const budget = buildBudget(values);
-    dispatch({ type: ADD, payload: budget });
-    return budget;
+  const fetchBudgets = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await budgetApi.getBudgets();
+      setBudgets(data);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch budgets');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const updateBudget = useCallback((id, values) => {
-    const existing = state.budgets.find(b => b.id === id);
-    if (!existing) return;
-    const updated = buildBudget(values, id, existing.createdAt);
-    dispatch({ type: UPDATE, payload: updated });
-    return updated;
-  }, [state.budgets]);
+  useEffect(() => {
+    fetchBudgets();
+  }, [fetchBudgets]);
 
-  const deleteBudget = useCallback((id) => {
-    dispatch({ type: DELETE, id });
+  // ── Mutations (Optimistic) ──────────────────────────────────────────────
+
+  const addBudget = useCallback(async (values) => {
+    const tempId = `temp-${Date.now()}`;
+    const optimisticBudget = { 
+      ...values, 
+      id: tempId, 
+      amount: Number(values.amount || values.monthlyLimit), 
+      period: values.period || 'MONTHLY',
+      createdAt: new Date().toISOString()
+    };
+    
+    setBudgets(prev => [optimisticBudget, ...prev]);
+    
+    try {
+      const created = await budgetApi.createBudget(values);
+      setBudgets(prev => prev.map(b => b.id === tempId ? created : b));
+      return created;
+    } catch (err) {
+      setBudgets(prev => prev.filter(b => b.id !== tempId));
+      setError('Failed to add budget');
+      throw err;
+    }
   }, []);
+
+  const updateBudget = useCallback(async (id, values) => {
+    const original = budgets.find(b => b.id === id);
+    const optimisticBudget = { 
+      ...original, 
+      ...values, 
+      amount: Number(values.amount || values.monthlyLimit)
+    };
+    
+    setBudgets(prev => prev.map(b => b.id === id ? optimisticBudget : b));
+    
+    try {
+      const updated = await budgetApi.updateBudget(id, values);
+      setBudgets(prev => prev.map(b => b.id === id ? updated : b));
+      return updated;
+    } catch (err) {
+      if (original) {
+        setBudgets(prev => prev.map(b => b.id === id ? original : b));
+      }
+      setError('Failed to update budget');
+      throw err;
+    }
+  }, [budgets]);
+
+  const deleteBudget = useCallback(async (id) => {
+    const original = budgets.find(b => b.id === id);
+    setBudgets(prev => prev.filter(b => b.id !== id));
+    
+    try {
+      await budgetApi.deleteBudget(id);
+    } catch (err) {
+      if (original) {
+        setBudgets(prev => [original, ...prev]);
+      }
+      setError('Failed to delete budget');
+      throw err;
+    }
+  }, [budgets]);
 
   const getBudget = useCallback((id) => {
-    return state.budgets.find(b => b.id === id) ?? null;
-  }, [state.budgets]);
+    return budgets.find(b => b.id === id) ?? null;
+  }, [budgets]);
 
   const clearBudgets = useCallback(() => {
-    dispatch({ type: CLEAR });
-  }, []);
+    budgets.forEach(b => deleteBudget(b.id).catch(() => {}));
+  }, [budgets, deleteBudget]);
 
   // ── Derived computations ───────────────────────────────────────────────
 
@@ -122,8 +124,12 @@ export function BudgetProvider({ children }) {
   }, []);
 
   const enrichedBudgets = useMemo(() => {
-    return state.budgets.map(budget => {
-      // 1. Sum spent by matching category and month/year
+    return budgets.map(budget => {
+      // 1. Sum spent by matching category (Note: month/year matching removed if backend uses fixed monthly period)
+      // If we still want local month/year matching, we use current month
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+
       const spent = expenses.reduce((sum, e) => {
         // Skip savings contributions if the toggle is OFF
         if (!includeSavings && e.type === 'savings_contribution') return sum;
@@ -131,51 +137,38 @@ export function BudgetProvider({ children }) {
         if (e.category !== budget.category) return sum;
         
         const [eYear, eMonth] = e.date.split('-');
-        if (Number(eMonth) === budget.month && Number(eYear) === budget.year) {
+        if (Number(eMonth) === currentMonth && Number(eYear) === currentYear) {
           return sum + e.amount;
         }
         return sum;
       }, 0);
 
       const parsedSpent = parseFloat(spent.toFixed(2));
-      const parsedRemaining = parseFloat((budget.monthlyLimit - parsedSpent).toFixed(2));
+      // Handle the fact that UI expects 'monthlyLimit' on budget object sometimes
+      const monthlyLimit = budget.amount;
+      const parsedRemaining = parseFloat((monthlyLimit - parsedSpent).toFixed(2));
 
       return {
         ...budget,
+        monthlyLimit: monthlyLimit, 
         spent: parsedSpent,
         remaining: parsedRemaining
       };
     });
-  }, [state.budgets, expenses]);
+  }, [budgets, expenses, includeSavings]);
 
-  /**
-   * Calculate the remaining amount for a specific budget by id.
-   * @param {string} id
-   * @returns {number}
-   */
   const calculateRemainingBudget = useCallback((id) => {
     const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget) return 0;
     return budget.remaining;
   }, [enrichedBudgets]);
 
-  /**
-   * Calculate the spent amount for a specific budget by id.
-   * @param {string} id
-   * @returns {number}
-   */
   const calculateSpentBudget = useCallback((id) => {
     const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget) return 0;
     return budget.spent;
   }, [enrichedBudgets]);
 
-  /**
-   * Calculate progress (0–100) as a percentage of limit spent.
-   * Capped at 100 when over-budget.
-   * @param {string} id
-   * @returns {number}
-   */
   const calculateBudgetProgress = useCallback((id) => {
     const budget = enrichedBudgets.find(b => b.id === id);
     if (!budget || budget.monthlyLimit <= 0) return 0;
@@ -186,23 +179,24 @@ export function BudgetProvider({ children }) {
   // ── Context value ──────────────────────────────────────────────────────
 
   const value = useMemo(() => ({
-    // Raw state (now enriched)
     budgets: enrichedBudgets,
-    // Mutations
+    loading,
+    error,
     addBudget,
     updateBudget,
     deleteBudget,
     getBudget,
     clearBudgets,
-    // Settings
     includeSavings,
     toggleIncludeSavings,
-    // Derived
     calculateRemainingBudget,
     calculateSpentBudget,
     calculateBudgetProgress,
+    refreshBudgets: fetchBudgets
   }), [
     enrichedBudgets,
+    loading,
+    error,
     includeSavings,
     addBudget,
     updateBudget,
@@ -213,6 +207,7 @@ export function BudgetProvider({ children }) {
     calculateRemainingBudget,
     calculateSpentBudget,
     calculateBudgetProgress,
+    fetchBudgets
   ]);
 
   return (
@@ -222,10 +217,6 @@ export function BudgetProvider({ children }) {
   );
 }
 
-/**
- * useBudgetContext — internal hook.
- * Throws a descriptive error if called outside <BudgetProvider>.
- */
 export function useBudgetContext() {
   const ctx = useContext(BudgetContext);
   if (!ctx) throw new Error('useBudgetContext must be called inside <BudgetProvider>');

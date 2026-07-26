@@ -1,25 +1,57 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { loadGoals, saveGoals, clearGoals as storageClear, buildGoal } from '../services/goalStorage';
-import { useTransactionContext } from './TransactionContext';
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { goalApi } from '../services/api/goalApi';
 import { calculateGoalProgressRaw, calculateGoalRemainingRaw, calculateRemainingMonthsRaw } from '../utils/goalUtils';
 
 const GoalContext = createContext(null);
 
 export function GoalProvider({ children }) {
-  const [goals, setGoalsRaw] = useState(() => loadGoals());
-  const { transactions, addTransaction } = useTransactionContext();
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // ── Derived goals with dynamic history and currentAmount ───────────────
+  // ── Fetching Data ───────────────────────────────────────────────────────
+
+  const fetchGoals = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await goalApi.getGoals();
+      
+      // Fetch histories for all goals to maintain existing UI compatibility
+      const goalsWithHistory = await Promise.all(data.map(async (goal) => {
+        try {
+          const contributions = await goalApi.getContributions(goal.id);
+          return {
+            ...goal,
+            history: contributions.sort((a, b) => new Date(b.date) - new Date(a.date))
+          };
+        } catch {
+          return { ...goal, history: [] };
+        }
+      }));
+
+      setGoals(goalsWithHistory);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch goals');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGoals();
+  }, [fetchGoals]);
+
+  // ── Derived goals with dynamic currentAmount ───────────────
 
   const processedGoals = useMemo(() => {
     return goals.map(g => {
-      // Find all savings contributions for this goal
-      const history = transactions
-        .filter(t => t.type === 'savings_contribution' && t.linkedGoalId === g.id)
-        .sort((a, b) => new Date(b.date) - new Date(a.date)); // newest first
-
-      // Sum them up
-      const currentAmount = history.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+      const history = g.history || [];
+      // Calculate current amount locally from history for real-time responsiveness,
+      // falling back to backend's currentAmount if history is missing.
+      const currentAmount = history.length > 0 
+        ? history.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+        : g.currentAmount;
 
       return {
         ...g,
@@ -27,70 +59,135 @@ export function GoalProvider({ children }) {
         currentAmount
       };
     });
-  }, [goals, transactions]);
+  }, [goals]);
 
   // ── Mutations ──────────────────────────────────────────────────────────
 
-  const addGoal = useCallback((values) => {
-    const goal = buildGoal(values);
-    setGoalsRaw(prev => {
-      const next = [goal, ...prev];
-      saveGoals(next);
-      return next;
-    });
-    return goal;
+  const addGoal = useCallback(async (values) => {
+    const tempId = `temp-${Date.now()}`;
+    const optimisticGoal = { 
+      ...values, 
+      id: tempId, 
+      targetAmount: Number(values.targetAmount),
+      currentAmount: 0,
+      history: [],
+      createdAt: new Date().toISOString()
+    };
+    
+    setGoals(prev => [optimisticGoal, ...prev]);
+    
+    try {
+      const created = await goalApi.createGoal(values);
+      const newGoalWithHistory = { ...created, history: [] };
+      setGoals(prev => prev.map(g => g.id === tempId ? newGoalWithHistory : g));
+      return created;
+    } catch (err) {
+      setGoals(prev => prev.filter(g => g.id !== tempId));
+      setError('Failed to create goal');
+      throw err;
+    }
   }, []);
 
-  const updateGoal = useCallback((id, values) => {
-    let updated;
-    setGoalsRaw(prev => {
-      const existing = prev.find(g => g.id === id);
-      if (!existing) return prev;
-      updated = buildGoal(values, id, existing.createdAt);
-      const next = prev.map(g => g.id === id ? updated : g);
-      saveGoals(next);
-      return next;
-    });
-    return updated;
-  }, []);
+  const updateGoal = useCallback(async (id, values) => {
+    const original = goals.find(g => g.id === id);
+    const optimisticGoal = { 
+      ...original, 
+      ...values, 
+      targetAmount: Number(values.targetAmount) 
+    };
+    
+    setGoals(prev => prev.map(g => g.id === id ? optimisticGoal : g));
+    
+    try {
+      const updated = await goalApi.updateGoal(id, values);
+      setGoals(prev => prev.map(g => g.id === id ? { ...updated, history: original.history } : g));
+      return updated;
+    } catch (err) {
+      if (original) {
+        setGoals(prev => prev.map(g => g.id === id ? original : g));
+      }
+      setError('Failed to update goal');
+      throw err;
+    }
+  }, [goals]);
 
-  const deleteGoal = useCallback((id) => {
-    setGoalsRaw(prev => {
-      const next = prev.filter(g => g.id !== id);
-      saveGoals(next);
-      return next;
-    });
-  }, []);
+  const deleteGoal = useCallback(async (id) => {
+    const original = goals.find(g => g.id === id);
+    setGoals(prev => prev.filter(g => g.id !== id));
+    
+    try {
+      await goalApi.deleteGoal(id);
+    } catch (err) {
+      if (original) {
+        setGoals(prev => [original, ...prev]);
+      }
+      setError('Failed to delete goal');
+      throw err;
+    }
+  }, [goals]);
 
   const getGoal = useCallback((id) => {
     return processedGoals.find(g => g.id === id) ?? null;
   }, [processedGoals]);
 
-  // Deprecated, keep for backwards compatibility but it shouldn't be used
   const updateProgress = useCallback((id, newAmount) => {
     console.warn('updateProgress is deprecated in favor of addGoalSaving');
   }, []);
 
-  const addGoalSaving = useCallback((goalId, amount, type = 'custom', notes = '', date = null) => {
-    const goal = goals.find(g => g.id === goalId);
-    if (!goal) return;
+  const addGoalSaving = useCallback(async (goalId, amount, type = 'custom', notes = '', date = null) => {
+    const originalGoal = goals.find(g => g.id === goalId);
+    if (!originalGoal) return;
 
-    // Dispatch to TransactionContext! This automatically updates processedGoals via useMemo
-    addTransaction({
-      type: 'savings_contribution',
+    const tempContribId = `temp-contrib-${Date.now()}`;
+    const targetDate = date || new Date().toISOString();
+    
+    const optimisticContrib = {
+      id: tempContribId,
+      goalId,
       amount: Number(amount),
-      category: 'Savings',
-      title: `Transfer to ${goal.title}`,
-      date: date || new Date().toISOString(),
-      notes: notes || `Goal Contribution (${type})`,
-      linkedGoalId: goalId
-    });
-  }, [goals, addTransaction]);
+      date: targetDate,
+      type: 'savings_contribution',
+      notes
+    };
+
+    // Optimistic Update
+    setGoals(prev => prev.map(g => {
+      if (g.id !== goalId) return g;
+      return {
+        ...g,
+        history: [optimisticContrib, ...g.history].sort((a, b) => new Date(b.date) - new Date(a.date))
+      };
+    }));
+
+    try {
+      const createdContrib = await goalApi.addContribution(goalId, amount, targetDate);
+      
+      // Update with real ID from backend
+      setGoals(prev => prev.map(g => {
+        if (g.id !== goalId) return g;
+        const newHistory = g.history.map(c => c.id === tempContribId ? createdContrib : c);
+        return {
+          ...g,
+          history: newHistory.sort((a, b) => new Date(b.date) - new Date(a.date))
+        };
+      }));
+    } catch (err) {
+      // Rollback
+      setGoals(prev => prev.map(g => {
+        if (g.id !== goalId) return g;
+        return {
+          ...g,
+          history: g.history.filter(c => c.id !== tempContribId)
+        };
+      }));
+      setError('Failed to add saving contribution');
+      throw err;
+    }
+  }, [goals]);
 
   const clearGoals = useCallback(() => {
-    storageClear();
-    setGoalsRaw([]);
-  }, []);
+    goals.forEach(g => deleteGoal(g.id).catch(() => {}));
+  }, [goals, deleteGoal]);
 
   // ── Derived computations ───────────────────────────────────────────────
 
@@ -127,6 +224,8 @@ export function GoalProvider({ children }) {
 
   const value = useMemo(() => ({
     goals: processedGoals,
+    loading,
+    error,
     addGoal,
     updateGoal,
     deleteGoal,
@@ -137,9 +236,12 @@ export function GoalProvider({ children }) {
     calculateProgress,
     calculateRemainingAmount,
     calculateRemainingMonths,
-    calculateMonthlyTarget
+    calculateMonthlyTarget,
+    refreshGoals: fetchGoals
   }), [
     processedGoals,
+    loading,
+    error,
     addGoal,
     updateGoal,
     deleteGoal,
@@ -150,7 +252,8 @@ export function GoalProvider({ children }) {
     calculateProgress,
     calculateRemainingAmount,
     calculateRemainingMonths,
-    calculateMonthlyTarget
+    calculateMonthlyTarget,
+    fetchGoals
   ]);
 
   return (
