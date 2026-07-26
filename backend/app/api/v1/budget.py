@@ -22,7 +22,7 @@ async def create_budget(
     service: BudgetService = Depends(get_budget_service)
 ):
     """Create a new budget."""
-    return await service.create_budget(str(current_user.id), budget_in)
+    return await service.create_budget(current_user.id, budget_in)
 
 @router.get("", response_model=List[BudgetResponse])
 async def list_budgets(
@@ -30,7 +30,7 @@ async def list_budgets(
     service: BudgetService = Depends(get_budget_service)
 ):
     """List all budgets for the user."""
-    return await service.list_budgets(str(current_user.id))
+    return await service.list_budgets(current_user.id)
 
 @router.get("/{id}", response_model=BudgetResponse)
 async def get_budget(
@@ -39,7 +39,7 @@ async def get_budget(
     service: BudgetService = Depends(get_budget_service)
 ):
     """Get a specific budget by ID."""
-    return await service.get_budget(id, str(current_user.id))
+    return await service.get_budget(id, current_user.id)
 
 @router.put("/{id}", response_model=BudgetResponse)
 async def update_budget(
@@ -49,7 +49,7 @@ async def update_budget(
     service: BudgetService = Depends(get_budget_service)
 ):
     """Update a specific budget by ID."""
-    return await service.update_budget(id, str(current_user.id), budget_in)
+    return await service.update_budget(id, current_user.id, budget_in)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_budget(
@@ -58,7 +58,7 @@ async def delete_budget(
     service: BudgetService = Depends(get_budget_service)
 ):
     """Delete a specific budget by ID."""
-    await service.delete_budget(id, str(current_user.id))
+    await service.delete_budget(id, current_user.id)
 
 @router.get("/{id}/utilization", response_model=BudgetUtilizationResponse)
 async def get_budget_utilization(
@@ -70,4 +70,4 @@ async def get_budget_utilization(
     """Get the budget utilization, total amount, and remaining amount for a specific month."""
     if not target_date:
         target_date = date.today()
-    return await service.get_budget_utilization(id, str(current_user.id), target_date)
+    return await service.get_budget_utilization(id, current_user.id, target_date)

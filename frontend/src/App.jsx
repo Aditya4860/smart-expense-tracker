@@ -17,6 +17,7 @@ import Income from './pages/Income';
 import Analytics from './pages/Analytics';
 import Budget from './pages/Budget';
 import Goals from './pages/Goals';
+import Reports from './pages/Reports';
 
 /**
  * App.jsx — Root component.
@@ -34,6 +35,7 @@ import Goals from './pages/Goals';
  *   /analytics   → Analytics   (protected)
  *   /budget      → Budget      (protected)
  *   /goals       → Goals       (protected)
+ *   /reports     → Reports     (protected)
  */
 function App() {
   return (
@@ -60,6 +62,7 @@ function App() {
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/budget"    element={<Budget />}    />
                       <Route path="/goals"     element={<Goals />}     />
+                      <Route path="/reports"   element={<Reports />}   />
                     </Route>
 
                     {/* Catch-all */}

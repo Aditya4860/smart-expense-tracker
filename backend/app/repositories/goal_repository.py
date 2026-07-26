@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,7 +10,7 @@ class GoalRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_goal(self, user_id: str, goal_in: GoalCreate) -> Goal:
+    async def create_goal(self, user_id: uuid.UUID, goal_in: GoalCreate) -> Goal:
         db_goal = Goal(
             user_id=user_id,
             name=goal_in.name,
@@ -23,19 +24,19 @@ class GoalRepository:
         await self.db.refresh(db_goal)
         return db_goal
 
-    async def get_goal(self, goal_id: str, user_id: str) -> Optional[Goal]:
+    async def get_goal(self, goal_id: str, user_id: uuid.UUID) -> Optional[Goal]:
         result = await self.db.execute(
             select(Goal).where(and_(Goal.id == goal_id, Goal.user_id == user_id))
         )
         return result.scalars().first()
 
-    async def list_goals(self, user_id: str) -> Sequence[Goal]:
+    async def list_goals(self, user_id: uuid.UUID) -> Sequence[Goal]:
         result = await self.db.execute(
             select(Goal).where(Goal.user_id == user_id).order_by(Goal.created_at.desc())
         )
         return result.scalars().all()
 
-    async def update_goal(self, goal_id: str, user_id: str, goal_in: GoalUpdate) -> Optional[Goal]:
+    async def update_goal(self, goal_id: str, user_id: uuid.UUID, goal_in: GoalUpdate) -> Optional[Goal]:
         db_goal = await self.get_goal(goal_id, user_id)
         if not db_goal:
             return None
@@ -59,7 +60,7 @@ class GoalRepository:
         await self.db.refresh(db_goal)
         return db_goal
 
-    async def delete_goal(self, goal_id: str, user_id: str) -> bool:
+    async def delete_goal(self, goal_id: str, user_id: uuid.UUID) -> bool:
         db_goal = await self.get_goal(goal_id, user_id)
         if not db_goal:
             return False

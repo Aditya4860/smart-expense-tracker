@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column('hashed_password', sa.String(length=255), nullable=False),
         sa.Column('full_name', sa.String(length=255), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False),
+        sa.Column('role', sa.Enum('USER', 'ADMIN', name='role'), nullable=False),
         sa.Column('currency_preference', sa.String(length=10), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -222,3 +223,4 @@ def downgrade() -> None:
     sa.Enum(name='budgetperiod').drop(op.get_bind(), checkfirst=False)
     sa.Enum(name='goalstatus').drop(op.get_bind(), checkfirst=False)
     sa.Enum(name='recurringfrequency').drop(op.get_bind(), checkfirst=False)
+    sa.Enum(name='role').drop(op.get_bind(), checkfirst=False)

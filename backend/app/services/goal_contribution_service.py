@@ -1,3 +1,4 @@
+import uuid
 from typing import Sequence
 from app.models.goal_contribution import GoalContribution
 from app.schemas.goal_contribution_schema import GoalContributionCreate
@@ -10,7 +11,7 @@ class GoalContributionService:
         self.repository = repository
         self.goal_repository = goal_repository
 
-    async def add_contribution(self, user_id: str, contribution_in: GoalContributionCreate) -> GoalContribution:
+    async def add_contribution(self, user_id: uuid.UUID, contribution_in: GoalContributionCreate) -> GoalContribution:
         if contribution_in.amount <= 0:
             raise BadRequestException("Contribution amount must be strictly positive.")
             
@@ -28,14 +29,14 @@ class GoalContributionService:
         
         return contribution
 
-    async def list_contributions(self, goal_id: str, user_id: str) -> Sequence[GoalContribution]:
+    async def list_contributions(self, goal_id: str, user_id: uuid.UUID) -> Sequence[GoalContribution]:
         goal = await self.goal_repository.get_goal(goal_id, user_id)
         if not goal:
             raise NotFoundException("Goal not found")
             
         return await self.repository.list_contributions(goal_id)
 
-    async def delete_contribution(self, contribution_id: str, user_id: str) -> bool:
+    async def delete_contribution(self, contribution_id: str, user_id: uuid.UUID) -> bool:
         # We need to make sure the user owns the goal this contribution belongs to
         contribution = await self.repository.get_contribution(contribution_id)
         if not contribution:

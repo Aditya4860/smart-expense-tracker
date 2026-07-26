@@ -29,7 +29,7 @@ async def create_goal(
     service: GoalService = Depends(get_goal_service)
 ):
     """Create a new savings goal."""
-    return await service.create_goal(str(current_user.id), goal_in)
+    return await service.create_goal(current_user.id, goal_in)
 
 @router.get("", response_model=List[GoalResponse])
 async def list_goals(
@@ -37,7 +37,7 @@ async def list_goals(
     service: GoalService = Depends(get_goal_service)
 ):
     """List all savings goals."""
-    return await service.list_goals(str(current_user.id))
+    return await service.list_goals(current_user.id)
 
 @router.get("/{id}/progress", response_model=GoalProgressResponse)
 async def get_goal_progress(
@@ -46,7 +46,7 @@ async def get_goal_progress(
     service: GoalService = Depends(get_goal_service)
 ):
     """Get goal progress, including remaining amount and completion percentage."""
-    return await service.get_goal_progress(id, str(current_user.id))
+    return await service.get_goal_progress(id, current_user.id)
 
 @router.get("/{id}", response_model=GoalResponse)
 async def get_goal(
@@ -55,7 +55,7 @@ async def get_goal(
     service: GoalService = Depends(get_goal_service)
 ):
     """Get a specific goal by ID."""
-    return await service.get_goal(id, str(current_user.id))
+    return await service.get_goal(id, current_user.id)
 
 @router.put("/{id}", response_model=GoalResponse)
 async def update_goal(
@@ -65,7 +65,7 @@ async def update_goal(
     service: GoalService = Depends(get_goal_service)
 ):
     """Update a specific goal."""
-    return await service.update_goal(id, str(current_user.id), goal_in)
+    return await service.update_goal(id, current_user.id, goal_in)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_goal(
@@ -74,7 +74,7 @@ async def delete_goal(
     service: GoalService = Depends(get_goal_service)
 ):
     """Delete a specific goal."""
-    await service.delete_goal(id, str(current_user.id))
+    await service.delete_goal(id, current_user.id)
 
 # Contributions endpoints nested under goals
 @router.post("/{id}/contributions", response_model=GoalContributionResponse, status_code=status.HTTP_201_CREATED)
@@ -90,7 +90,7 @@ async def add_contribution(
         from app.core.exceptions import BadRequestException
         raise BadRequestException("Goal ID in URL does not match payload")
         
-    return await service.add_contribution(str(current_user.id), contribution_in)
+    return await service.add_contribution(current_user.id, contribution_in)
 
 @router.get("/{id}/contributions", response_model=List[GoalContributionResponse])
 async def list_contributions(
@@ -99,7 +99,7 @@ async def list_contributions(
     service: GoalContributionService = Depends(get_goal_contribution_service)
 ):
     """List all contributions for a specific goal."""
-    return await service.list_contributions(id, str(current_user.id))
+    return await service.list_contributions(id, current_user.id)
 
 @router.delete("/contributions/{contribution_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contribution(
@@ -108,4 +108,4 @@ async def delete_contribution(
     service: GoalContributionService = Depends(get_goal_contribution_service)
 ):
     """Delete a specific contribution."""
-    await service.delete_contribution(contribution_id, str(current_user.id))
+    await service.delete_contribution(contribution_id, current_user.id)

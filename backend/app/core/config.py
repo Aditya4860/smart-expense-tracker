@@ -24,6 +24,7 @@ class Settings(BaseSettings):
         return v
 
     DATABASE_URL: Optional[PostgresDsn] = None
+    ALEMBIC_DATABASE_URL: Optional[PostgresDsn] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

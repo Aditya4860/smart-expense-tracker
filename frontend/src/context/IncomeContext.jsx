@@ -27,7 +27,10 @@ export function IncomeProvider({ children }) {
     try {
       if (searchQuery.trim()) {
         const data = await incomeApi.searchIncome(searchQuery.trim());
-        setIncome(data);
+        setIncome(prev => {
+          const optimistic = prev.filter(i => String(i.id).startsWith('temp-'));
+          return [...optimistic, ...data];
+        });
       } else {
         const params = {};
         if (filters.category) params.category = filters.category;
@@ -35,7 +38,10 @@ export function IncomeProvider({ children }) {
         if (filters.dateTo) params.end_date = filters.dateTo;
         
         const data = await incomeApi.getIncome(params);
-        setIncome(data);
+        setIncome(prev => {
+          const optimistic = prev.filter(i => String(i.id).startsWith('temp-'));
+          return [...optimistic, ...data];
+        });
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch income');
@@ -51,7 +57,7 @@ export function IncomeProvider({ children }) {
   // ── Mutations (Optimistic) ──────────────────────────────────────────────
 
   const addIncome = useCallback(async (values) => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimisticIncome = { ...values, id: tempId, amount: Number(values.amount), type: 'income' };
     
     setIncome(prev => [optimisticIncome, ...prev]);

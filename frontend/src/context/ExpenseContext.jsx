@@ -31,7 +31,12 @@ export function ExpenseProvider({ children }) {
     try {
       if (searchQuery.trim()) {
         const data = await expenseApi.searchExpenses(searchQuery.trim());
-        setExpenses(data);
+        setExpenses(prev => {
+          const optimistic = prev.filter(e => String(e.id).startsWith('temp-'));
+          if (page === 1) return [...optimistic, ...data];
+          const existing = prev.filter(e => !String(e.id).startsWith('temp-'));
+          return [...existing, ...data, ...optimistic];
+        });
       } else {
         const skip = (page - 1) * limit;
         const params = { skip, limit };
@@ -40,7 +45,12 @@ export function ExpenseProvider({ children }) {
         if (filters.dateTo) params.end_date = filters.dateTo;
         
         const data = await expenseApi.getExpenses(params);
-        setExpenses(data);
+        setExpenses(prev => {
+          const optimistic = prev.filter(e => String(e.id).startsWith('temp-'));
+          if (page === 1) return [...optimistic, ...data];
+          const existing = prev.filter(e => !String(e.id).startsWith('temp-'));
+          return [...existing, ...data, ...optimistic];
+        });
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch expenses');
@@ -56,7 +66,7 @@ export function ExpenseProvider({ children }) {
   // ── Mutations (Optimistic) ──────────────────────────────────────────────
 
   const addExpense = useCallback(async (values) => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimisticExpense = { ...values, id: tempId, amount: Number(values.amount), type: 'expense' };
     
     // Optimistic update

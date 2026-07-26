@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, Sequence
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,7 @@ class ExpenseRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_expense(self, user_id: str, expense_in: ExpenseCreate) -> Expense:
+    async def create_expense(self, user_id: uuid.UUID, expense_in: ExpenseCreate) -> Expense:
         db_expense = Expense(
             user_id=user_id,
             title=expense_in.title,
@@ -27,13 +28,13 @@ class ExpenseRepository:
         await self.db.refresh(db_expense)
         return db_expense
 
-    async def get_expense(self, expense_id: str, user_id: str) -> Optional[Expense]:
+    async def get_expense(self, expense_id: str, user_id: uuid.UUID) -> Optional[Expense]:
         result = await self.db.execute(
             select(Expense).where(and_(Expense.id == expense_id, Expense.user_id == user_id))
         )
         return result.scalars().first()
 
-    async def list_expenses(self, user_id: str, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
+    async def list_expenses(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
         result = await self.db.execute(
             select(Expense)
             .where(Expense.user_id == user_id)
@@ -43,7 +44,7 @@ class ExpenseRepository:
         )
         return result.scalars().all()
 
-    async def update_expense(self, expense_id: str, user_id: str, expense_in: ExpenseUpdate) -> Optional[Expense]:
+    async def update_expense(self, expense_id: str, user_id: uuid.UUID, expense_in: ExpenseUpdate) -> Optional[Expense]:
         db_expense = await self.get_expense(expense_id, user_id)
         if not db_expense:
             return None
@@ -59,7 +60,7 @@ class ExpenseRepository:
         await self.db.refresh(db_expense)
         return db_expense
 
-    async def delete_expense(self, expense_id: str, user_id: str) -> bool:
+    async def delete_expense(self, expense_id: str, user_id: uuid.UUID) -> bool:
         db_expense = await self.get_expense(expense_id, user_id)
         if not db_expense:
             return False
@@ -68,7 +69,7 @@ class ExpenseRepository:
         await self.db.commit()
         return True
 
-    async def search_expenses(self, user_id: str, query: str) -> Sequence[Expense]:
+    async def search_expenses(self, user_id: uuid.UUID, query: str) -> Sequence[Expense]:
         result = await self.db.execute(
             select(Expense).where(
                 and_(
@@ -79,7 +80,7 @@ class ExpenseRepository:
         )
         return result.scalars().all()
 
-    async def filter_by_category(self, user_id: str, category: str) -> Sequence[Expense]:
+    async def filter_by_category(self, user_id: uuid.UUID, category: str) -> Sequence[Expense]:
         result = await self.db.execute(
             select(Expense).where(
                 and_(
@@ -90,7 +91,7 @@ class ExpenseRepository:
         )
         return result.scalars().all()
 
-    async def filter_by_date(self, user_id: str, start_date: date, end_date: date) -> Sequence[Expense]:
+    async def filter_by_date(self, user_id: uuid.UUID, start_date: date, end_date: date) -> Sequence[Expense]:
         result = await self.db.execute(
             select(Expense).where(
                 and_(
@@ -102,7 +103,7 @@ class ExpenseRepository:
         )
         return result.scalars().all()
 
-    async def filter_by_amount(self, user_id: str, min_amount: float, max_amount: float) -> Sequence[Expense]:
+    async def filter_by_amount(self, user_id: uuid.UUID, min_amount: float, max_amount: float) -> Sequence[Expense]:
         result = await self.db.execute(
             select(Expense).where(
                 and_(
@@ -114,7 +115,7 @@ class ExpenseRepository:
         )
         return result.scalars().all()
 
-    async def get_monthly_summary(self, user_id: str, year: int, month: int) -> float:
+    async def get_monthly_summary(self, user_id: uuid.UUID, year: int, month: int) -> float:
         result = await self.db.execute(
             select(func.sum(Expense.amount)).where(
                 and_(
@@ -126,7 +127,7 @@ class ExpenseRepository:
         )
         return result.scalar() or 0.0
 
-    async def get_statistics(self, user_id: str, start_date: date, end_date: date) -> dict:
+    async def get_statistics(self, user_id: uuid.UUID, start_date: date, end_date: date) -> dict:
         result = await self.db.execute(
             select(
                 func.count(Expense.id).label('total_transactions'),

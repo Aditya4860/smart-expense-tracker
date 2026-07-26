@@ -30,7 +30,19 @@ export function GoalProvider({ children }) {
         }
       }));
 
-      setGoals(goalsWithHistory);
+      setGoals(prev => {
+        const optimistic = prev.filter(g => String(g.id).startsWith('temp-'));
+        const mergedData = goalsWithHistory.map(serverGoal => {
+          const existingGoal = prev.find(g => g.id === serverGoal.id);
+          if (!existingGoal) return serverGoal;
+          const optimisticContribs = (existingGoal.history || []).filter(c => String(c.id).startsWith('temp-'));
+          return {
+            ...serverGoal,
+            history: [...optimisticContribs, ...(serverGoal.history || [])].sort((a, b) => new Date(b.date) - new Date(a.date))
+          };
+        });
+        return [...optimistic, ...mergedData];
+      });
     } catch (err) {
       setError(err.message || 'Failed to fetch goals');
     } finally {
@@ -64,7 +76,7 @@ export function GoalProvider({ children }) {
   // ── Mutations ──────────────────────────────────────────────────────────
 
   const addGoal = useCallback(async (values) => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimisticGoal = { 
       ...values, 
       id: tempId, 
@@ -138,7 +150,7 @@ export function GoalProvider({ children }) {
     const originalGoal = goals.find(g => g.id === goalId);
     if (!originalGoal) return;
 
-    const tempContribId = `temp-contrib-${Date.now()}`;
+    const tempContribId = `temp-contrib-${crypto.randomUUID()}`;
     const targetDate = date || new Date().toISOString();
     
     const optimisticContrib = {

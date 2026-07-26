@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, Sequence
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,7 @@ class BudgetRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_budget(self, user_id: str, budget_in: BudgetCreate) -> Budget:
+    async def create_budget(self, user_id: uuid.UUID, budget_in: BudgetCreate) -> Budget:
         db_budget = Budget(
             user_id=user_id,
             amount=budget_in.amount,
@@ -24,13 +25,13 @@ class BudgetRepository:
         await self.db.refresh(db_budget)
         return db_budget
 
-    async def get_budget(self, budget_id: str, user_id: str) -> Optional[Budget]:
+    async def get_budget(self, budget_id: str, user_id: uuid.UUID) -> Optional[Budget]:
         result = await self.db.execute(
             select(Budget).where(and_(Budget.id == budget_id, Budget.user_id == user_id))
         )
         return result.scalars().first()
 
-    async def list_budgets(self, user_id: str) -> Sequence[Budget]:
+    async def list_budgets(self, user_id: uuid.UUID) -> Sequence[Budget]:
         result = await self.db.execute(
             select(Budget)
             .where(Budget.user_id == user_id)
@@ -38,7 +39,7 @@ class BudgetRepository:
         )
         return result.scalars().all()
 
-    async def update_budget(self, budget_id: str, user_id: str, budget_in: BudgetUpdate) -> Optional[Budget]:
+    async def update_budget(self, budget_id: str, user_id: uuid.UUID, budget_in: BudgetUpdate) -> Optional[Budget]:
         db_budget = await self.get_budget(budget_id, user_id)
         if not db_budget:
             return None
@@ -51,7 +52,7 @@ class BudgetRepository:
         await self.db.refresh(db_budget)
         return db_budget
 
-    async def delete_budget(self, budget_id: str, user_id: str) -> bool:
+    async def delete_budget(self, budget_id: str, user_id: uuid.UUID) -> bool:
         db_budget = await self.get_budget(budget_id, user_id)
         if not db_budget:
             return False
@@ -60,7 +61,7 @@ class BudgetRepository:
         await self.db.commit()
         return True
 
-    async def get_budget_utilization(self, budget_id: str, user_id: str, target_date: date) -> Optional[dict]:
+    async def get_budget_utilization(self, budget_id: str, user_id: uuid.UUID, target_date: date) -> Optional[dict]:
         db_budget = await self.get_budget(budget_id, user_id)
         if not db_budget:
             return None

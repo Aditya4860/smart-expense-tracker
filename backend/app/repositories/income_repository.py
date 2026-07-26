@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, Sequence
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,7 @@ class IncomeRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_income(self, user_id: str, income_in: IncomeCreate) -> Income:
+    async def create_income(self, user_id: uuid.UUID, income_in: IncomeCreate) -> Income:
         db_income = Income(
             user_id=user_id,
             amount=income_in.amount,
@@ -23,13 +24,13 @@ class IncomeRepository:
         await self.db.refresh(db_income)
         return db_income
 
-    async def get_income(self, income_id: str, user_id: str) -> Optional[Income]:
+    async def get_income(self, income_id: str, user_id: uuid.UUID) -> Optional[Income]:
         result = await self.db.execute(
             select(Income).where(and_(Income.id == income_id, Income.user_id == user_id))
         )
         return result.scalars().first()
 
-    async def list_incomes(self, user_id: str, skip: int = 0, limit: int = 100) -> Sequence[Income]:
+    async def list_incomes(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Income]:
         result = await self.db.execute(
             select(Income)
             .where(Income.user_id == user_id)
@@ -39,7 +40,7 @@ class IncomeRepository:
         )
         return result.scalars().all()
 
-    async def update_income(self, income_id: str, user_id: str, income_in: IncomeUpdate) -> Optional[Income]:
+    async def update_income(self, income_id: str, user_id: uuid.UUID, income_in: IncomeUpdate) -> Optional[Income]:
         db_income = await self.get_income(income_id, user_id)
         if not db_income:
             return None
@@ -52,7 +53,7 @@ class IncomeRepository:
         await self.db.refresh(db_income)
         return db_income
 
-    async def delete_income(self, income_id: str, user_id: str) -> bool:
+    async def delete_income(self, income_id: str, user_id: uuid.UUID) -> bool:
         db_income = await self.get_income(income_id, user_id)
         if not db_income:
             return False
@@ -61,7 +62,7 @@ class IncomeRepository:
         await self.db.commit()
         return True
 
-    async def search_incomes(self, user_id: str, query: str) -> Sequence[Income]:
+    async def search_incomes(self, user_id: uuid.UUID, query: str) -> Sequence[Income]:
         result = await self.db.execute(
             select(Income).where(
                 and_(
@@ -72,7 +73,7 @@ class IncomeRepository:
         )
         return result.scalars().all()
 
-    async def filter_by_category(self, user_id: str, category_id: str) -> Sequence[Income]:
+    async def filter_by_category(self, user_id: uuid.UUID, category_id: str) -> Sequence[Income]:
         result = await self.db.execute(
             select(Income).where(
                 and_(
@@ -83,7 +84,7 @@ class IncomeRepository:
         )
         return result.scalars().all()
 
-    async def filter_by_date(self, user_id: str, start_date: date, end_date: date) -> Sequence[Income]:
+    async def filter_by_date(self, user_id: uuid.UUID, start_date: date, end_date: date) -> Sequence[Income]:
         result = await self.db.execute(
             select(Income).where(
                 and_(
@@ -95,7 +96,7 @@ class IncomeRepository:
         )
         return result.scalars().all()
 
-    async def get_monthly_summary(self, user_id: str, year: int, month: int) -> float:
+    async def get_monthly_summary(self, user_id: uuid.UUID, year: int, month: int) -> float:
         result = await self.db.execute(
             select(func.sum(Income.amount)).where(
                 and_(
@@ -107,7 +108,7 @@ class IncomeRepository:
         )
         return result.scalar() or 0.0
 
-    async def get_statistics(self, user_id: str, start_date: date, end_date: date) -> dict:
+    async def get_statistics(self, user_id: uuid.UUID, start_date: date, end_date: date) -> dict:
         result = await self.db.execute(
             select(
                 func.count(Income.id).label('total_transactions'),

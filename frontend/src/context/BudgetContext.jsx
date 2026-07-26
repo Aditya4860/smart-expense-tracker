@@ -25,7 +25,10 @@ export function BudgetProvider({ children }) {
     setError(null);
     try {
       const data = await budgetApi.getBudgets();
-      setBudgets(data);
+      setBudgets(prev => {
+        const optimistic = prev.filter(b => String(b.id).startsWith('temp-'));
+        return [...optimistic, ...data];
+      });
     } catch (err) {
       setError(err.message || 'Failed to fetch budgets');
     } finally {
@@ -40,7 +43,7 @@ export function BudgetProvider({ children }) {
   // ── Mutations (Optimistic) ──────────────────────────────────────────────
 
   const addBudget = useCallback(async (values) => {
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const optimisticBudget = { 
       ...values, 
       id: tempId, 
