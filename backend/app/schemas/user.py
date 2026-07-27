@@ -10,6 +10,7 @@ class UserBase(BaseModel):
     currency_preference: Optional[str] = "USD"
 
 class UserCreate(UserBase):
+    full_name: str
     password: str
 
 class UserUpdate(BaseModel):

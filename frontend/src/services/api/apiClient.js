@@ -33,27 +33,35 @@ apiClient.interceptors.response.use(
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      // Token Refresh Stub
-      // Note: Backend does not currently have a /refresh endpoint.
-      // If it did, we would call it here, update localStorage, and retry originalRequest.
-      // For now, we clear the session and force a logout.
-      console.warn('Unauthorized request. Session expired.');
-      localStorage.removeItem('set_auth_token');
-      localStorage.removeItem('set_auth_user');
-      
-      // Optionally trigger a custom event that AuthContext can listen to for redirect
-      window.dispatchEvent(new Event('auth-unauthorized'));
-      
-      return Promise.reject(error);
+      try {
+        const refreshToken = localStorage.getItem('set_refresh_token');
+        if (!refreshToken) throw new Error('No refresh token');
+
+        // Call backend refresh endpoint
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refresh_token: refreshToken
+        });
+
+        const { access_token, refresh_token: new_refresh_token } = response.data;
+        
+        // Update tokens
+        localStorage.setItem('set_auth_token', access_token);
+        localStorage.setItem('set_refresh_token', new_refresh_token);
+        
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        console.warn('Refresh token failed. Session expired.');
+        localStorage.removeItem('set_auth_token');
+        localStorage.removeItem('set_refresh_token');
+        localStorage.removeItem('set_auth_user');
+        window.dispatchEvent(new Event('auth-unauthorized'));
+        return Promise.reject(refreshError);
+      }
     }
 
-    // Basic Retry Logic for 5xx errors or Network Errors
-    if ((!error.response || error.response.status >= 500) && !originalRequest._retry5xx) {
-      originalRequest._retry5xx = true;
-      console.warn('Network error or 5xx error. Retrying request in 1 second...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return apiClient(originalRequest);
-    }
+    // (Removed naive 5xx retry logic per audit requirements)
 
     // Extract standardized backend error message if available
     if (error.response && error.response.data && error.response.data.detail) {

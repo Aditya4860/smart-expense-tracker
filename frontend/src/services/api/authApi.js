@@ -9,7 +9,7 @@ export const authApi = {
   },
 
   register: async (name, email, password) => {
-    const response = await apiClient.post('/auth/register', { name, email, password });
+    const response = await apiClient.post('/auth/register', { full_name: name, email, password });
     return response.data;
   },
 };

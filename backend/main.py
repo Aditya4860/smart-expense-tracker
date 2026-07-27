@@ -5,6 +5,8 @@ from app.core.config import settings
 from app.api.v1 import api_router
 from app.core.exceptions import BaseAPIException
 from app.core.logging import logger
+import traceback
+import time
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -24,7 +26,27 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Global Exception Handler
+# Request Logging Middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    try:
+        response = await call_next(request)
+        process_time = (time.time() - start_time) * 1000
+        logger.info(
+            f"METHOD={request.method} PATH={request.url.path} "
+            f"STATUS={response.status_code} TIME={process_time:.2f}ms"
+        )
+        return response
+    except Exception as exc:
+        process_time = (time.time() - start_time) * 1000
+        logger.error(
+            f"METHOD={request.method} PATH={request.url.path} "
+            f"STATUS=500 TIME={process_time:.2f}ms"
+        )
+        raise exc
+
+# Global Exception Handlers
 @app.exception_handler(BaseAPIException)
 async def custom_http_exception_handler(request: Request, exc: BaseAPIException):
     logger.error(f"HTTP Exception: {exc.detail}")
@@ -32,6 +54,17 @@ async def custom_http_exception_handler(request: Request, exc: BaseAPIException)
         status_code=exc.status_code,
         content={"detail": exc.detail},
         headers=exc.headers
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled Exception:")
+    logger.error(traceback.format_exc())
+    # Return JSONResponse instead of raising to ensure CORS headers apply
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"},
+        headers={"Access-Control-Allow-Origin": "*"} if not settings.BACKEND_CORS_ORIGINS else None
     )
 
 # Include API Router

@@ -11,15 +11,18 @@ import { authApi } from '../services/api/authApi';
 export const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'set_auth_token';
+const REFRESH_TOKEN_KEY = 'set_refresh_token';
 const USER_KEY = 'set_auth_user';
 
-function persistSession(token, user) {
+function persistSession(token, refreshToken, user) {
   localStorage.setItem(TOKEN_KEY, token);
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
 }
 
@@ -72,13 +75,14 @@ export function AuthProvider({ children }) {
       // Assuming the backend returns standard JWT schema: { access_token: '...', user: {...} }
       // Or we just decode the JWT payload for user info if not provided
       const newToken = response.access_token || response.token;
+      const newRefreshToken = response.refresh_token;
       
       const authenticatedUser = response.user || {
         email: email,
         name: email.split('@')[0],
       };
 
-      persistSession(newToken, authenticatedUser);
+      persistSession(newToken, newRefreshToken, authenticatedUser);
       setToken(newToken);
       setUser(authenticatedUser);
       return { success: true };
@@ -100,10 +104,11 @@ export function AuthProvider({ children }) {
       
       // Auto login or use returned token
       const newToken = response.access_token || response.token;
+      const newRefreshToken = response.refresh_token;
       const newUser = response.user || { email, name };
 
       if (newToken) {
-        persistSession(newToken, newUser);
+        persistSession(newToken, newRefreshToken, newUser);
         setToken(newToken);
         setUser(newUser);
       }
