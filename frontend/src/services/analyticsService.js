@@ -243,7 +243,7 @@ export function calculateRecentTransactions(income, expenses, limit = 10) {
 
   tagged.sort((a, b) => {
     // Primary: date descending
-    const dateDiff = b.date.localeCompare(a.date);
+    const dateDiff = (b.date || '').localeCompare(a.date || '');
     if (dateDiff !== 0) return dateDiff;
     // Secondary: createdAt descending (handles same-day entries)
     return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');

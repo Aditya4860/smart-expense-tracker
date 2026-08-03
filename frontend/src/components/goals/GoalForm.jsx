@@ -6,6 +6,7 @@ import CurrencyInput from '../ui/CurrencyInput';
 import DateSelect from '../ui/DateSelect';
 import Select from '../ui/Select';
 import useFormState from '../../hooks/useFormState';
+import { todayString } from '../../utils/formatters';
 
 const PRIORITIES = [
   { value: 'high', label: 'High' },

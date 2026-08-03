@@ -121,8 +121,8 @@ const ExpenseCategoryPieChart = memo(function ExpenseCategoryPieChart() {
               <Cell key={`exp-cell-${i}`} fill={entry.fill} stroke="transparent" />
             ))}
           </Pie>
-          <Tooltip content={<PieTooltip />} />
-          <Legend content={<CustomLegend />} />
+          <Tooltip content={<ChartTooltip />} />
+          <Legend content={<ChartLegend />} />
         </PieChart>
       </ResponsiveContainer>
     </Card>

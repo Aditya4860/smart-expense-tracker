@@ -12,4 +12,10 @@ export const authApi = {
     const response = await apiClient.post('/auth/register', { full_name: name, email, password });
     return response.data;
   },
+
+  getMe: async () => {
+    const response = await apiClient.get('/users/me');
+    return response.data;
+  },
 };
+

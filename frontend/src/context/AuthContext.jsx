@@ -61,6 +61,27 @@ export function AuthProvider({ children }) {
     if (session) {
       setToken(session.token);
       setUser(session.user);
+
+      // Refresh user details from /users/me in the background
+      authApi.getMe()
+        .then((me) => {
+          if (me) {
+            const updatedUser = {
+              ...session.user,
+              id: me.id || session.user?.id,
+              email: me.email || session.user?.email,
+              name: me.full_name || session.user?.name || me.email?.split('@')[0],
+              full_name: me.full_name || session.user?.full_name,
+              currency_preference: me.currency_preference || session.user?.currency_preference,
+              role: me.role || session.user?.role,
+            };
+            localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+            setUser(updatedUser);
+          }
+        })
+        .catch(() => {
+          // Keep existing session if offline or backend error
+        });
     }
     setLoading(false);
   }, []);
@@ -72,18 +93,38 @@ export function AuthProvider({ children }) {
     
     try {
       const response = await authApi.login(email, password);
-      // Assuming the backend returns standard JWT schema: { access_token: '...', user: {...} }
-      // Or we just decode the JWT payload for user info if not provided
       const newToken = response.access_token || response.token;
       const newRefreshToken = response.refresh_token;
       
-      const authenticatedUser = response.user || {
+      let authenticatedUser = response.user || {
         email: email,
         name: email.split('@')[0],
       };
 
+      if (newToken) {
+        // Persist token immediately so apiClient attaches Authorization header for getMe
+        localStorage.setItem(TOKEN_KEY, newToken);
+        if (newRefreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+        setToken(newToken);
+
+        try {
+          const me = await authApi.getMe();
+          if (me) {
+            authenticatedUser = {
+              id: me.id,
+              email: me.email || email,
+              name: me.full_name || me.email?.split('@')[0] || email.split('@')[0],
+              full_name: me.full_name,
+              currency_preference: me.currency_preference,
+              role: me.role,
+            };
+          }
+        } catch (meErr) {
+          console.warn('Could not fetch user details from /users/me:', meErr);
+        }
+      }
+
       persistSession(newToken, newRefreshToken, authenticatedUser);
-      setToken(newToken);
       setUser(authenticatedUser);
       return { success: true };
     } catch (err) {
@@ -105,7 +146,12 @@ export function AuthProvider({ children }) {
       // Auto login or use returned token
       const newToken = response.access_token || response.token;
       const newRefreshToken = response.refresh_token;
-      const newUser = response.user || { email, name };
+      const newUser = response.user || {
+        id: response.id,
+        email: response.email || email,
+        name: response.full_name || name,
+        full_name: response.full_name || name,
+      };
 
       if (newToken) {
         persistSession(newToken, newRefreshToken, newUser);

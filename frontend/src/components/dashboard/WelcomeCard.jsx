@@ -62,7 +62,7 @@ const WelcomeCard = memo(function WelcomeCard() {
   const { budgets, calculateBudgetProgress } = useBudget();
   const { goals }     = useGoals();
 
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
+  const displayName = user?.full_name || user?.name || (user?.email ? user.email.split('@')[0] : 'there');
   const message   = MESSAGES[new Date().getDay() % MESSAGES.length];
 
   const hasData = analytics.incomeCount > 0 || analytics.expenseCount > 0;
@@ -111,7 +111,7 @@ const WelcomeCard = memo(function WelcomeCard() {
             {formatToday()}
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            {getGreeting()}, {firstName} 👋
+            {getGreeting()}, {displayName} 👋
           </h2>
           <p className="mt-2 max-w-sm text-sm text-white/70 leading-relaxed">
             {message}
