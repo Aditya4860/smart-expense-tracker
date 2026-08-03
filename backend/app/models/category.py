@@ -12,11 +12,12 @@ class Category(BaseModel):
     icon = Column(String(50), nullable=True)
     color = Column(String(20), nullable=True)
     
-    # Nullable user_id allows for system-wide default categories
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    # Every category must belong to a user
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
     user = relationship("User", back_populates="categories")
     incomes = relationship("Income", back_populates="category")
+    expenses = relationship("Expense", back_populates="category")
     budgets = relationship("Budget", back_populates="category")
     recurring_transactions = relationship("RecurringTransaction", back_populates="category")

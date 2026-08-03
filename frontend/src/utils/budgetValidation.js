@@ -5,7 +5,7 @@
  * All functions are stateless and independently testable.
  */
 
-import { BUDGET_CATEGORY_IDS } from '../constants/budgetCategories';
+
 import { validateAmount } from './validationUtils';
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -46,8 +46,6 @@ export function validateBudget(values, existingBudgets = [], editingId = null) {
   // ── Category ─────────────────────────────────────────────────────────────
   if (!values.category) {
     errors.category = 'Category is required.';
-  } else if (!BUDGET_CATEGORY_IDS.includes(values.category)) {
-    errors.category = 'Please select a valid category.';
   }
 
   // ── Monthly limit ─────────────────────────────────────────────────────────

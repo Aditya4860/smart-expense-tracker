@@ -36,7 +36,7 @@ function IncomeSearch() {
         type="search"
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        placeholder="Search by title or category…"
+        placeholder="Search by source or category…"
         aria-label="Search income records"
         autoComplete="off"
         className="input h-10 w-full pl-9 pr-4 text-sm"
@@ -64,11 +64,16 @@ function IncomeInner() {
   const [addOpen, setAddOpen] = useState(false);
   const [saving,  setSaving]  = useState(false);
 
-  const handleAdd = useCallback((values) => {
+  const handleAdd = useCallback(async (values) => {
     setSaving(true);
-    addIncome(values);
-    setSaving(false);
-    setAddOpen(false);
+    try {
+      await addIncome(values);
+      setAddOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   }, [addIncome]);
 
   return (

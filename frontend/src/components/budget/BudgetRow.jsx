@@ -1,4 +1,5 @@
 import { memo, useState, useCallback } from 'react';
+import { useCategory } from '../../context/CategoryContext';
 import { BUDGET_CATEGORY_MAP } from '../../constants/budgetCategories';
 import { formatCurrency, MONTH_NAMES } from '../../utils/formatters';
 import { IconButton, EDIT_ICON, DELETE_ICON } from '../ui/FormField';
@@ -19,11 +20,12 @@ import useBudget from '../../hooks/useBudget';
  */
 const BudgetRow = memo(function BudgetRow({ budget }) {
   const { updateBudget, deleteBudget, calculateBudgetProgress } = useBudget();
+  const { getCategoryMeta } = useCategory();
   const [editOpen,   setEditOpen]   = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving,     setSaving]     = useState(false);
 
-  const cat = BUDGET_CATEGORY_MAP[budget.category] ?? BUDGET_CATEGORY_MAP.other;
+  const cat = getCategoryMeta(budget.category, 'EXPENSE');
   const pct = calculateBudgetProgress(budget.id);
 
   const handleEdit = useCallback((values) => {
@@ -130,7 +132,7 @@ const BudgetRow = memo(function BudgetRow({ budget }) {
       </BudgetModal>
 
       {/* Delete confirmation modal */}
-      <BudgetModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Budget">
+      <BudgetModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete Budget" size="sm">
         <DeleteConfirmBody
           onCancel={() => setDeleteOpen(false)}
           onConfirm={handleDelete}

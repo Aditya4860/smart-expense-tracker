@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import DashboardLayout from '../layouts/DashboardLayout';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { useIncomeContext } from '../context/IncomeContext';
 import { useBudgetContext } from '../context/BudgetContext';
 import { useGoals } from '../context/GoalContext';
 import { useAnalyticsContext } from '../context/AnalyticsContext';
+import { useCategory } from '../context/CategoryContext';
 import { exportToCSV, exportToExcel, triggerPDFPrint } from '../utils/exportUtils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -29,6 +32,7 @@ export default function Reports() {
   const { budgets, calculateSpentBudget } = useBudgetContext();
   const { goals, calculateProgress } = useGoals();
   const { analytics } = useAnalyticsContext();
+  const { getCategoryMeta } = useCategory();
 
   const [activeReport, setActiveReport] = useState('monthly');
   const [reportYear, setReportYear] = useState(new Date().getFullYear().toString());
@@ -109,7 +113,8 @@ export default function Reports() {
       
       expenses.forEach(exp => {
         if (exp.date && exp.date.startsWith(reportYear)) {
-          catMap[exp.category] = (catMap[exp.category] || 0) + exp.amount;
+          const catName = exp.categoryName || getCategoryMeta(exp.category, 'EXPENSE').name;
+          catMap[catName] = (catMap[catName] || 0) + exp.amount;
         }
       });
       
@@ -127,7 +132,7 @@ export default function Reports() {
       
       income.forEach(inc => {
         if (inc.date && inc.date.startsWith(reportYear)) {
-          const source = inc.source || inc.category || 'Other';
+          const source = inc.source || inc.categoryName || getCategoryMeta(inc.category, 'INCOME').name || 'Other';
           catMap[source] = (catMap[source] || 0) + inc.amount;
         }
       });
@@ -163,7 +168,7 @@ export default function Reports() {
       chartType = 'bar';
       
       chartData = budgets.map(b => ({
-        name: b.category || 'General',
+        name: getCategoryMeta(b.category, 'EXPENSE').name || 'General',
         'Spent ($)': calculateSpentBudget(b.id),
         'Limit ($)': b.monthlyLimit,
       }));
@@ -284,148 +289,177 @@ export default function Reports() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8 md:px-8 print-wrapper">
-      
-      {/* Header - Hidden in Print */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Reports Module</h1>
-          <p className="text-surface-400 mt-1">Generate, analyze, and export your financial data.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button 
-            onClick={() => exportToCSV(reportData.tableData, `${activeReport}_report`)}
-            className="px-4 py-2 bg-surface-800 hover:bg-surface-700 text-white rounded-lg font-medium transition-colors border border-surface-700 text-sm"
-          >
-            Export CSV
-          </button>
-          <button 
-            onClick={() => exportToExcel(reportData.tableData, `${activeReport}_report`)}
-            className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg font-medium transition-colors border border-emerald-500/30 text-sm"
-          >
-            Export Excel
-          </button>
-          <button 
-            onClick={triggerPDFPrint}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-medium shadow-sm transition-colors text-sm"
-          >
-            Download PDF
-          </button>
-        </div>
-      </div>
-
-      {/* Controls - Hidden in Print */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 no-print p-4 bg-surface-900 border border-surface-800 rounded-xl">
-        <div className="flex flex-col gap-1.5 md:col-span-2">
-          <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Report Type</label>
-          <select 
-            value={activeReport} 
-            onChange={e => setActiveReport(e.target.value)}
-            className="input w-full"
-          >
-            {REPORT_TYPES.map(t => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Target Year</label>
-          <select 
-            value={reportYear} 
-            onChange={e => setReportYear(e.target.value)}
-            className="input w-full"
-          >
-            {[...Array(5)].map((_, i) => {
-              const year = new Date().getFullYear() - i;
-              return <option key={year} value={year}>{year}</option>;
-            })}
-          </select>
-        </div>
-      </div>
-
-      {/* Printable Report Area */}
-      <div className="bg-surface-900 border border-surface-800 rounded-xl overflow-hidden print-area">
-        <div className="p-6 border-b border-surface-800 flex justify-between items-center bg-surface-800/50">
-          <h2 className="text-xl font-bold text-white">{reportData.title}</h2>
-          <span className="text-sm font-mono text-surface-400">Generated: {new Date().toLocaleDateString()}</span>
-        </div>
+    <DashboardLayout>
+      <div className="w-full max-w-7xl mx-auto print-wrapper">
         
-        {/* Chart Area */}
-        {reportData.chartType !== 'none' && (
-          <div className="p-6 border-b border-surface-800 min-h-[400px] flex items-center justify-center bg-surface-900/50">
-            {renderChart()}
-          </div>
-        )}
+        {/* Navigation Breadcrumb / Back button */}
+        <div className="mb-4 no-print flex items-center justify-between">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-surface-800 transition-colors group border border-transparent hover:border-surface-700"
+          >
+            <svg 
+              className="w-4 h-4 transition-transform group-hover:-translate-x-1" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+          </Link>
+        </div>
 
-        {/* Data Table */}
-        <div className="p-0 overflow-x-auto">
-          {reportData.tableData.length > 0 ? (
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase bg-surface-800/80 text-surface-300">
-                <tr>
-                  {Object.keys(reportData.tableData[0]).map(key => (
-                    <th key={key} className="px-6 py-4 font-semibold tracking-wider">{key}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-800/50">
-                {reportData.tableData.map((row, i) => (
-                  <tr key={i} className="hover:bg-surface-800/20 transition-colors">
-                    {Object.values(row).map((val, j) => (
-                      <td key={j} className="px-6 py-4 text-surface-200">{val}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-8 text-center text-surface-400">
-              No data available for the selected parameters.
+        {/* Header - Hidden in Print */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Reports Module</h1>
+            <p className="text-surface-400 mt-1">Generate, analyze, and export your financial data.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/dashboard"
+              className="px-3.5 py-2 bg-surface-800/80 hover:bg-surface-700 text-slate-300 hover:text-white rounded-lg font-medium transition-colors border border-surface-700 text-sm inline-flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Dashboard
+            </Link>
+            <button 
+              onClick={() => exportToCSV(reportData.tableData, `${activeReport}_report`)}
+              className="px-4 py-2 bg-surface-800 hover:bg-surface-700 text-white rounded-lg font-medium transition-colors border border-surface-700 text-sm"
+            >
+              Export CSV
+            </button>
+            <button 
+              onClick={() => exportToExcel(reportData.tableData, `${activeReport}_report`)}
+              className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg font-medium transition-colors border border-emerald-500/30 text-sm"
+            >
+              Export Excel
+            </button>
+            <button 
+              onClick={triggerPDFPrint}
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-medium shadow-sm transition-colors text-sm"
+            >
+              Download PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Controls - Hidden in Print */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 no-print p-4 bg-surface-900 border border-surface-800 rounded-xl">
+          <div className="flex flex-col gap-1.5 md:col-span-2">
+            <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Report Type</label>
+            <select 
+              value={activeReport} 
+              onChange={e => setActiveReport(e.target.value)}
+              className="input w-full"
+            >
+              {REPORT_TYPES.map(t => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Target Year</label>
+            <select 
+              value={reportYear} 
+              onChange={e => setReportYear(e.target.value)}
+              className="input w-full"
+            >
+              {[...Array(5)].map((_, i) => {
+                const year = new Date().getFullYear() - i;
+                return <option key={year} value={year}>{year}</option>;
+              })}
+            </select>
+          </div>
+        </div>
+
+        {/* Printable Report Area */}
+        <div className="bg-surface-900 border border-surface-800 rounded-xl overflow-hidden print-area">
+          <div className="p-6 border-b border-surface-800 flex justify-between items-center bg-surface-800/50">
+            <h2 className="text-xl font-bold text-white">{reportData.title}</h2>
+            <span className="text-sm font-mono text-surface-400">Generated: {new Date().toLocaleDateString()}</span>
+          </div>
+          
+          {/* Chart Area */}
+          {reportData.chartType !== 'none' && (
+            <div className="p-6 border-b border-surface-800 min-h-[400px] flex items-center justify-center bg-surface-900/50">
+              {renderChart()}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Print-specific CSS injected locally */}
-      <style>{`
-        @media print {
-          body {
-            background-color: white !important;
-            color: black !important;
+          {/* Data Table */}
+          <div className="p-0 overflow-x-auto">
+            {reportData.tableData.length > 0 ? (
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs uppercase bg-surface-800/80 text-surface-300">
+                  <tr>
+                    {Object.keys(reportData.tableData[0]).map(key => (
+                      <th key={key} className="px-6 py-4 font-semibold tracking-wider">{key}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-800/50">
+                  {reportData.tableData.map((row, i) => (
+                    <tr key={i} className="hover:bg-surface-800/20 transition-colors">
+                      {Object.values(row).map((val, j) => (
+                        <td key={j} className="px-6 py-4 text-surface-200">{val}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 text-center text-surface-400">
+                No data available for the selected parameters.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Print-specific CSS injected locally */}
+        <style>{`
+          @media print {
+            body {
+              background-color: white !important;
+              color: black !important;
+            }
+            .no-print, #top-navbar, .sidebar {
+              display: none !important;
+            }
+            .print-area {
+              background-color: white !important;
+              border: 1px solid #ccc !important;
+              color: black !important;
+              box-shadow: none !important;
+            }
+            .print-area h2 {
+              color: black !important;
+            }
+            .print-area th {
+              background-color: #f3f4f6 !important;
+              color: #374151 !important;
+              border-bottom: 2px solid #ccc;
+            }
+            .print-area td {
+              color: black !important;
+              border-bottom: 1px solid #eee;
+            }
+            .print-area .bg-surface-800\\/50, .print-area .bg-surface-900\\/50 {
+              background-color: transparent !important;
+            }
+            /* Attempt to make recharts look better on print */
+            .recharts-text {
+              fill: black !important;
+            }
+            .recharts-cartesian-grid line {
+              stroke: #eee !important;
+            }
           }
-          .no-print, #top-navbar, .sidebar {
-            display: none !important;
-          }
-          .print-area {
-            background-color: white !important;
-            border: 1px solid #ccc !important;
-            color: black !important;
-            box-shadow: none !important;
-          }
-          .print-area h2 {
-            color: black !important;
-          }
-          .print-area th {
-            background-color: #f3f4f6 !important;
-            color: #374151 !important;
-            border-bottom: 2px solid #ccc;
-          }
-          .print-area td {
-            color: black !important;
-            border-bottom: 1px solid #eee;
-          }
-          .print-area .bg-surface-800\\/50, .print-area .bg-surface-900\\/50 {
-            background-color: transparent !important;
-          }
-          /* Attempt to make recharts look better on print */
-          .recharts-text {
-            fill: black !important;
-          }
-          .recharts-cartesian-grid line {
-            stroke: #eee !important;
-          }
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+    </DashboardLayout>
   );
 }

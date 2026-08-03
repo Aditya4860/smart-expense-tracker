@@ -5,7 +5,6 @@
  * All functions are stateless and independently testable.
  */
 
-import { INCOME_CATEGORY_IDS } from '../constants/incomeCategories';
 import { todayString } from './formatters';
 import { validateTitle, validateAmount, validateDate, validateNotes } from './validationUtils';
 
@@ -13,21 +12,16 @@ import { validateTitle, validateAmount, validateDate, validateNotes } from './va
  * Validate raw income form values.
  *
  * @param {object}        values
- * @param {string}        values.title
  * @param {string|number} values.amount
  * @param {string}        values.category
  * @param {string}        values.date          - 'YYYY-MM-DD'
  * @param {string}        [values.source]      - optional
- * @param {string}        [values.notes]       - optional
+ * @param {string}        [values.description] - optional
  *
  * @returns {{ valid: boolean, errors: Record<string, string> }}
  */
 export function validateIncome(values) {
   const errors = {};
-
-  // ── Title ─────────────────────────────────────────────────────────────────
-  const titleErr = validateTitle(values.title);
-  if (titleErr) errors.title = titleErr;
 
   // ── Amount ────────────────────────────────────────────────────────────────
   const amountErr = validateAmount(values.amount, 100_000_000);
@@ -36,8 +30,6 @@ export function validateIncome(values) {
   // ── Category ──────────────────────────────────────────────────────────────
   if (!values.category) {
     errors.category = 'Category is required.';
-  } else if (!INCOME_CATEGORY_IDS.includes(values.category)) {
-    errors.category = 'Please select a valid category.';
   }
 
   // ── Date ──────────────────────────────────────────────────────────────────
@@ -49,9 +41,9 @@ export function validateIncome(values) {
     errors.source = 'Source must be 100 characters or fewer.';
   }
 
-  // ── Notes (optional) — cap length if provided ─────────────────────────────
-  const notesErr = validateNotes(values.notes);
-  if (notesErr) errors.notes = notesErr;
+  // ── Description (optional) — cap length if provided ───────────────────────
+  const notesErr = validateNotes(values.description);
+  if (notesErr) errors.description = notesErr;
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
@@ -59,16 +51,15 @@ export function validateIncome(values) {
 /**
  * Returns a clean default form values object with today's date pre-filled.
  *
- * @returns {{ title: string, amount: string, category: string, date: string, source: string, notes: string }}
+ * @returns {{ amount: string, category: string, date: string, source: string, description: string }}
  */
 export function defaultIncomeValues() {
   return {
-    title:    '',
     amount:   '',
     category: '',
     date:     todayString(),
     source:   '',
-    notes:    '',
+    description: '',
   };
 }
 

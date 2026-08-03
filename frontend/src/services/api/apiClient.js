@@ -25,47 +25,66 @@ apiClient.interceptors.request.use(
 
 // Response Interceptor: Handle errors, retries, and token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If the response follows the standard { success: true, message, data }, unwrap it
+    if (response.data && response.data.success !== undefined && response.data.data !== undefined) {
+      // Modify response.data to just be the inner data
+      // So that existing code relying on response.data works transparently
+      response.data = response.data.data;
+    }
+    return response;
+  },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
 
-    // Handle 401 Unauthorized (Token expired or invalid)
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // Check if this is an authentication endpoint
+    const url = originalRequest.url || '';
+    const isAuthEndpoint = url.includes('/auth/login') ||
+                           url.includes('/auth/register') ||
+                           url.includes('/auth/refresh');
+
+    // Handle 401 Unauthorized (Token expired or invalid) only for non-auth endpoints
+    if (error.response && error.response.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
       
       try {
         const refreshToken = localStorage.getItem('set_refresh_token');
-        if (!refreshToken) throw new Error('No refresh token');
+        if (!refreshToken) throw new Error('Session expired');
 
         // Call backend refresh endpoint
         const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken
         });
 
-        const { access_token, refresh_token: new_refresh_token } = response.data;
+        // If response is wrapped by middleware, use response.data.data, else response.data
+        const tokenData = response.data.data || response.data;
+        const { access_token, refresh_token: new_refresh_token } = tokenData;
         
         // Update tokens
         localStorage.setItem('set_auth_token', access_token);
-        localStorage.setItem('set_refresh_token', new_refresh_token);
+        if (new_refresh_token) {
+          localStorage.setItem('set_refresh_token', new_refresh_token);
+        }
         
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        console.warn('Refresh token failed. Session expired.');
+        console.warn('Session expired or token refresh failed.');
         localStorage.removeItem('set_auth_token');
         localStorage.removeItem('set_refresh_token');
         localStorage.removeItem('set_auth_user');
         window.dispatchEvent(new Event('auth-unauthorized'));
-        return Promise.reject(refreshError);
       }
     }
 
-    // (Removed naive 5xx retry logic per audit requirements)
-
     // Extract standardized backend error message if available
-    if (error.response && error.response.data && error.response.data.detail) {
-      error.message = error.response.data.detail;
+    if (error.response && error.response.data) {
+      if (typeof error.response.data.message === 'string') {
+        error.message = error.response.data.message;
+      } else if (typeof error.response.data.detail === 'string') {
+        error.message = error.response.data.detail;
+      }
     }
 
     return Promise.reject(error);

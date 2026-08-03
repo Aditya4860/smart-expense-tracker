@@ -2,25 +2,24 @@ import apiClient from './apiClient';
 
 const mapToFrontend = (apiExpense) => ({
   id: apiExpense.id,
-  title: apiExpense.title,
+  merchant: apiExpense.merchant || '',
   description: apiExpense.description || '',
   amount: apiExpense.amount,
-  category: apiExpense.category,
+  category: apiExpense.category_id,
+  categoryName: apiExpense.category_name,
   paymentMethod: apiExpense.payment_method || '',
-  date: apiExpense.transaction_date,
-  notes: apiExpense.notes || '',
+  date: apiExpense.date,
   receiptUrl: apiExpense.receipt_url || '',
   type: 'expense'
 });
 
 const mapToBackend = (uiExpense) => ({
-  title: uiExpense.title,
+  merchant: uiExpense.merchant || null,
   description: uiExpense.description || null,
   amount: Number(uiExpense.amount),
-  category: uiExpense.category,
+  category_id: uiExpense.category,
   payment_method: uiExpense.paymentMethod || null,
-  transaction_date: uiExpense.date,
-  notes: uiExpense.notes || null,
+  date: uiExpense.date,
   receipt_url: uiExpense.receiptUrl || null,
 });
 

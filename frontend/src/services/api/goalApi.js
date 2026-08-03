@@ -6,6 +6,8 @@ const mapGoalToFrontend = (apiGoal) => ({
   targetAmount: apiGoal.target_amount,
   currentAmount: apiGoal.current_amount,
   targetDate: apiGoal.deadline, // UI uses targetDate
+  description: apiGoal.description,
+  priority: apiGoal.priority,
   status: apiGoal.status,
   createdAt: apiGoal.created_at,
 });
@@ -14,6 +16,8 @@ const mapGoalToBackend = (uiGoal) => ({
   name: uiGoal.title,
   target_amount: Number(uiGoal.targetAmount),
   deadline: uiGoal.targetDate || null,
+  description: uiGoal.description || null,
+  priority: uiGoal.priority || 'medium',
   status: uiGoal.status || 'ACTIVE',
 });
 

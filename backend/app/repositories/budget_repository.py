@@ -80,9 +80,9 @@ class BudgetRepository:
             select(func.sum(Expense.amount)).where(
                 and_(
                     Expense.user_id == user_id,
-                    Expense.category == category_name,
-                    extract('year', Expense.transaction_date) == year,
-                    extract('month', Expense.transaction_date) == month
+                    Expense.category_id == db_budget.category_id,
+                    extract('year', Expense.date) == year,
+                    extract('month', Expense.date) == month
                 )
             )
         )

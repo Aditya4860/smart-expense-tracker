@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
+import { useCategory } from '../../context/CategoryContext';
 import { CATEGORY_MAP } from '../../constants/expenseCategories';
 import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
@@ -8,7 +9,8 @@ import Card from '../ui/Card';
 // ── Bar item ───────────────────────────────────────────────────────────────
 
 function CategoryBar({ item, maxTotal }) {
-  const cat      = CATEGORY_MAP[item.category] ?? { name: item.category, icon: '📦', color: 'text-slate-400', bg: 'bg-slate-500/15' };
+  const { getCategoryMeta } = useCategory();
+  const cat      = getCategoryMeta(item.category, 'EXPENSE');
   const pct      = maxTotal > 0 ? Math.round((item.total / maxTotal) * 100) : 0;
 
   return (

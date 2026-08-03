@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { useCategory } from '../../context/CategoryContext';
 import { BUDGET_CATEGORY_MAP } from '../../constants/budgetCategories';
 import { formatCurrency, MONTH_NAMES } from '../../utils/formatters';
 import useBudget from '../../hooks/useBudget';
@@ -17,7 +18,8 @@ import Card from '../ui/Card';
  */
 const BudgetCard = memo(function BudgetCard({ budget, onEdit, onDelete }) {
   const { calculateBudgetProgress } = useBudget();
-  const cat = BUDGET_CATEGORY_MAP[budget.category] ?? BUDGET_CATEGORY_MAP.other;
+  const { getCategoryMeta } = useCategory();
+  const cat = getCategoryMeta(budget.category, 'EXPENSE');
   const pct = useMemo(
     () => calculateBudgetProgress(budget.id),
     [budget.id, calculateBudgetProgress],

@@ -5,6 +5,7 @@ from app.services.expense_service import ExpenseService
 from app.schemas.expense_schema import ExpenseCreate, ExpenseUpdate
 from app.core.exceptions import BadRequestException, NotFoundException
 from app.models.expense import Expense
+from uuid import uuid4
 
 @pytest.fixture
 def mock_repo():
@@ -17,23 +18,23 @@ def expense_service(mock_repo):
 @pytest.mark.asyncio
 async def test_create_expense_success(expense_service, mock_repo):
     expense_data = ExpenseCreate(
-        title="Coffee", amount=5.0, category="Food", transaction_date=date.today()
+        merchant="Coffee", amount=5.0, category_id=uuid4(), date=date.today()
     )
-    mock_repo.create_expense.return_value = Expense(id="123", **expense_data.model_dump())
+    user_id = uuid4()
+    mock_repo.create_expense.return_value = Expense(id=uuid4(), **expense_data.model_dump())
     
-    result = await expense_service.create_expense("user1", expense_data)
-    assert result.title == "Coffee"
+    result = await expense_service.create_expense(user_id, expense_data)
+    assert result.merchant == "Coffee"
     assert result.amount == 5.0
-    mock_repo.create_expense.assert_called_once_with("user1", expense_data)
+    mock_repo.create_expense.assert_called_once_with(user_id, expense_data)
 
 @pytest.mark.asyncio
 async def test_create_expense_invalid_amount(expense_service, mock_repo):
-    expense_data = ExpenseCreate(
-        title="Coffee", amount=-5.0, category="Food", transaction_date=date.today()
-    )
-    
-    with pytest.raises(BadRequestException):
-        await expense_service.create_expense("user1", expense_data)
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        expense_data = ExpenseCreate(
+            merchant="Coffee", amount=-5.0, category_id=uuid4(), date=date.today()
+        )
 
 @pytest.mark.asyncio
 async def test_get_expense_not_found(expense_service, mock_repo):

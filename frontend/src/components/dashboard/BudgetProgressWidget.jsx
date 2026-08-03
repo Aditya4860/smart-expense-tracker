@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { useCategory } from '../../context/CategoryContext';
 import { BUDGET_CATEGORY_MAP } from '../../constants/budgetCategories';
 import { formatCurrency, MONTH_NAMES } from '../../utils/formatters';
 import useBudget from '../../hooks/useBudget';
@@ -28,12 +29,13 @@ function pctColour(pct) {
  */
 const BudgetProgressWidget = memo(function BudgetProgressWidget() {
   const { budgets, calculateBudgetProgress } = useBudget();
+  const { getCategoryMeta } = useCategory();
 
   const items = useMemo(() => {
     return budgets
       .map(b => ({
         id:      b.id,
-        cat:     BUDGET_CATEGORY_MAP[b.category] ?? { name: b.category, icon: '📦', bg: 'bg-slate-500/15', color: 'text-slate-400' },
+        cat:     getCategoryMeta(b.category, 'EXPENSE'),
         limit:   b.monthlyLimit,
         spent:   b.spent,
         remain:  b.remaining,
@@ -42,7 +44,7 @@ const BudgetProgressWidget = memo(function BudgetProgressWidget() {
       }))
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 5);
-  }, [budgets, calculateBudgetProgress]);
+  }, [budgets, calculateBudgetProgress, getCategoryMeta]);
 
   return (
     <Card padding="md" className="flex flex-col gap-4">

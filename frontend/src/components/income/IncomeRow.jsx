@@ -1,5 +1,5 @@
 import { memo, useState, useCallback } from 'react';
-import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
+import { useCategory } from '../../context/CategoryContext';
 import { formatCurrency, formatLocalDate } from '../../utils/formatters';
 import { IconButton, EDIT_ICON, DELETE_ICON } from '../ui/FormField';
 import Button from '../ui/Button';
@@ -22,13 +22,24 @@ const IncomeRow = memo(function IncomeRow({ record }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving,     setSaving]     = useState(false);
 
-  const cat = INCOME_CATEGORY_MAP[record.category] ?? INCOME_CATEGORY_MAP.other;
+  const { getCategoryById } = useCategory();
+  
+  const apiCat = getCategoryById(record.category);
+  const cat = apiCat 
+    ? { bg: 'bg-slate-700/50', color: apiCat.color, icon: apiCat.icon, name: apiCat.name }
+    : { bg: 'bg-slate-700/50', color: 'text-slate-400', icon: '💰', name: 'Other' };
 
-  const handleEdit = useCallback((values) => {
+  const handleEdit = useCallback(async (values) => {
     setSaving(true);
-    updateIncome(record.id, values);
-    setSaving(false);
-    setEditOpen(false);
+    try {
+      await updateIncome(record.id, values);
+      setEditOpen(false);
+    } catch (err) {
+      console.error(err);
+      // Toast would be nice here, but since it's a row, the error is logged and modal stays open
+    } finally {
+      setSaving(false);
+    }
   }, [record.id, updateIncome]);
 
   const handleDelete = useCallback(() => {
@@ -50,7 +61,7 @@ const IncomeRow = memo(function IncomeRow({ record }) {
               {cat.icon}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">{record.title}</p>
+              <p className="truncate text-sm font-medium text-white">{record.source || 'Income'}</p>
               <p className="truncate text-xs text-slate-500">{cat.name}</p>
             </div>
           </div>
@@ -82,7 +93,7 @@ const IncomeRow = memo(function IncomeRow({ record }) {
           <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
             <IconButton
               onClick={() => setEditOpen(true)}
-              label={`Edit ${record.title}`}
+              label={`Edit ${record.source || 'Income'}`}
               hoverClass="hover:bg-primary-500/10 hover:text-primary-400"
             >
               {EDIT_ICON}
@@ -90,7 +101,7 @@ const IncomeRow = memo(function IncomeRow({ record }) {
 
             <IconButton
               onClick={() => setDeleteOpen(true)}
-              label={`Delete ${record.title}`}
+              label={`Delete ${record.source || 'Income'}`}
               hoverClass="hover:bg-danger-500/10 hover:text-danger-400"
             >
               {DELETE_ICON}
@@ -117,7 +128,7 @@ const IncomeRow = memo(function IncomeRow({ record }) {
           itemName="Income"
         >
           Are you sure you want to delete{' '}
-          <span className="font-semibold text-white">"{record.title}"</span>?
+          <span className="font-semibold text-white">"{record.source || 'this income'}"</span>?
           This action <span className="font-semibold text-danger-400">cannot be undone</span>.
         </DeleteConfirmBody>
       </IncomeModal>

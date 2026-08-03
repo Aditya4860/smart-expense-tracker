@@ -1,5 +1,5 @@
 import { memo, useState, useCallback } from 'react';
-import { CATEGORY_MAP, PAYMENT_METHOD_MAP } from '../../constants/expenseCategories';
+import { useCategory } from '../../context/CategoryContext';
 import { formatCurrency, formatLocalDate } from '../../utils/formatters';
 import { IconButton, EDIT_ICON, DELETE_ICON } from '../ui/FormField';
 import Button from '../ui/Button';
@@ -22,15 +22,27 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving,     setSaving]     = useState(false);
 
-  const isSavings = expense.type === 'savings_contribution';
-  const cat     = isSavings ? { bg: 'bg-primary-500/20', color: 'text-primary-400', icon: '🏦', name: 'Savings Transfer' } : (CATEGORY_MAP[expense.category] ?? CATEGORY_MAP.other);
-  const payment = isSavings ? { label: 'Internal Transfer' } : (PAYMENT_METHOD_MAP[expense.paymentMethod] ?? { label: expense.paymentMethod });
+  const { getCategoryById } = useCategory();
 
-  const handleEdit = useCallback((values) => {
+  const isSavings = expense.type === 'savings_contribution';
+  const apiCat = getCategoryById(expense.category);
+  const cat = isSavings ? { bg: 'bg-primary-500/20', color: 'text-primary-400', icon: '🏦', name: 'Savings Transfer' } 
+    : apiCat ? { bg: 'bg-slate-700/50', color: apiCat.color, icon: apiCat.icon, name: apiCat.name }
+    : { bg: 'bg-slate-700/50', color: 'text-slate-400', icon: '📦', name: 'Other' };
+
+  const payment = isSavings ? { label: 'Internal Transfer' } : { label: expense.paymentMethod || 'None' };
+
+  const handleEdit = useCallback(async (values) => {
     setSaving(true);
-    updateExpense(expense.id, values);
-    setSaving(false);
-    setEditOpen(false);
+    try {
+      await updateExpense(expense.id, values);
+      setEditOpen(false);
+    } catch (err) {
+      console.error(err);
+      // Toast would be nice here, but since it's a row, the error is logged and modal stays open
+    } finally {
+      setSaving(false);
+    }
   }, [expense.id, updateExpense]);
 
   const handleDelete = useCallback(() => {
@@ -52,7 +64,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
               {cat.icon}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">{expense.title}</p>
+              <p className="truncate text-sm font-medium text-white">{expense.merchant || 'Unknown'}</p>
               <p className="truncate text-xs text-slate-500">{cat.name}</p>
             </div>
           </div>
@@ -80,7 +92,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
           <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
             <IconButton
               onClick={() => setEditOpen(true)}
-              label={`Edit ${expense.title}`}
+              label={`Edit ${expense.merchant || 'Expense'}`}
               hoverClass="hover:bg-primary-500/10 hover:text-primary-400"
             >
               {EDIT_ICON}
@@ -88,7 +100,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
 
             <IconButton
               onClick={() => setDeleteOpen(true)}
-              label={`Delete ${expense.title}`}
+              label={`Delete ${expense.merchant || 'Expense'}`}
               hoverClass="hover:bg-danger-500/10 hover:text-danger-400"
             >
               {DELETE_ICON}
@@ -115,7 +127,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
           itemName="Expense"
         >
           Are you sure you want to delete{' '}
-          <span className="font-semibold text-white">"{expense.title}"</span>?
+          <span className="font-semibold text-white">"{expense.merchant || 'this expense'}"</span>?
           This action <span className="font-semibold text-danger-400">cannot be undone</span>.
         </DeleteConfirmBody>
       </ExpenseModal>

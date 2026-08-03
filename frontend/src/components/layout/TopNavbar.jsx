@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { path: '/goals', label: 'Goals' },
   { path: '/analytics', label: 'Analytics' },
   { path: '/reports', label: 'Reports' },
+  { path: '/categories', label: 'Categories' },
 ];
 
 /**

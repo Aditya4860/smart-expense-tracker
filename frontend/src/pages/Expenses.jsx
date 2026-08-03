@@ -35,11 +35,16 @@ function ExpensesInner() {
 
   const activeFilters = Object.values(filters).some(Boolean);
 
-  const handleAdd = useCallback((values) => {
+  const handleAdd = useCallback(async (values) => {
     setSaving(true);
-    addExpense(values);
-    setSaving(false);
-    setAddOpen(false);
+    try {
+      await addExpense(values);
+      setAddOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   }, [addExpense]);
 
   return (

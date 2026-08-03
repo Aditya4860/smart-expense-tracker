@@ -41,19 +41,29 @@ function GoalsInner() {
 
   const { goals, addGoal, updateGoal, deleteGoal, addGoalSaving } = useGoals();
 
-  const handleAdd = useCallback((values) => {
+  const handleAdd = useCallback(async (values) => {
     setSaving(true);
-    addGoal(values);
-    setSaving(false);
-    setAddOpen(false);
+    try {
+      await addGoal(values);
+      setAddOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   }, [addGoal]);
 
-  const handleEdit = useCallback((values) => {
+  const handleEdit = useCallback(async (values) => {
     if (!editGoal) return;
     setSaving(true);
-    updateGoal(editGoal.id, values);
-    setSaving(false);
-    setEditGoal(null);
+    try {
+      await updateGoal(editGoal.id, values);
+      setEditGoal(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   }, [editGoal, updateGoal]);
 
   const handleDelete = useCallback(() => {

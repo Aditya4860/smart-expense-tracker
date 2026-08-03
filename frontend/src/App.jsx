@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CategoryProvider } from './context/CategoryContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { IncomeProvider } from './context/IncomeContext';
@@ -18,12 +19,13 @@ import Analytics from './pages/Analytics';
 import Budget from './pages/Budget';
 import Goals from './pages/Goals';
 import Reports from './pages/Reports';
+import Categories from './pages/Categories';
 
 /**
  * App.jsx — Root component.
  *
  * Provider hierarchy (outermost → innermost):
- *   AuthProvider → TransactionProvider → ExpenseProvider → IncomeProvider → AnalyticsProvider → BudgetProvider → GoalProvider → BrowserRouter → Routes
+ *   AuthProvider → CategoryProvider → TransactionProvider → ExpenseProvider → IncomeProvider → AnalyticsProvider → BudgetProvider → GoalProvider → BrowserRouter → Routes
  *
  * Route structure:
  *   /            → Landing     (public)
@@ -41,6 +43,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+      <CategoryProvider>
       <TransactionProvider>
         <ExpenseProvider>
           <IncomeProvider>
@@ -63,6 +66,7 @@ function App() {
                       <Route path="/budget"    element={<Budget />}    />
                       <Route path="/goals"     element={<Goals />}     />
                       <Route path="/reports"   element={<Reports />}   />
+                      <Route path="/categories" element={<Categories />} />
                     </Route>
 
                     {/* Catch-all */}
@@ -75,6 +79,7 @@ function App() {
           </IncomeProvider>
         </ExpenseProvider>
       </TransactionProvider>
+      </CategoryProvider>
       </ThemeProvider>
     </AuthProvider>
   );

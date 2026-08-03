@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import useAnalytics from '../../hooks/useAnalytics';
+import { useCategory } from '../../context/CategoryContext';
 import { CATEGORY_MAP } from '../../constants/expenseCategories';
 import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
 import { formatCurrency, formatLocalDate } from '../../utils/formatters';
@@ -8,14 +9,13 @@ import Card from '../ui/Card';
 // ── Transaction row ────────────────────────────────────────────────────────
 
 function TransactionRow({ txn }) {
+  const { getCategoryMeta } = useCategory();
   const isIncome  = txn.type === 'income';
   const isSavings = txn.type === 'savings_contribution';
   
-  const catMeta   = isIncome
-    ? (INCOME_CATEGORY_MAP[txn.category] ?? { icon: '📦', name: txn.category, bg: 'bg-slate-500/15', color: 'text-slate-400' })
-    : isSavings 
-      ? { icon: '🏦', name: 'Savings Transfer', bg: 'bg-primary-500/20', color: 'text-primary-400' }
-      : (CATEGORY_MAP[txn.category]      ?? { icon: '📦', name: txn.category, bg: 'bg-slate-500/15', color: 'text-slate-400' });
+  const catMeta   = isSavings 
+    ? { icon: '🏦', name: 'Savings Transfer', bg: 'bg-primary-500/20', color: 'text-primary-400' }
+    : getCategoryMeta(txn.category, isIncome ? 'INCOME' : 'EXPENSE');
 
   return (
     <li className="flex items-center gap-4 py-3 border-b border-surface-700/40 last:border-0">

@@ -2,19 +2,18 @@ import { useState, useCallback } from 'react';
 import { validateIncome, defaultIncomeValues } from '../../utils/incomeValidation';
 import { todayString } from '../../utils/formatters';
 import { FieldError, FormLabel } from '../ui/FormField';
-import CategorySelect from './CategorySelect';
+import CategorySelect from '../ui/CategorySelect';
 import Button from '../ui/Button';
 import DateSelect from '../ui/DateSelect';
 import useFormState from '../../hooks/useFormState';
 
 function valuesFromIncome(record) {
   return {
-    title:    record.title,
     amount:   String(record.amount),
-    category: record.category,
+    category: record.category_id || record.category, // fallback for old data
     date:     record.date,
     source:   record.source ?? '',
-    notes:    record.notes  ?? '',
+    description: record.description ?? '',
   };
 }
 
@@ -49,7 +48,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    const ALL = { title: true, amount: true, category: true, date: true, source: true, notes: true };
+    const ALL = { amount: true, category: true, date: true, source: true, description: true };
     setTouched(ALL);
     const { valid, errors: newErrors } = validateIncome(values);
     if (!valid) {
@@ -70,28 +69,9 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {/* Main Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          {/* Title */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <FormLabel htmlFor="if-title" required>Title</FormLabel>
-            <input
-              id="if-title"
-              name="title"
-              type="text"
-              value={values.title}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="e.g. Monthly salary"
-              autoComplete="off"
-              aria-invalid={!!err('title')}
-              aria-describedby={err('title') ? 'if-title-error' : undefined}
-              className={inputClass('title')}
-            />
-            <FieldError id="if-title-error" message={err('title')} />
-          </div>
-
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Amount */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="if-amount" required>Amount (₹)</FormLabel>
             <input
               id="if-amount"
@@ -111,7 +91,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
           </div>
 
           {/* Date */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="if-date" required>Date</FormLabel>
             <DateSelect
               id="if-date"
@@ -126,7 +106,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
           </div>
 
           {/* Category */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="if-category" required>Category</FormLabel>
             <CategorySelect
               id="if-category"
@@ -134,12 +114,13 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
               onChange={handleChange}
               onBlur={handleBlur}
               error={err('category')}
+              type="INCOME"
             />
             <FieldError id="if-category-error" message={err('category')} />
           </div>
 
           {/* Source */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="if-source" optional>Source</FormLabel>
             <input
               id="if-source"
@@ -158,13 +139,13 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
           </div>
         </div>
 
-      {/* Notes */}
+      {/* Description */}
       <div>
-        <FormLabel htmlFor="if-notes" optional>Notes</FormLabel>
+        <FormLabel htmlFor="if-description" optional>Notes</FormLabel>
         <textarea
-          id="if-notes"
-          name="notes"
-          value={values.notes}
+          id="if-description"
+          name="description"
+          value={values.description}
           onChange={handleChange}
           onBlur={handleBlur}
           placeholder="Any extra details…"
@@ -173,15 +154,15 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
           className="input resize-none py-2.5 text-sm"
         />
         <div className="mt-1 flex items-start justify-between gap-2">
-          <FieldError id="if-notes-error" message={err('notes')} />
-          <p className="ml-auto text-xs text-slate-600">{values.notes.length}/500</p>
+          <FieldError id="if-description-error" message={err('description')} />
+          <p className="ml-auto text-xs text-slate-600">{values.description.length}/500</p>
         </div>
       </div>
 
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

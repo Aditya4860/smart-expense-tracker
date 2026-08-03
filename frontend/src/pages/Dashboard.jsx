@@ -25,14 +25,16 @@ import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
 import useBudget from '../hooks/useBudget';
 import useGoals from '../hooks/useGoals';
+import { useCategory } from '../context/CategoryContext';
 import { CATEGORY_MAP } from '../constants/expenseCategories';
 import { formatCurrency } from '../utils/formatters';
 
 // ── Widget: Top Spending Category ──────────────────────────────────────────
 
 const TopSpendingCategory = memo(function TopSpendingCategory({ analytics }) {
+  const { getCategoryMeta } = useCategory();
   const top = analytics.topExpenseCategories[0];
-  const cat = top ? (CATEGORY_MAP[top.category] ?? { name: top.category, icon: '📦', bg: 'bg-slate-500/15', color: 'text-slate-400' }) : null;
+  const cat = top ? getCategoryMeta(top.category, 'EXPENSE') : null;
 
   return (
     <Card padding="md" className="flex flex-col gap-3">

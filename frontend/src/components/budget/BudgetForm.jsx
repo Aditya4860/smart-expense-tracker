@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { validateBudget, defaultBudgetValues } from '../../utils/budgetValidation';
 import { FieldError, FormLabel } from '../ui/FormField';
-import CategoryBudgetSelect from './CategoryBudgetSelect';
+import CategorySelect from '../ui/CategorySelect';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
 import useBudget from '../../hooks/useBudget';
@@ -95,22 +95,23 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
     >
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {/* Main Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Category */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="bf-category" required>Category</FormLabel>
-            <CategoryBudgetSelect
+            <CategorySelect
               id="bf-category"
               value={values.category}
               onChange={handleChange}
               onBlur={handleBlur}
               error={err('category')}
+              type="EXPENSE"
             />
             <FieldError id="bf-category-error" message={err('category')} />
           </div>
 
           {/* Monthly Limit */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="bf-monthlyLimit" required>Monthly Limit (₹)</FormLabel>
             <input
               id="bf-monthlyLimit"
@@ -163,7 +164,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

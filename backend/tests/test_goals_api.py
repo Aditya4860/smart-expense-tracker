@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock
 from uuid import uuid4
-from app.main import app
+from main import app
 from app.api.v1.goals import get_goal_service, get_goal_contribution_service
 from app.core.dependencies import get_current_user
 from app.models.user import User

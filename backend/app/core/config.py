@@ -1,7 +1,11 @@
+from pathlib import Path
 from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_FILE = BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -9,7 +13,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
-    SECRET_KEY: str
+    SECRET_KEY: str = "your-super-secret-key-for-jwt-do-not-use-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
     ALGORITHM: str = "HS256"
@@ -27,7 +31,8 @@ class Settings(BaseSettings):
     ALEMBIC_DATABASE_URL: Optional[PostgresDsn] = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE),
+        extra="ignore",
         case_sensitive=True,
     )
 

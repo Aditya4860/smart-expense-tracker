@@ -30,6 +30,35 @@ class AuthService:
         self.db.add(db_user)
         await self.db.commit()
         await self.db.refresh(db_user)
+
+        # Seed default categories
+        from app.models.category import Category
+        from app.models.enums import TransactionType
+        default_categories = [
+            {"name": "Food & Dining", "type": TransactionType.EXPENSE, "icon": "🍽️", "color": "text-orange-400"},
+            {"name": "Transport", "type": TransactionType.EXPENSE, "icon": "🚗", "color": "text-blue-400"},
+            {"name": "Shopping", "type": TransactionType.EXPENSE, "icon": "🛍️", "color": "text-pink-400"},
+            {"name": "Bills & Utilities", "type": TransactionType.EXPENSE, "icon": "⚡", "color": "text-yellow-400"},
+            {"name": "Entertainment", "type": TransactionType.EXPENSE, "icon": "🎬", "color": "text-purple-400"},
+            {"name": "Salary", "type": TransactionType.INCOME, "icon": "💼", "color": "text-green-400"},
+            {"name": "Freelancing", "type": TransactionType.INCOME, "icon": "💻", "color": "text-blue-400"},
+            {"name": "Investment", "type": TransactionType.INCOME, "icon": "📈", "color": "text-teal-400"},
+            {"name": "Other", "type": TransactionType.EXPENSE, "icon": "📦", "color": "text-slate-400"},
+            {"name": "Other", "type": TransactionType.INCOME, "icon": "📦", "color": "text-slate-400"}
+        ]
+        
+        for cat in default_categories:
+            db_cat = Category(
+                user_id=db_user.id,
+                name=cat["name"],
+                type=cat["type"],
+                icon=cat["icon"],
+                color=cat["color"]
+            )
+            self.db.add(db_cat)
+            
+        await self.db.commit()
+
         return db_user
 
     async def authenticate_user(self, email: str, password: str) -> User:

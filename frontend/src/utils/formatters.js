@@ -46,7 +46,10 @@ export function formatDate(iso) {
  */
 export function formatLocalDate(dateStr) {
   if (!dateStr) return '—';
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', {
+  const cleanStr = typeof dateStr === 'string' && dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+  const d = new Date(cleanStr + 'T00:00:00');
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('en-IN', {
     day: '2-digit', month: 'short', year: 'numeric',
   });
 }

@@ -5,7 +5,7 @@
  * All functions are stateless and testable in isolation.
  */
 
-import { CATEGORY_IDS, PAYMENT_METHOD_IDS } from '../constants/expenseCategories';
+import { PAYMENT_METHOD_IDS } from '../constants/expenseCategories';
 import { todayString } from './formatters';
 import { validateTitle, validateAmount, validateDate, validateNotes } from './validationUtils';
 
@@ -13,21 +13,23 @@ import { validateTitle, validateAmount, validateDate, validateNotes } from './va
  * Validate raw expense form values.
  *
  * @param {object} values
- * @param {string} values.title
+ * @param {string} values.merchant
  * @param {string|number} values.amount
  * @param {string} values.category
  * @param {string} values.date          - 'YYYY-MM-DD'
  * @param {string} values.paymentMethod
- * @param {string} [values.notes]
+ * @param {string} [values.description]
  *
  * @returns {{ valid: boolean, errors: Record<string, string> }}
  */
 export function validateExpense(values) {
   const errors = {};
 
-  // ── Title ────────────────────────────────────────────────────────────────
-  const titleErr = validateTitle(values.title);
-  if (titleErr) errors.title = titleErr;
+  // ── Merchant ─────────────────────────────────────────────────────────────
+  // It's optional, but we validate length if present
+  if (values.merchant && values.merchant.length > 255) {
+    errors.merchant = 'Merchant name must be less than 255 characters.';
+  }
 
   // ── Amount ───────────────────────────────────────────────────────────────
   const amountErr = validateAmount(values.amount, 10_000_000);
@@ -36,8 +38,6 @@ export function validateExpense(values) {
   // ── Category ─────────────────────────────────────────────────────────────
   if (!values.category) {
     errors.category = 'Category is required.';
-  } else if (!CATEGORY_IDS.includes(values.category)) {
-    errors.category = 'Please select a valid category.';
   }
 
   // ── Date ─────────────────────────────────────────────────────────────────
@@ -51,9 +51,9 @@ export function validateExpense(values) {
     errors.paymentMethod = 'Please select a valid payment method.';
   }
 
-  // ── Notes (optional) ─────────────────────────────────────────────────────
-  const notesErr = validateNotes(values.notes);
-  if (notesErr) errors.notes = notesErr;
+  // ── Description (optional) ───────────────────────────────────────────────
+  const notesErr = validateNotes(values.description);
+  if (notesErr) errors.description = notesErr;
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
@@ -61,16 +61,16 @@ export function validateExpense(values) {
 /**
  * Returns a clean default form values object with today's date pre-filled.
  *
- * @returns {{ title: string, amount: string, category: string, date: string, paymentMethod: string, notes: string }}
+ * @returns {{ merchant: string, amount: string, category: string, date: string, paymentMethod: string, description: string }}
  */
 export function defaultExpenseValues() {
   return {
-    title:         '',
+    merchant:      '',
     amount:        '',
     category:      '',
     date:          todayString(),
     paymentMethod: '',
-    notes:         '',
+    description:   '',
   };
 }
 

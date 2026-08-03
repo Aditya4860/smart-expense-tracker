@@ -7,6 +7,7 @@ import BudgetModal from '../components/budget/BudgetModal';
 import BudgetForm from '../components/budget/BudgetForm';
 import Button from '../components/ui/Button';
 import useBudget from '../hooks/useBudget';
+import { useCategory } from '../context/CategoryContext';
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ const GridIcon = (
 
 function BudgetInner() {
   const { budgets, addBudget, updateBudget, deleteBudget, includeSavings, toggleIncludeSavings } = useBudget();
+  const { getCategoryMeta } = useCategory();
   const [addOpen,    setAddOpen]    = useState(false);
   const [editBudget, setEditBudget] = useState(null);
   const [delBudget,  setDelBudget]  = useState(null);
@@ -216,13 +218,14 @@ function BudgetInner() {
         isOpen={Boolean(delBudget)}
         onClose={() => setDelBudget(null)}
         title="Delete Budget"
+        size="sm"
       >
-        <div className="space-y-5">
+        <div className="p-6 space-y-5">
           <div className="rounded-xl border border-danger-500/20 bg-danger-500/5 p-4">
             <p className="text-sm text-slate-300">
               Are you sure you want to delete the{' '}
               <span className="font-semibold text-white">
-                "{delBudget?.category}"
+                "{delBudget ? getCategoryMeta(delBudget.category, 'EXPENSE').name : 'this'}"
               </span>{' '}
               budget? This action{' '}
               <span className="font-semibold text-danger-400">cannot be undone</span>.

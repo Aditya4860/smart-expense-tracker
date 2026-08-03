@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import useAnalytics from '../../hooks/useAnalytics';
+import { useCategory } from '../../context/CategoryContext';
 import { CATEGORY_MAP } from '../../constants/expenseCategories';
 import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
@@ -28,37 +29,36 @@ const EXPENSE_CATEGORY_HEX = {
   other:         '#94a3b8', // slate-400
 };
 
-const DEFAULT_HEX = '#6366f1'; // indigo-400 fallback
+const DEFAULT_HEX = '#94a3b8';
+const PALETTE_FALLBACKS = ['#fb923c', '#60a5fa', '#f472b6', '#facc15', '#c084fc', '#f87171', '#22d3ee', '#2dd4bf', '#4ade80'];
 
+// ── Custom Tooltip ─────────────────────────────────────────────────────────
 
-
-// ── Custom tooltip ─────────────────────────────────────────────────────────
-
-function PieTooltip({ active, payload }) {
+function ChartTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
-  const { name, value, payload: inner } = payload[0];
+  const { name, value, share } = payload[0].payload;
   return (
-    <div className="rounded-xl border border-surface-700/60 bg-surface-900 p-3 shadow-2xl text-sm">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: inner.fill }} />
-        <span className="font-semibold text-white">{name}</span>
-      </div>
-      <p className="text-danger-400 font-semibold tabular-nums">{formatCurrency(value)}</p>
-      <p className="text-slate-500 text-xs">{inner.share}% of total</p>
+    <div className="rounded-xl border border-surface-700/80 bg-surface-900/95 p-3 shadow-xl backdrop-blur-sm">
+      <p className="text-xs font-semibold text-white">{name}</p>
+      <p className="mt-1 text-sm font-bold text-danger-400">{formatCurrency(value)}</p>
+      <p className="text-[10px] text-slate-500">{share}% of total spending</p>
     </div>
   );
 }
 
-// ── Legend item ────────────────────────────────────────────────────────────
+// ── Custom Legend ──────────────────────────────────────────────────────────
 
-function CustomLegend({ payload }) {
-  if (!payload?.length) return null;
+function ChartLegend({ payload }) {
   return (
-    <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
-      {payload.map(entry => (
-        <li key={entry.value} className="flex items-center gap-1.5 text-xs text-slate-400">
-          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-          {entry.value}
+    <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-3 text-xs" role="list">
+      {payload.map((entry) => (
+        <li key={entry.value} className="flex items-center gap-1.5 text-slate-400">
+          <span
+            className="h-2 w-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: entry.color }}
+            aria-hidden="true"
+          />
+          <span className="truncate max-w-[120px]">{entry.value}</span>
         </li>
       ))}
     </ul>
@@ -73,13 +73,17 @@ function CustomLegend({ payload }) {
  */
 const ExpenseCategoryPieChart = memo(function ExpenseCategoryPieChart() {
   const { analytics } = useAnalytics();
+  const { getCategoryMeta } = useCategory();
 
-  const data = analytics.categoryTotals.map(item => ({
-    name:  CATEGORY_MAP[item.category]?.name ?? item.category,
-    value: item.total,
-    share: item.share,
-    fill:  EXPENSE_CATEGORY_HEX[item.category] ?? DEFAULT_HEX,
-  }));
+  const data = analytics.categoryTotals.map((item, idx) => {
+    const meta = getCategoryMeta(item.category, 'EXPENSE');
+    return {
+      name:  meta.name,
+      value: item.total,
+      share: item.share,
+      fill:  EXPENSE_CATEGORY_HEX[item.category] || PALETTE_FALLBACKS[idx % PALETTE_FALLBACKS.length] || DEFAULT_HEX,
+    };
+  });
 
   if (!data.length) {
     return (

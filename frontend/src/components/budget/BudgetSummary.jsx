@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import useBudget from '../../hooks/useBudget';
+import { useCategory } from '../../context/CategoryContext';
 import { formatCurrency } from '../../utils/formatters';
 import { computeBudgetStats } from '../../utils/budgetUtils';
 import StatCard from '../ui/StatCard';
@@ -43,6 +44,7 @@ const ICONS = {
  */
 const BudgetSummary = memo(function BudgetSummary() {
   const { budgets } = useBudget();
+  const { getCategoryMeta } = useCategory();
 
   const stats = useMemo(() => computeBudgetStats(budgets), [budgets]);
 
@@ -111,7 +113,7 @@ const BudgetSummary = memo(function BudgetSummary() {
       id:       'bs-top',
       label:    'Highest Budget',
       value:    stats.topBudget ? formatCurrency(stats.topBudget.monthlyLimit) : '—',
-      sub:      stats.topBudget ? stats.topBudget.category : 'No budgets yet',
+      sub:      stats.topBudget ? getCategoryMeta(stats.topBudget.category, 'EXPENSE').name : 'No budgets yet',
       icon:     ICONS.trophy,
       iconBg:   'bg-yellow-500/15',
       iconText: 'text-yellow-400',

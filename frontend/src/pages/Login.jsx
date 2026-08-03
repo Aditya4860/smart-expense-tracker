@@ -8,8 +8,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [form, setForm]       = useState({ email: '', password: '' });
-  const [errors, setErrors]   = useState({});
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,10 +21,10 @@ export default function Login() {
 
   function validate() {
     const next = {};
-    if (!form.email.trim())    next.email    = 'Email is required.';
+    if (!form.email.trim()) next.email = 'Email is required.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
-                               next.email    = 'Enter a valid email address.';
-    if (!form.password)        next.password = 'Password is required.';
+      next.email = 'Enter a valid email address.';
+    if (!form.password) next.password = 'Password is required.';
     return next;
   }
 
@@ -32,7 +32,7 @@ export default function Login() {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-    if (apiError)     setApiError('');
+    if (apiError) setApiError('');
   }
 
   async function handleSubmit(e) {

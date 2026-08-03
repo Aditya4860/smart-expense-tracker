@@ -66,9 +66,9 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full" id="goal-form">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {/* Main Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Title */}
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="sm:col-span-2">
             <FormLabel htmlFor="gf-title" required>Goal Name</FormLabel>
             <input
               id="gf-title" name="title" type="text"
@@ -79,7 +79,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
           </div>
 
           {/* Target Amount */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="gf-target" required>Target Amount (₹)</FormLabel>
             <CurrencyInput
               id="gf-target" name="targetAmount"
@@ -92,7 +92,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
           </div>
 
           {/* Current Amount */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="gf-current">Current Saved (₹)</FormLabel>
             <CurrencyInput
               id="gf-current" name="currentAmount"
@@ -105,7 +105,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
           </div>
 
           {/* Monthly Contribution */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="gf-monthly" required>Monthly Contribution (₹)</FormLabel>
             <CurrencyInput
               id="gf-monthly" name="monthlyContribution"
@@ -118,7 +118,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
           </div>
 
           {/* Target Date */}
-          <div>
+          <div className="sm:col-span-1">
             <FormLabel htmlFor="gf-date" required>Target Date</FormLabel>
             <DateSelect
               id="gf-date"
@@ -133,7 +133,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
           </div>
 
           {/* Priority */}
-          <div>
+          <div className="sm:col-span-2">
             <FormLabel htmlFor="gf-priority">Priority</FormLabel>
             <Select
               id="gf-priority"
@@ -161,7 +161,7 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
       </div>
       
       {/* Footer */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-[10px] sm:rounded-b-[10px]">
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/60 p-6 bg-surface-900 rounded-b-2xl sm:rounded-b-2xl">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
         </Button>

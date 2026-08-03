@@ -11,6 +11,8 @@ class Goal(BaseModel):
     target_amount = Column(Numeric(12, 2), nullable=False)
     current_amount = Column(Numeric(12, 2), default=0.00, nullable=False)
     deadline = Column(Date, nullable=True)
+    description = Column(String(500), nullable=True)
+    priority = Column(String(20), default="medium", nullable=False)
     status = Column(Enum(GoalStatus), default=GoalStatus.ACTIVE, nullable=False, index=True)
     
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)

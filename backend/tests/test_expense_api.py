@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock
 from uuid import uuid4
 from datetime import date
-from app.main import app
+from main import app
 from app.api.v1.expense import get_expense_service
 from app.core.dependencies import get_current_user
 from app.models.user import User
@@ -33,12 +33,14 @@ def test_create_expense_api(mock_service):
     mock_expense = {
         "id": str(uuid4()),
         "user_id": str(uuid4()),
-        "title": "Groceries",
+        "merchant": "Groceries",
         "description": "Weekly groceries",
         "amount": 50.0,
-        "category": "Food",
+        "category_id": str(uuid4()),
+        "category_name": "Food",
         "payment_method": "Card",
-        "transaction_date": str(date.today()),
+        "date": str(date.today()),
+        "receipt_url": None,
         "created_at": "2024-01-01T12:00:00",
         "updated_at": "2024-01-01T12:00:00"
     }
@@ -46,32 +48,36 @@ def test_create_expense_api(mock_service):
     mock_service.create_expense.return_value = mock_expense
     
     payload = {
-        "title": "Groceries",
+        "merchant": "Groceries",
         "amount": 50.0,
-        "category": "Food",
-        "transaction_date": str(date.today())
+        "category_id": str(uuid4()),
+        "date": str(date.today())
     }
     
     response = client.post("/api/v1/expenses", json=payload)
     assert response.status_code == 201
-    assert response.json()["title"] == "Groceries"
+    assert response.json()["merchant"] == "Groceries"
 
 def test_get_expense_api(mock_service):
     mock_expense = {
-        "id": "123",
+        "id": str(uuid4()),
         "user_id": str(uuid4()),
-        "title": "Gas",
+        "merchant": "Gas",
+        "description": None,
         "amount": 30.0,
-        "category": "Transport",
-        "transaction_date": str(date.today()),
+        "category_id": str(uuid4()),
+        "category_name": "Transport",
+        "payment_method": None,
+        "date": str(date.today()),
+        "receipt_url": None,
         "created_at": "2024-01-01T12:00:00",
         "updated_at": "2024-01-01T12:00:00"
     }
     mock_service.get_expense.return_value = mock_expense
     
-    response = client.get("/api/v1/expenses/123")
+    response = client.get(f"/api/v1/expenses/{mock_expense['id']}")
     assert response.status_code == 200
-    assert response.json()["title"] == "Gas"
+    assert response.json()["merchant"] == "Gas"
 
 def test_delete_expense_api(mock_service):
     mock_service.delete_expense.return_value = True

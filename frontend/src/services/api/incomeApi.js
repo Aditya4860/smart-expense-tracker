@@ -5,7 +5,9 @@ const mapToFrontend = (apiIncome) => ({
   amount: apiIncome.amount,
   date: apiIncome.date,
   source: apiIncome.source || '',
-  category: apiIncome.category_id, // If category_id maps to frontend category string
+  description: apiIncome.description || '',
+  category: apiIncome.category_id,
+  categoryName: apiIncome.category_name,
   type: 'income',
 });
 
@@ -13,7 +15,8 @@ const mapToBackend = (uiIncome) => ({
   amount: Number(uiIncome.amount),
   date: uiIncome.date,
   source: uiIncome.source || null,
-  category_id: uiIncome.category, // Assuming category passes the ID or string matching backend
+  description: uiIncome.description || null,
+  category_id: uiIncome.category,
 });
 
 export const incomeApi = {

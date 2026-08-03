@@ -33,7 +33,21 @@ const CLOSE_ICON = (
   </svg>
 );
 
-export default function Modal({ isOpen, onClose, title, titleId = 'modal-title', children }) {
+const SIZE_CLASSES = {
+  sm: 'sm:max-w-md',
+  md: 'sm:max-w-lg',
+  lg: 'sm:max-w-2xl',
+  xl: 'sm:max-w-4xl',
+};
+
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  titleId = 'modal-title',
+  size = 'md',
+  children,
+}) {
   const panelRef = useRef(null);
 
   const handleKeyDown = useCallback((e) => {
@@ -52,6 +66,8 @@ export default function Modal({ isOpen, onClose, title, titleId = 'modal-title',
   }, [isOpen, handleKeyDown]);
 
   if (!isOpen) return null;
+
+  const sizeClass = SIZE_CLASSES[size] || size || SIZE_CLASSES.md;
 
   return createPortal(
     <div
@@ -73,10 +89,10 @@ export default function Modal({ isOpen, onClose, title, titleId = 'modal-title',
         className={[
           'relative z-10 w-full bg-surface-900',
           'border border-surface-700',
-          'rounded-t-[10px] sm:rounded-[10px]',
+          'rounded-t-2xl sm:rounded-2xl',
           'shadow-2xl shadow-black/50',
-          'sm:max-w-[900px]',
-          'max-h-[92dvh] flex flex-col w-[95vw]',
+          sizeClass,
+          'max-h-[90dvh] flex flex-col',
         ].join(' ')}
       >
         {/* Mobile drag handle */}

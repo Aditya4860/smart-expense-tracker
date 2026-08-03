@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import useIncome from '../../hooks/useIncome';
+import { useCategory } from '../../context/CategoryContext';
 import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
 import { formatCurrency } from '../../utils/formatters';
 import Card from '../ui/Card';
@@ -30,6 +31,7 @@ const INCOME_CATEGORY_HEX = {
 };
 
 const DEFAULT_HEX = '#6366f1';
+const PALETTE_FALLBACKS = ['#4ade80', '#60a5fa', '#c084fc', '#22d3ee', '#818cf8', '#2dd4bf', '#fb923c', '#f472b6', '#facc15'];
 
 // ── Custom tooltip ─────────────────────────────────────────────────────────
 
@@ -73,6 +75,7 @@ function CustomLegend({ payload }) {
  */
 const IncomeCategoryPieChart = memo(function IncomeCategoryPieChart() {
   const { income } = useIncome();
+  const { getCategoryMeta } = useCategory();
 
   // Compute category totals from full income array
   const catMap   = {};
@@ -83,12 +86,15 @@ const IncomeCategoryPieChart = memo(function IncomeCategoryPieChart() {
   }
 
   const data = Object.entries(catMap)
-    .map(([cat, total]) => ({
-      name:  INCOME_CATEGORY_MAP[cat]?.name ?? cat,
-      value: Math.round(total * 100) / 100,
-      share: grandTotal > 0 ? Math.round((total / grandTotal) * 100) : 0,
-      fill:  INCOME_CATEGORY_HEX[cat] ?? DEFAULT_HEX,
-    }))
+    .map(([cat, total], idx) => {
+      const meta = getCategoryMeta(cat, 'INCOME');
+      return {
+        name:  meta.name,
+        value: Math.round(total * 100) / 100,
+        share: grandTotal > 0 ? Math.round((total / grandTotal) * 100) : 0,
+        fill:  INCOME_CATEGORY_HEX[cat] || PALETTE_FALLBACKS[idx % PALETTE_FALLBACKS.length] || DEFAULT_HEX,
+      };
+    })
     .sort((a, b) => b.value - a.value);
 
   if (!data.length) {

@@ -14,7 +14,7 @@ export default function GoalDetailsModal({ isOpen, onClose, goal, onAddMonthly, 
   const history = goal.history || [];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Goal Details">
+    <Modal isOpen={isOpen} onClose={onClose} title="Goal Details" size="lg">
       <div className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           

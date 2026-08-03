@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import and_, func, extract
+from sqlalchemy.orm import selectinload
 from app.models.income import Income
 from app.schemas.income_schema import IncomeCreate, IncomeUpdate
 
@@ -17,6 +18,7 @@ class IncomeRepository:
             amount=income_in.amount,
             date=income_in.date,
             source=income_in.source,
+            description=income_in.description,
             category_id=income_in.category_id
         )
         self.db.add(db_income)
@@ -26,19 +28,29 @@ class IncomeRepository:
 
     async def get_income(self, income_id: str, user_id: uuid.UUID) -> Optional[Income]:
         result = await self.db.execute(
-            select(Income).where(and_(Income.id == income_id, Income.user_id == user_id))
+            select(Income)
+            .options(selectinload(Income.category))
+            .where(and_(Income.id == income_id, Income.user_id == user_id))
         )
-        return result.scalars().first()
+        income = result.scalars().first()
+        if income and income.category:
+            income.category_name = income.category.name
+        return income
 
     async def list_incomes(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Income]:
         result = await self.db.execute(
             select(Income)
+            .options(selectinload(Income.category))
             .where(Income.user_id == user_id)
             .order_by(Income.date.desc())
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+        incomes = result.scalars().all()
+        for income in incomes:
+            if income.category:
+                income.category_name = income.category.name
+        return incomes
 
     async def update_income(self, income_id: str, user_id: uuid.UUID, income_in: IncomeUpdate) -> Optional[Income]:
         db_income = await self.get_income(income_id, user_id)
@@ -51,6 +63,8 @@ class IncomeRepository:
                 
         await self.db.commit()
         await self.db.refresh(db_income)
+        if db_income.category:
+            db_income.category_name = db_income.category.name
         return db_income
 
     async def delete_income(self, income_id: str, user_id: uuid.UUID) -> bool:
@@ -64,29 +78,43 @@ class IncomeRepository:
 
     async def search_incomes(self, user_id: uuid.UUID, query: str) -> Sequence[Income]:
         result = await self.db.execute(
-            select(Income).where(
+            select(Income)
+            .options(selectinload(Income.category))
+            .where(
                 and_(
                     Income.user_id == user_id,
                     Income.source.ilike(f"%{query}%")
                 )
             ).order_by(Income.date.desc())
         )
-        return result.scalars().all()
+        incomes = result.scalars().all()
+        for income in incomes:
+            if income.category:
+                income.category_name = income.category.name
+        return incomes
 
-    async def filter_by_category(self, user_id: uuid.UUID, category_id: str) -> Sequence[Income]:
+    async def filter_by_category(self, user_id: uuid.UUID, category_id: uuid.UUID) -> Sequence[Income]:
         result = await self.db.execute(
-            select(Income).where(
+            select(Income)
+            .options(selectinload(Income.category))
+            .where(
                 and_(
                     Income.user_id == user_id,
                     Income.category_id == category_id
                 )
             ).order_by(Income.date.desc())
         )
-        return result.scalars().all()
+        incomes = result.scalars().all()
+        for income in incomes:
+            if income.category:
+                income.category_name = income.category.name
+        return incomes
 
     async def filter_by_date(self, user_id: uuid.UUID, start_date: date, end_date: date) -> Sequence[Income]:
         result = await self.db.execute(
-            select(Income).where(
+            select(Income)
+            .options(selectinload(Income.category))
+            .where(
                 and_(
                     Income.user_id == user_id,
                     Income.date >= start_date,
@@ -94,7 +122,11 @@ class IncomeRepository:
                 )
             ).order_by(Income.date.desc())
         )
-        return result.scalars().all()
+        incomes = result.scalars().all()
+        for income in incomes:
+            if income.category:
+                income.category_name = income.category.name
+        return incomes
 
     async def get_monthly_summary(self, user_id: uuid.UUID, year: int, month: int) -> float:
         result = await self.db.execute(
@@ -106,7 +138,7 @@ class IncomeRepository:
                 )
             )
         )
-        return result.scalar() or 0.0
+        return float(result.scalar() or 0.0)
 
     async def get_statistics(self, user_id: uuid.UUID, start_date: date, end_date: date) -> dict:
         result = await self.db.execute(
