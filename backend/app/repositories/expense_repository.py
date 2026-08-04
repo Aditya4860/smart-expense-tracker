@@ -71,7 +71,9 @@ class ExpenseRepository:
         if max_amount is not None:
             filters.append(Expense.amount <= max_amount)
         if search_query and search_query.strip():
-            term = f"%{search_query.strip()}%"
+            from app.core.sanitization import escape_like_pattern
+            clean_term = escape_like_pattern(search_query)
+            term = f"%{clean_term}%"
             filters.append(or_(Expense.merchant.ilike(term), Expense.description.ilike(term)))
 
         query = (

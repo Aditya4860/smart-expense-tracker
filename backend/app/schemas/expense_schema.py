@@ -1,7 +1,8 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict, field_validator
 from datetime import date, datetime
+from app.core.sanitization import sanitize_string
 
 class ExpenseBase(BaseModel):
     merchant: Optional[str] = Field(None, max_length=255)
@@ -11,6 +12,11 @@ class ExpenseBase(BaseModel):
     payment_method: Optional[str] = Field(None, max_length=100)
     date: date
     receipt_url: Optional[HttpUrl] = None
+
+    @field_validator("merchant", "description", "payment_method", mode="before")
+    @classmethod
+    def sanitize_text(cls, v):
+        return sanitize_string(v) if isinstance(v, str) else v
 
 class ExpenseCreate(ExpenseBase):
     pass
@@ -23,6 +29,11 @@ class ExpenseUpdate(BaseModel):
     payment_method: Optional[str] = Field(None, max_length=100)
     date: Optional[date] = None
     receipt_url: Optional[HttpUrl] = None
+
+    @field_validator("merchant", "description", "payment_method", mode="before")
+    @classmethod
+    def sanitize_text(cls, v):
+        return sanitize_string(v) if isinstance(v, str) else v
 
 class ExpenseResponse(ExpenseBase):
     id: UUID

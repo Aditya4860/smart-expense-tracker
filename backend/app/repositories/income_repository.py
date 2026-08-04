@@ -61,7 +61,9 @@ class IncomeRepository:
         if end_date:
             filters.append(Income.date <= end_date)
         if search_query and search_query.strip():
-            term = f"%{search_query.strip()}%"
+            from app.core.sanitization import escape_like_pattern
+            clean_term = escape_like_pattern(search_query)
+            term = f"%{clean_term}%"
             filters.append(or_(Income.source.ilike(term), Income.description.ilike(term)))
 
         query = (

@@ -1,7 +1,8 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import date, datetime
+from app.core.sanitization import sanitize_string
 
 class IncomeBase(BaseModel):
     amount: float = Field(..., gt=0, description="Amount must be greater than 0")
@@ -9,6 +10,11 @@ class IncomeBase(BaseModel):
     source: Optional[str] = Field(None, max_length=255)
     description: Optional[str] = None
     category_id: UUID
+
+    @field_validator("source", "description", mode="before")
+    @classmethod
+    def sanitize_text(cls, v):
+        return sanitize_string(v) if isinstance(v, str) else v
 
 class IncomeCreate(IncomeBase):
     pass
@@ -19,6 +25,11 @@ class IncomeUpdate(BaseModel):
     source: Optional[str] = Field(None, max_length=255)
     description: Optional[str] = None
     category_id: Optional[UUID] = None
+
+    @field_validator("source", "description", mode="before")
+    @classmethod
+    def sanitize_text(cls, v):
+        return sanitize_string(v) if isinstance(v, str) else v
 
 class IncomeResponse(IncomeBase):
     id: UUID
