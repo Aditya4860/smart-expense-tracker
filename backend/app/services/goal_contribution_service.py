@@ -29,12 +29,15 @@ class GoalContributionService:
         
         return contribution
 
-    async def list_contributions(self, goal_id: str, user_id: uuid.UUID) -> Sequence[GoalContribution]:
+    async def list_contributions(self, goal_id: str, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[GoalContribution]:
         goal = await self.goal_repository.get_goal(goal_id, user_id)
         if not goal:
             raise NotFoundException("Goal not found")
             
-        return await self.repository.list_contributions(goal_id)
+        if skip < 0 or limit <= 0:
+            raise BadRequestException("Invalid pagination parameters.")
+        limit = min(limit, 500)
+        return await self.repository.list_contributions(goal_id, skip, limit)
 
     async def delete_contribution(self, contribution_id: str, user_id: uuid.UUID) -> bool:
         # We need to make sure the user owns the goal this contribution belongs to

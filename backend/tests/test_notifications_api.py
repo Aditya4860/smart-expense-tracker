@@ -26,7 +26,8 @@ def test_list_notifications_api(mock_service):
     mock_service.list_notifications.return_value = []
     response = client.get("/api/v1/notifications")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_notification_api(mock_service):
     mock_notification = {
@@ -48,4 +49,5 @@ def test_create_notification_api(mock_service):
     
     response = client.post("/api/v1/notifications", json=payload)
     assert response.status_code == 201
-    assert response.json()["title"] == "Welcome"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["title"] == "Welcome"

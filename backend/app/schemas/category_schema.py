@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from app.models.enums import TransactionType
 
@@ -21,9 +21,8 @@ class CategoryUpdate(BaseModel):
 
 class CategoryResponse(CategoryBase):
     id: UUID
-    user_id: UUID
+    user_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -21,8 +21,11 @@ class GoalService:
             raise NotFoundException("Goal not found")
         return goal
 
-    async def list_goals(self, user_id: uuid.UUID) -> Sequence[Goal]:
-        return await self.repository.list_goals(user_id)
+    async def list_goals(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Goal]:
+        if skip < 0 or limit <= 0:
+            raise BadRequestException("Invalid pagination parameters.")
+        limit = min(limit, 500)
+        return await self.repository.list_goals(user_id, skip, limit)
 
     async def update_goal(self, goal_id: str, user_id: uuid.UUID, goal_in: GoalUpdate) -> Goal:
         if goal_in.target_amount is not None and goal_in.target_amount <= 0:

@@ -31,16 +31,20 @@ async def list_incomes(
     category_id: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     service: IncomeService = Depends(get_income_service)
 ):
-    """List incomes with optional filtering and pagination."""
-    if category_id:
-        return await service.filter_by_category(current_user.id, category_id)
-    if start_date and end_date:
-        return await service.filter_by_date(current_user.id, start_date, end_date)
-    
-    return await service.list_incomes(current_user.id, skip, limit)
+    """List incomes with composable filtering and pagination."""
+    return await service.list_incomes(
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit,
+        category_id=category_id,
+        start_date=start_date,
+        end_date=end_date,
+        search_query=search
+    )
 
 @router.get("/search", response_model=List[IncomeResponse])
 async def search_incomes(

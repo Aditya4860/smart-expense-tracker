@@ -47,7 +47,17 @@ async def test_get_expense_not_found(expense_service, mock_repo):
 async def test_list_expenses_pagination(expense_service, mock_repo):
     mock_repo.list_expenses.return_value = []
     await expense_service.list_expenses("user1", skip=10, limit=5)
-    mock_repo.list_expenses.assert_called_once_with("user1", 10, 5)
+    mock_repo.list_expenses.assert_called_once_with(
+        user_id="user1",
+        skip=10,
+        limit=5,
+        category_id=None,
+        start_date=None,
+        end_date=None,
+        min_amount=None,
+        max_amount=None,
+        search_query=None
+    )
 
 @pytest.mark.asyncio
 async def test_list_expenses_invalid_pagination(expense_service, mock_repo):

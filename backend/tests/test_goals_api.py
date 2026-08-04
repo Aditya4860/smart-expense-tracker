@@ -28,7 +28,8 @@ def test_list_goals_api(mock_service):
     mock_service.list_goals.return_value = []
     response = client.get("/api/v1/goals")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_goal_api(mock_service):
     mock_goal = {
@@ -52,4 +53,5 @@ def test_create_goal_api(mock_service):
     
     response = client.post("/api/v1/goals", json=payload)
     assert response.status_code == 201
-    assert response.json()["name"] == "Vacation"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["name"] == "Vacation"

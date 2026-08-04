@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db_session, get_current_user
@@ -33,11 +33,13 @@ async def create_goal(
 
 @router.get("", response_model=List[GoalResponse])
 async def list_goals(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, gt=0, le=1000),
     current_user: User = Depends(get_current_user),
     service: GoalService = Depends(get_goal_service)
 ):
     """List all savings goals."""
-    return await service.list_goals(current_user.id)
+    return await service.list_goals(current_user.id, skip=skip, limit=limit)
 
 @router.get("/{id}/progress", response_model=GoalProgressResponse)
 async def get_goal_progress(
@@ -95,11 +97,13 @@ async def add_contribution(
 @router.get("/{id}/contributions", response_model=List[GoalContributionResponse])
 async def list_contributions(
     id: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, gt=0, le=1000),
     current_user: User = Depends(get_current_user),
     service: GoalContributionService = Depends(get_goal_contribution_service)
 ):
     """List all contributions for a specific goal."""
-    return await service.list_contributions(id, current_user.id)
+    return await service.list_contributions(id, current_user.id, skip=skip, limit=limit)
 
 @router.delete("/contributions/{contribution_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contribution(

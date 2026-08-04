@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey
+from sqlalchemy import Column, String, Boolean, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
@@ -14,3 +14,7 @@ class Notification(BaseModel):
 
     # Relationships
     user = relationship("User", back_populates="notifications")
+
+    __table_args__ = (
+        Index("ix_notifications_user_read", "user_id", "is_read"),
+    )

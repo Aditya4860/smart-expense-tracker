@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, Enum
+from sqlalchemy import Column, String, ForeignKey, Enum, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
@@ -21,3 +21,8 @@ class Category(BaseModel):
     expenses = relationship("Expense", back_populates="category")
     budgets = relationship("Budget", back_populates="category")
     recurring_transactions = relationship("RecurringTransaction", back_populates="category")
+
+    __table_args__ = (
+        Index("ix_categories_user_type", "user_id", "type"),
+        Index("ix_categories_user_name", "user_id", "name"),
+    )

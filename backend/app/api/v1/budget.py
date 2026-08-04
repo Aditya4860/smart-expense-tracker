@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import date
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db_session, get_current_user
@@ -26,11 +26,24 @@ async def create_budget(
 
 @router.get("", response_model=List[BudgetResponse])
 async def list_budgets(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, gt=0, le=1000),
     current_user: User = Depends(get_current_user),
     service: BudgetService = Depends(get_budget_service)
 ):
     """List all budgets for the user."""
-    return await service.list_budgets(current_user.id)
+    return await service.list_budgets(current_user.id, skip=skip, limit=limit)
+
+@router.get("/utilizations", response_model=List[BudgetUtilizationResponse])
+async def list_all_budget_utilizations(
+    target_date: Optional[date] = None,
+    current_user: User = Depends(get_current_user),
+    service: BudgetService = Depends(get_budget_service)
+):
+    """Get all budget utilizations in a single optimized query."""
+    if not target_date:
+        target_date = date.today()
+    return await service.list_all_budget_utilizations(current_user.id, target_date)
 
 @router.get("/{id}", response_model=BudgetResponse)
 async def get_budget(
@@ -71,3 +84,4 @@ async def get_budget_utilization(
     if not target_date:
         target_date = date.today()
     return await service.get_budget_utilization(id, current_user.id, target_date)
+

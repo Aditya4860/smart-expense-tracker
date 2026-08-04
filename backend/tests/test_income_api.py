@@ -27,7 +27,8 @@ def test_list_income_api(mock_service):
     mock_service.list_incomes.return_value = []
     response = client.get("/api/v1/income")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_income_api(mock_service):
     mock_income = {
@@ -52,4 +53,5 @@ def test_create_income_api(mock_service):
     
     response = client.post("/api/v1/income", json=payload)
     assert response.status_code == 201
-    assert response.json()["source"] == "Salary"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["source"] == "Salary"

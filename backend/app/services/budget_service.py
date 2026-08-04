@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List
 from datetime import date
 from app.models.budget import Budget
 from app.schemas.budget_schema import BudgetCreate, BudgetUpdate, BudgetUtilizationResponse
@@ -22,8 +22,11 @@ class BudgetService:
             raise NotFoundException("Budget not found")
         return budget
 
-    async def list_budgets(self, user_id: uuid.UUID) -> Sequence[Budget]:
-        return await self.repository.list_budgets(user_id)
+    async def list_budgets(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Budget]:
+        if skip < 0 or limit <= 0:
+            raise BadRequestException("Invalid pagination parameters.")
+        limit = min(limit, 500)
+        return await self.repository.list_budgets(user_id, skip, limit)
 
     async def update_budget(self, budget_id: str, user_id: uuid.UUID, budget_in: BudgetUpdate) -> Budget:
         if budget_in.amount is not None and budget_in.amount <= 0:
@@ -45,3 +48,7 @@ class BudgetService:
         if not utilization:
             raise NotFoundException("Budget not found")
         return BudgetUtilizationResponse(**utilization)
+
+    async def list_all_budget_utilizations(self, user_id: uuid.UUID, target_date: date) -> List[BudgetUtilizationResponse]:
+        utilizations = await self.repository.list_all_budget_utilizations(user_id, target_date)
+        return [BudgetUtilizationResponse(**u) for u in utilizations]

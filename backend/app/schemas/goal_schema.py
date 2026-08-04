@@ -1,6 +1,6 @@
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import date, datetime
 from app.models.enums import GoalStatus
 from app.schemas.goal_contribution_schema import GoalContributionResponse
@@ -31,8 +31,7 @@ class GoalResponse(GoalBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class GoalProgressResponse(GoalResponse):
     remaining_amount: float

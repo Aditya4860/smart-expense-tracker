@@ -3,30 +3,37 @@ from typing import Optional, Sequence
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_, func, extract
+from sqlalchemy import and_, or_, func, extract
 from sqlalchemy.orm import selectinload
 from app.models.expense import Expense
 from app.schemas.expense_schema import ExpenseCreate, ExpenseUpdate
+from app.core.logging import logger
 
 class ExpenseRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def create_expense(self, user_id: uuid.UUID, expense_in: ExpenseCreate) -> Expense:
-        db_expense = Expense(
-            user_id=user_id,
-            merchant=expense_in.merchant,
-            description=expense_in.description,
-            amount=expense_in.amount,
-            category_id=expense_in.category_id,
-            payment_method=expense_in.payment_method,
-            date=expense_in.date,
-            receipt_url=str(expense_in.receipt_url) if expense_in.receipt_url else None
-        )
-        self.db.add(db_expense)
-        await self.db.commit()
-        await self.db.refresh(db_expense)
-        return db_expense
+        try:
+            db_expense = Expense(
+                user_id=user_id,
+                merchant=expense_in.merchant,
+                description=expense_in.description,
+                amount=expense_in.amount,
+                category_id=expense_in.category_id,
+                payment_method=expense_in.payment_method,
+                date=expense_in.date,
+                receipt_url=str(expense_in.receipt_url) if expense_in.receipt_url else None
+            )
+            self.db.add(db_expense)
+            await self.db.commit()
+            
+            # Fetch with category eagerly loaded
+            return await self.get_expense(str(db_expense.id), user_id)
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error creating expense: {e}")
+            raise
 
     async def get_expense(self, expense_id: str, user_id: uuid.UUID) -> Optional[Expense]:
         result = await self.db.execute(
@@ -39,15 +46,44 @@ class ExpenseRepository:
             expense.category_name = expense.category.name
         return expense
 
-    async def list_expenses(self, user_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
-        result = await self.db.execute(
+    async def list_expenses(
+        self,
+        user_id: uuid.UUID,
+        skip: int = 0,
+        limit: int = 100,
+        category_id: Optional[uuid.UUID] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        min_amount: Optional[float] = None,
+        max_amount: Optional[float] = None,
+        search_query: Optional[str] = None
+    ) -> Sequence[Expense]:
+        filters = [Expense.user_id == user_id]
+
+        if category_id:
+            filters.append(Expense.category_id == category_id)
+        if start_date:
+            filters.append(Expense.date >= start_date)
+        if end_date:
+            filters.append(Expense.date <= end_date)
+        if min_amount is not None:
+            filters.append(Expense.amount >= min_amount)
+        if max_amount is not None:
+            filters.append(Expense.amount <= max_amount)
+        if search_query and search_query.strip():
+            term = f"%{search_query.strip()}%"
+            filters.append(or_(Expense.merchant.ilike(term), Expense.description.ilike(term)))
+
+        query = (
             select(Expense)
             .options(selectinload(Expense.category))
-            .where(Expense.user_id == user_id)
-            .order_by(Expense.date.desc())
+            .where(and_(*filters))
+            .order_by(Expense.date.desc(), Expense.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
+
+        result = await self.db.execute(query)
         expenses = result.scalars().all()
         for expense in expenses:
             if expense.category:
@@ -55,105 +91,57 @@ class ExpenseRepository:
         return expenses
 
     async def update_expense(self, expense_id: str, user_id: uuid.UUID, expense_in: ExpenseUpdate) -> Optional[Expense]:
-        db_expense = await self.get_expense(expense_id, user_id)
-        if not db_expense:
-            return None
-            
-        update_data = expense_in.model_dump(exclude_unset=True)
-        for field, value in update_data.items():
-            if field == 'receipt_url' and value is not None:
-                setattr(db_expense, field, str(value))
-            else:
-                setattr(db_expense, field, value)
+        try:
+            db_expense = await self.get_expense(expense_id, user_id)
+            if not db_expense:
+                return None
                 
-        await self.db.commit()
-        await self.db.refresh(db_expense)
-        if db_expense.category:
-            db_expense.category_name = db_expense.category.name
-        return db_expense
+            update_data = expense_in.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                if field == 'receipt_url' and value is not None:
+                    setattr(db_expense, field, str(value))
+                else:
+                    setattr(db_expense, field, value)
+                    
+            await self.db.commit()
+            await self.db.refresh(db_expense)
+            if db_expense.category:
+                db_expense.category_name = db_expense.category.name
+            return db_expense
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error updating expense {expense_id}: {e}")
+            raise
 
     async def delete_expense(self, expense_id: str, user_id: uuid.UUID) -> bool:
-        db_expense = await self.get_expense(expense_id, user_id)
-        if not db_expense:
-            return False
-            
-        await self.db.delete(db_expense)
-        await self.db.commit()
-        return True
+        try:
+            db_expense = await self.get_expense(expense_id, user_id)
+            if not db_expense:
+                return False
+                
+            await self.db.delete(db_expense)
+            await self.db.commit()
+            return True
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error deleting expense {expense_id}: {e}")
+            raise
 
-    async def search_expenses(self, user_id: uuid.UUID, query: str) -> Sequence[Expense]:
-        result = await self.db.execute(
-            select(Expense)
-            .options(selectinload(Expense.category))
-            .where(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.merchant.ilike(f"%{query}%")
-                )
-            ).order_by(Expense.date.desc())
-        )
-        expenses = result.scalars().all()
-        for expense in expenses:
-            if expense.category:
-                expense.category_name = expense.category.name
-        return expenses
+    async def search_expenses(self, user_id: uuid.UUID, query: str, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
+        return await self.list_expenses(user_id=user_id, skip=skip, limit=limit, search_query=query)
 
-    async def filter_by_category(self, user_id: uuid.UUID, category_id: uuid.UUID) -> Sequence[Expense]:
-        result = await self.db.execute(
-            select(Expense)
-            .options(selectinload(Expense.category))
-            .where(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.category_id == category_id
-                )
-            ).order_by(Expense.date.desc())
-        )
-        expenses = result.scalars().all()
-        for expense in expenses:
-            if expense.category:
-                expense.category_name = expense.category.name
-        return expenses
+    async def filter_by_category(self, user_id: uuid.UUID, category_id: uuid.UUID, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
+        return await self.list_expenses(user_id=user_id, skip=skip, limit=limit, category_id=category_id)
 
-    async def filter_by_date(self, user_id: uuid.UUID, start_date: date, end_date: date) -> Sequence[Expense]:
-        result = await self.db.execute(
-            select(Expense)
-            .options(selectinload(Expense.category))
-            .where(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.date >= start_date,
-                    Expense.date <= end_date
-                )
-            ).order_by(Expense.date.desc())
-        )
-        expenses = result.scalars().all()
-        for expense in expenses:
-            if expense.category:
-                expense.category_name = expense.category.name
-        return expenses
+    async def filter_by_date(self, user_id: uuid.UUID, start_date: date, end_date: date, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
+        return await self.list_expenses(user_id=user_id, skip=skip, limit=limit, start_date=start_date, end_date=end_date)
 
-    async def filter_by_amount(self, user_id: uuid.UUID, min_amount: float, max_amount: float) -> Sequence[Expense]:
-        result = await self.db.execute(
-            select(Expense)
-            .options(selectinload(Expense.category))
-            .where(
-                and_(
-                    Expense.user_id == user_id,
-                    Expense.amount >= min_amount,
-                    Expense.amount <= max_amount
-                )
-            ).order_by(Expense.amount.desc())
-        )
-        expenses = result.scalars().all()
-        for expense in expenses:
-            if expense.category:
-                expense.category_name = expense.category.name
-        return expenses
+    async def filter_by_amount(self, user_id: uuid.UUID, min_amount: float, max_amount: float, skip: int = 0, limit: int = 100) -> Sequence[Expense]:
+        return await self.list_expenses(user_id=user_id, skip=skip, limit=limit, min_amount=min_amount, max_amount=max_amount)
 
     async def get_monthly_summary(self, user_id: uuid.UUID, year: int, month: int) -> float:
         result = await self.db.execute(
-            select(func.sum(Expense.amount)).where(
+            select(func.coalesce(func.sum(Expense.amount), 0)).where(
                 and_(
                     Expense.user_id == user_id,
                     extract('year', Expense.date) == year,
@@ -167,10 +155,10 @@ class ExpenseRepository:
         result = await self.db.execute(
             select(
                 func.count(Expense.id).label('total_transactions'),
-                func.sum(Expense.amount).label('total_amount'),
-                func.avg(Expense.amount).label('average_amount'),
-                func.max(Expense.amount).label('max_amount'),
-                func.min(Expense.amount).label('min_amount')
+                func.coalesce(func.sum(Expense.amount), 0).label('total_amount'),
+                func.coalesce(func.avg(Expense.amount), 0).label('average_amount'),
+                func.coalesce(func.max(Expense.amount), 0).label('max_amount'),
+                func.coalesce(func.min(Expense.amount), 0).label('min_amount')
             ).where(
                 and_(
                     Expense.user_id == user_id,

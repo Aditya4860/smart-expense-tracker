@@ -2,7 +2,7 @@ from typing import Sequence
 from app.models.notification import Notification
 from app.schemas.notification_schema import NotificationCreate
 from app.repositories.notification_repository import NotificationRepository
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import BadRequestException, NotFoundException
 
 class NotificationService:
     def __init__(self, repository: NotificationRepository):
@@ -17,8 +17,11 @@ class NotificationService:
             raise NotFoundException("Notification not found")
         return notification
 
-    async def list_notifications(self, user_id: str, unread_only: bool = False) -> Sequence[Notification]:
-        return await self.repository.list_notifications(user_id, unread_only)
+    async def list_notifications(self, user_id: str, unread_only: bool = False, skip: int = 0, limit: int = 100) -> Sequence[Notification]:
+        if skip < 0 or limit <= 0:
+            raise BadRequestException("Invalid pagination parameters.")
+        limit = min(limit, 500)
+        return await self.repository.list_notifications(user_id, unread_only, skip, limit)
 
     async def mark_as_read(self, notification_id: str, user_id: str) -> Notification:
         notification = await self.repository.mark_as_read(notification_id, user_id)

@@ -26,11 +26,13 @@ async def create_notification(
 @router.get("", response_model=List[NotificationResponse])
 async def list_notifications(
     unread_only: bool = Query(False, description="Filter only unread notifications"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, gt=0, le=1000),
     current_user: User = Depends(get_current_user),
     service: NotificationService = Depends(get_notification_service)
 ):
     """List all notifications for the user."""
-    return await service.list_notifications(str(current_user.id), unread_only)
+    return await service.list_notifications(str(current_user.id), unread_only, skip=skip, limit=limit)
 
 @router.post("/mark-all-read", status_code=status.HTTP_200_OK)
 async def mark_all_as_read(

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Numeric, Date, ForeignKey, Text
+from sqlalchemy import Column, String, Numeric, Date, ForeignKey, Text, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
@@ -19,3 +19,9 @@ class Expense(BaseModel):
     # Relationships
     user = relationship("User", back_populates="expenses")
     category = relationship("Category", back_populates="expenses")
+
+    __table_args__ = (
+        Index("ix_expenses_user_date", "user_id", "date"),
+        Index("ix_expenses_user_category", "user_id", "category_id"),
+        Index("ix_expenses_user_merchant", "user_id", "merchant"),
+    )

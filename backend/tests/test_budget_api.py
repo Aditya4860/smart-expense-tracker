@@ -27,7 +27,8 @@ def test_list_budget_api(mock_service):
     mock_service.list_budgets.return_value = []
     response = client.get("/api/v1/budget")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_budget_api(mock_service):
     mock_budget = {
@@ -50,4 +51,5 @@ def test_create_budget_api(mock_service):
     
     response = client.post("/api/v1/budget", json=payload)
     assert response.status_code == 201
-    assert response.json()["amount"] == 500.0
+    assert response.json()["success"] is True
+    assert response.json()["data"]["amount"] == 500.0

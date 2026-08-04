@@ -27,7 +27,8 @@ def test_list_category_api(mock_service):
     mock_service.list_categories.return_value = []
     response = client.get("/api/v1/categories")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_category_api(mock_service):
     mock_category = {
@@ -52,4 +53,5 @@ def test_create_category_api(mock_service):
     
     response = client.post("/api/v1/categories", json=payload)
     assert response.status_code == 201
-    assert response.json()["name"] == "Food"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["name"] == "Food"

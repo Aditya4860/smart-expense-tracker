@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Numeric, Date, ForeignKey, Enum
+from sqlalchemy import Column, String, Numeric, Date, ForeignKey, Enum, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
@@ -20,3 +20,7 @@ class Goal(BaseModel):
     # Relationships
     user = relationship("User", back_populates="goals")
     contributions = relationship("GoalContribution", back_populates="goal", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("ix_goals_user_status", "user_id", "status"),
+    )

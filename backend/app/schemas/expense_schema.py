@@ -1,6 +1,6 @@
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from datetime import date, datetime
 
 class ExpenseBase(BaseModel):
@@ -31,5 +31,4 @@ class ExpenseResponse(ExpenseBase):
     updated_at: datetime
     category_name: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

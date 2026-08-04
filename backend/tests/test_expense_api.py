@@ -27,7 +27,8 @@ def test_list_expenses_api(mock_service):
     mock_service.list_expenses.return_value = []
     response = client.get("/api/v1/expenses")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_create_expense_api(mock_service):
     mock_expense = {
@@ -56,7 +57,8 @@ def test_create_expense_api(mock_service):
     
     response = client.post("/api/v1/expenses", json=payload)
     assert response.status_code == 201
-    assert response.json()["merchant"] == "Groceries"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["merchant"] == "Groceries"
 
 def test_get_expense_api(mock_service):
     mock_expense = {
@@ -77,7 +79,8 @@ def test_get_expense_api(mock_service):
     
     response = client.get(f"/api/v1/expenses/{mock_expense['id']}")
     assert response.status_code == 200
-    assert response.json()["merchant"] == "Gas"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["merchant"] == "Gas"
 
 def test_delete_expense_api(mock_service):
     mock_service.delete_expense.return_value = True
@@ -88,10 +91,12 @@ def test_search_expenses_api(mock_service):
     mock_service.search_expenses.return_value = []
     response = client.get("/api/v1/expenses/search?q=coffee")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["success"] is True
+    assert response.json()["data"] == []
 
 def test_statistics_api(mock_service):
     mock_service.get_statistics.return_value = {"total_amount": 100.0}
     response = client.get("/api/v1/expenses/statistics?start_date=2024-01-01&end_date=2024-01-31")
     assert response.status_code == 200
-    assert response.json() == {"total_amount": 100.0}
+    assert response.json()["success"] is True
+    assert response.json()["data"] == {"total_amount": 100.0}

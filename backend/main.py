@@ -27,33 +27,48 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Request Logging Middleware
+# Request Logging & Standardization Middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
     try:
         response = await call_next(request)
         process_time = (time.time() - start_time) * 1000
-        logger.info(
-            f"METHOD={request.method} PATH={request.url.path} "
-            f"STATUS={response.status_code} TIME={process_time:.2f}ms"
-        )
         
-        # Wrap successful JSON responses
-        if response.status_code < 400 and response.headers.get("content-type") == "application/json" and not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+        # Slow request warning threshold (> 500ms)
+        if process_time > 500:
+            logger.warning(
+                f"SLOW REQUEST: METHOD={request.method} PATH={request.url.path} "
+                f"STATUS={response.status_code} TIME={process_time:.2f}ms"
+            )
+        else:
+            logger.info(
+                f"METHOD={request.method} PATH={request.url.path} "
+                f"STATUS={response.status_code} TIME={process_time:.2f}ms"
+            )
+        
+        # Do not wrap 204 No Content or documentation endpoints
+        if response.status_code == 204 or request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+            return response
+
+        # Wrap successful JSON responses consistently
+        content_type = response.headers.get("content-type", "")
+        if response.status_code < 400 and "application/json" in content_type:
             body = b""
             async for chunk in response.body_iterator:
                 body += chunk
             try:
                 data = json.loads(body)
-                wrapped = {
-                    "success": True,
-                    "message": "Operation successful",
-                    "data": data
-                }
+                if isinstance(data, dict) and "success" in data and "data" in data:
+                    wrapped = data
+                else:
+                    wrapped = {
+                        "success": True,
+                        "message": "Operation successful",
+                        "data": data
+                    }
                 wrapped_body = json.dumps(wrapped).encode("utf-8")
                 
-                # Delete content-length header because we changed body length
                 headers = dict(response.headers)
                 headers.pop("content-length", None)
                 
@@ -65,7 +80,6 @@ async def log_requests(request: Request, call_next):
                     media_type="application/json"
                 )
             except json.JSONDecodeError:
-                # If not valid JSON, just recreate the original response and return
                 from fastapi.responses import Response
                 return Response(
                     content=body,
