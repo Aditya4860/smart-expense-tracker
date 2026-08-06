@@ -106,10 +106,7 @@ class ExpenseRepository:
                     setattr(db_expense, field, value)
                     
             await self.db.commit()
-            await self.db.refresh(db_expense)
-            if db_expense.category:
-                db_expense.category_name = db_expense.category.name
-            return db_expense
+            return await self.get_expense(expense_id, user_id)
         except Exception as e:
             await self.db.rollback()
             logger.error(f"Error updating expense {expense_id}: {e}")

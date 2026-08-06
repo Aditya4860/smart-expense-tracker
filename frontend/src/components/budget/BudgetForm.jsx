@@ -30,11 +30,13 @@ const YEARS = Array.from({ length: 11 }, (_, i) => CURRENT_YEAR - 5 + i);
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function valuesFromBudget(budget) {
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
   return {
-    category:     budget.category,
-    monthlyLimit: String(budget.monthlyLimit),
-    month:        budget.month,
-    year:         budget.year,
+    category:     budget.category || budget.category_id || '',
+    monthlyLimit: String(budget.monthlyLimit ?? budget.amount ?? ''),
+    month:        Number(budget.month || currentMonth),
+    year:         Number(budget.year || currentYear),
   };
 }
 

@@ -2,11 +2,12 @@ import apiClient from './apiClient';
 
 const mapToFrontend = (apiIncome) => ({
   id: apiIncome.id,
-  amount: apiIncome.amount,
+  amount: Number(apiIncome.amount),
   date: apiIncome.date,
   source: apiIncome.source || '',
   description: apiIncome.description || '',
   category: apiIncome.category_id,
+  category_id: apiIncome.category_id,
   categoryName: apiIncome.category_name,
   type: 'income',
 });
@@ -16,7 +17,7 @@ const mapToBackend = (uiIncome) => ({
   date: uiIncome.date,
   source: uiIncome.source || null,
   description: uiIncome.description || null,
-  category_id: uiIncome.category,
+  category_id: uiIncome.category || uiIncome.category_id,
 });
 
 export const incomeApi = {

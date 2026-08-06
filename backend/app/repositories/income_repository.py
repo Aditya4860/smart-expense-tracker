@@ -93,10 +93,7 @@ class IncomeRepository:
                 setattr(db_income, field, value)
                     
             await self.db.commit()
-            await self.db.refresh(db_income)
-            if db_income.category:
-                db_income.category_name = db_income.category.name
-            return db_income
+            return await self.get_income(income_id, user_id)
         except Exception as e:
             await self.db.rollback()
             logger.error(f"Error updating income {income_id}: {e}")

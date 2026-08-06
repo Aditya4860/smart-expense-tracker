@@ -40,25 +40,39 @@ function BudgetInner() {
   const [saving,     setSaving]     = useState(false);
   const [viewMode,   setViewMode]   = useState('table'); // 'table' | 'grid'
 
-  const handleAdd = useCallback((values) => {
+  const handleAdd = useCallback(async (values) => {
     setSaving(true);
-    addBudget(values);
-    setSaving(false);
-    setAddOpen(false);
+    try {
+      await addBudget(values);
+      setAddOpen(false);
+    } catch (err) {
+      console.error('Failed to add budget:', err);
+    } finally {
+      setSaving(false);
+    }
   }, [addBudget]);
 
-  const handleEdit = useCallback((values) => {
+  const handleEdit = useCallback(async (values) => {
     if (!editBudget) return;
     setSaving(true);
-    updateBudget(editBudget.id, values);
-    setSaving(false);
-    setEditBudget(null);
+    try {
+      await updateBudget(editBudget.id, values);
+      setEditBudget(null);
+    } catch (err) {
+      console.error('Failed to edit budget:', err);
+    } finally {
+      setSaving(false);
+    }
   }, [editBudget, updateBudget]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!delBudget) return;
-    deleteBudget(delBudget.id);
-    setDelBudget(null);
+    try {
+      await deleteBudget(delBudget.id);
+      setDelBudget(null);
+    } catch (err) {
+      console.error('Failed to delete budget:', err);
+    }
   }, [delBudget, deleteBudget]);
 
   return (

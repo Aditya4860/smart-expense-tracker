@@ -43,12 +43,18 @@ export function BudgetProvider({ children }) {
   // ── Mutations (Optimistic) ──────────────────────────────────────────────
 
   const addBudget = useCallback(async (values) => {
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
     const tempId = `temp-${crypto.randomUUID()}`;
+    const amountVal = Number(values.amount || values.monthlyLimit || 0);
     const optimisticBudget = { 
       ...values, 
       id: tempId, 
-      amount: Number(values.amount || values.monthlyLimit), 
+      amount: amountVal,
+      monthlyLimit: amountVal,
       period: values.period || 'MONTHLY',
+      month: Number(values.month || currentMonth),
+      year: Number(values.year || currentYear),
       createdAt: new Date().toISOString()
     };
     
@@ -56,7 +62,10 @@ export function BudgetProvider({ children }) {
     
     try {
       const created = await budgetApi.createBudget(values);
-      setBudgets(prev => prev.map(b => b.id === tempId ? created : b));
+      setBudgets(prev => {
+        const filtered = prev.filter(b => b.id !== tempId && b.id !== created.id);
+        return [created, ...filtered];
+      });
       return created;
     } catch (err) {
       setBudgets(prev => prev.filter(b => b.id !== tempId));
@@ -67,10 +76,16 @@ export function BudgetProvider({ children }) {
 
   const updateBudget = useCallback(async (id, values) => {
     const original = budgets.find(b => b.id === id);
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+    const amountVal = Number(values.amount || values.monthlyLimit || (original ? original.amount : 0));
     const optimisticBudget = { 
       ...original, 
       ...values, 
-      amount: Number(values.amount || values.monthlyLimit)
+      amount: amountVal,
+      monthlyLimit: amountVal,
+      month: Number(values.month || (original ? original.month : currentMonth)),
+      year: Number(values.year || (original ? original.year : currentYear)),
     };
     
     setBudgets(prev => prev.map(b => b.id === id ? optimisticBudget : b));
@@ -127,11 +142,12 @@ export function BudgetProvider({ children }) {
   }, []);
 
   const enrichedBudgets = useMemo(() => {
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+
     return budgets.map(budget => {
-      // 1. Sum spent by matching category (Note: month/year matching removed if backend uses fixed monthly period)
-      // If we still want local month/year matching, we use current month
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
+      const bMonth = Number(budget.month || currentMonth);
+      const bYear = Number(budget.year || currentYear);
 
       const spent = expenses.reduce((sum, e) => {
         // Skip savings contributions if the toggle is OFF
@@ -139,20 +155,21 @@ export function BudgetProvider({ children }) {
         
         if (e.category !== budget.category) return sum;
         
-        const [eYear, eMonth] = e.date.split('-');
-        if (Number(eMonth) === currentMonth && Number(eYear) === currentYear) {
-          return sum + e.amount;
+        const [eYear, eMonth] = (e.date || '').split('-');
+        if (Number(eMonth) === bMonth && Number(eYear) === bYear) {
+          return sum + (Number(e.amount) || 0);
         }
         return sum;
       }, 0);
 
       const parsedSpent = parseFloat(spent.toFixed(2));
-      // Handle the fact that UI expects 'monthlyLimit' on budget object sometimes
-      const monthlyLimit = budget.amount;
+      const monthlyLimit = Number(budget.monthlyLimit || budget.amount || 0);
       const parsedRemaining = parseFloat((monthlyLimit - parsedSpent).toFixed(2));
 
       return {
         ...budget,
+        month: bMonth,
+        year: bYear,
         monthlyLimit: monthlyLimit, 
         spent: parsedSpent,
         remaining: parsedRemaining

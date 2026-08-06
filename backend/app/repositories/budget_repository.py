@@ -15,8 +15,29 @@ class BudgetRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_budget_by_category_and_period(self, user_id: uuid.UUID, category_id: uuid.UUID, period) -> Optional[Budget]:
+        result = await self.db.execute(
+            select(Budget)
+            .options(selectinload(Budget.category))
+            .where(and_(
+                Budget.user_id == user_id,
+                Budget.category_id == category_id,
+                Budget.period == period
+            ))
+        )
+        budget = result.scalars().first()
+        if budget and budget.category:
+            budget.category_name = budget.category.name
+        return budget
+
     async def create_budget(self, user_id: uuid.UUID, budget_in: BudgetCreate) -> Budget:
         try:
+            existing = await self.get_budget_by_category_and_period(user_id, budget_in.category_id, budget_in.period)
+            if existing:
+                existing.amount = budget_in.amount
+                await self.db.commit()
+                return await self.get_budget(str(existing.id), user_id)
+
             db_budget = Budget(
                 user_id=user_id,
                 amount=budget_in.amount,
@@ -68,10 +89,7 @@ class BudgetRepository:
                 setattr(db_budget, field, value)
                     
             await self.db.commit()
-            await self.db.refresh(db_budget)
-            if db_budget.category:
-                db_budget.category_name = db_budget.category.name
-            return db_budget
+            return await self.get_budget(budget_id, user_id)
         except Exception as e:
             await self.db.rollback()
             logger.error(f"Error updating budget {budget_id}: {e}")

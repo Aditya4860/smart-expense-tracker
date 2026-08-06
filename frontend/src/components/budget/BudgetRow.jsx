@@ -28,16 +28,25 @@ const BudgetRow = memo(function BudgetRow({ budget }) {
   const cat = getCategoryMeta(budget.category, 'EXPENSE');
   const pct = calculateBudgetProgress(budget.id);
 
-  const handleEdit = useCallback((values) => {
+  const handleEdit = useCallback(async (values) => {
     setSaving(true);
-    updateBudget(budget.id, values);
-    setSaving(false);
-    setEditOpen(false);
+    try {
+      await updateBudget(budget.id, values);
+      setEditOpen(false);
+    } catch (err) {
+      console.error('Failed to edit budget:', err);
+    } finally {
+      setSaving(false);
+    }
   }, [budget.id, updateBudget]);
 
-  const handleDelete = useCallback(() => {
-    deleteBudget(budget.id);
-    setDeleteOpen(false);
+  const handleDelete = useCallback(async () => {
+    try {
+      await deleteBudget(budget.id);
+      setDeleteOpen(false);
+    } catch (err) {
+      console.error('Failed to delete budget:', err);
+    }
   }, [budget.id, deleteBudget]);
 
   return (

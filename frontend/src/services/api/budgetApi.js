@@ -1,17 +1,27 @@
 import apiClient from './apiClient';
 
-const mapToFrontend = (apiBudget) => ({
-  id: apiBudget.id,
-  amount: apiBudget.amount,
-  period: apiBudget.period,
-  category: apiBudget.category_id,
-  createdAt: apiBudget.created_at,
-});
+const mapToFrontend = (apiBudget) => {
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  return {
+    id: apiBudget.id,
+    amount: Number(apiBudget.amount),
+    monthlyLimit: Number(apiBudget.amount),
+    period: apiBudget.period || 'MONTHLY',
+    category: apiBudget.category_id,
+    category_id: apiBudget.category_id,
+    categoryName: apiBudget.category_name || '',
+    month: apiBudget.month || currentMonth,
+    year: apiBudget.year || currentYear,
+    createdAt: apiBudget.created_at,
+  };
+};
 
 const mapToBackend = (uiBudget) => ({
   amount: Number(uiBudget.amount || uiBudget.monthlyLimit),
   period: uiBudget.period || 'MONTHLY',
-  category_id: uiBudget.category,
+  category_id: uiBudget.category || uiBudget.category_id,
 });
 
 export const budgetApi = {
