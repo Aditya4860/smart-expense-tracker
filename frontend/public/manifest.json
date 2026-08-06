@@ -1,0 +1,16 @@
+{
+  "name": "Smart Expense Tracker",
+  "short_name": "ExpenseTracker",
+  "description": "Take control of your finances with intelligent insights and real-time tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1623",
+  "theme_color": "#8b5cf6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

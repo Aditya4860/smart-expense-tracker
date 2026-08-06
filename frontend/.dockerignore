@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Build output (we build inside Docker)
+dist/
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
+cypress/
+
+# Test artifacts
+coverage/

@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Docker Compose – Production Overrides
+#
+# Extends docker-compose.yml with production-grade settings:
+#   - Gunicorn with multiple workers (not hot-reload uvicorn)
+#   - production ENVIRONMENT flag
+#   - resource limits
+#   - no volume mounts for source code
+#   - restart: always
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  backend:
+    # Override dev command (uvicorn --reload) with Gunicorn production server
+    command: ["gunicorn", "-c", "gunicorn.conf.py", "main:app"]
+    environment:
+      ENVIRONMENT:                  production
+      DATABASE_URL:                 ${DATABASE_URL}
+      SECRET_KEY:                   ${SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES:  ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      REFRESH_TOKEN_EXPIRE_MINUTES: ${REFRESH_TOKEN_EXPIRE_MINUTES:-10080}
+      BACKEND_CORS_ORIGINS:         ${BACKEND_CORS_ORIGINS}
+      LOG_LEVEL:                    ${LOG_LEVEL:-INFO}
+      RATE_LIMIT_ENABLED:           "true"
+      SENTRY_DSN:                   ${SENTRY_DSN:-}
+      GUNICORN_WORKERS:             ${GUNICORN_WORKERS:-3}
+      GUNICORN_BIND:                "0.0.0.0:8000"
+    # Remove source code volume mount in production
+    volumes: []
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "128M"
+
+  frontend:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "128M"
+
+  postgres:
+    restart: always
+    # Do not expose the Postgres port to the host in production
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"

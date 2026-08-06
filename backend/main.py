@@ -2,24 +2,77 @@ import time
 import json
 import traceback
 import re
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy import text
 
 from app.core.config import settings
+from app.core.logging_config import configure_logging
 from app.api.v1 import api_router
 from app.core.exceptions import BaseAPIException
 from app.core.logging import logger
+from app.core.database import AsyncSessionLocal
+
+# ── Configure structured logging on import ────────────────────────────────────
+configure_logging(level=settings.LOG_LEVEL, environment=settings.ENVIRONMENT)
+
+# ── Optional Sentry error monitoring ─────────────────────────────────────────
+if settings.SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            environment=settings.ENVIRONMENT,
+            release=settings.VERSION,
+            traces_sample_rate=0.1,
+        )
+        logger.info("Sentry error monitoring initialised")
+    except ImportError:
+        logger.warning("SENTRY_DSN is set but sentry-sdk is not installed (pip install sentry-sdk)")
+
+
+# ── Lifespan: startup & graceful shutdown ─────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ── STARTUP ──────────────────────────────────────────────────────────────
+    logger.info(
+        f"Starting {settings.PROJECT_NAME} v{settings.VERSION} "
+        f"[env={settings.ENVIRONMENT}] [log_level={settings.LOG_LEVEL}]"
+    )
+
+    # Verify database connectivity at startup
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+        logger.info("Database connection verified ✓")
+    except Exception as exc:
+        logger.error(f"Database connection FAILED at startup: {exc}")
+        # Do not crash in development; crash hard in production
+        if settings.ENVIRONMENT == "production":
+            raise
+
+    yield  # ← application runs here
+
+    # ── SHUTDOWN ─────────────────────────────────────────────────────────────
+    logger.info(f"Shutting down {settings.PROJECT_NAME} — draining connections...")
+    # AsyncSessionLocal sessions are closed per-request; nothing to drain here.
+    logger.info("Shutdown complete.")
+
+# Hide interactive API docs in production for security
+_is_prod = settings.ENVIRONMENT == "production"
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    openapi_url=None if _is_prod else f"{settings.API_V1_STR}/openapi.json",
+    docs_url=None if _is_prod else "/docs",
+    redoc_url=None if _is_prod else "/redoc",
+    lifespan=lifespan,
 )
 
 # Hardened CORS Configuration
@@ -212,8 +265,33 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Health Check Endpoint
+# ── Enhanced Health Check ─────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 async def health_check():
-    return {"status": "ok", "message": "Smart Expense Tracker Backend is healthy."}
+    """Returns service health including database connectivity status."""
+    db_status = "ok"
+    db_error = None
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+    except Exception as exc:
+        db_status = "error"
+        db_error = "Database unreachable"
+        logger.error(f"Health check DB failure: {exc}")
+
+    overall = "healthy" if db_status == "ok" else "degraded"
+    status_code = 200 if db_status == "ok" else 503
+
+    payload = {
+        "status": overall,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "services": {
+            "database": db_status,
+        },
+    }
+    if db_error:
+        payload["services"]["database_error"] = db_error
+
+    return JSONResponse(content=payload, status_code=status_code)
 

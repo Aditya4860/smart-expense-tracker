@@ -305,6 +305,45 @@ Full interactive documentation is available at `/docs` when the backend is runni
 
 ---
 
+## 🚀 Deployment
+
+The project is fully Docker-ready. See the [full deployment guide](docs/DEPLOYMENT.md) for detailed instructions.
+
+### Quick Start with Docker Compose
+
+```bash
+# 1. Clone and configure
+git clone https://github.com/Aditya4860/smart-expense-tracker.git
+cd smart-expense-tracker
+cp .env.example .env
+# Edit .env — set SECRET_KEY, POSTGRES_PASSWORD, BACKEND_CORS_ORIGINS
+
+# 2. Start all services (dev mode)
+docker compose up --build
+
+# 3. Start in production mode
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+| Service | URL |
+|---------|-----|
+| Frontend (Nginx) | http://localhost |
+| Backend API | http://localhost:8000 |
+| API Health | http://localhost:8000/health |
+
+### Health Check
+
+```bash
+curl http://localhost:8000/health
+# {"status":"healthy","version":"1.0.0","environment":"development","services":{"database":"ok"}}
+```
+
+### Deployment Checklist
+
+Before going live, go through [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md).
+
+---
+
 ## Contributing
 
 Contributions are welcome. Please read the [PR template](.github/PULL_REQUEST_TEMPLATE.md) before submitting.

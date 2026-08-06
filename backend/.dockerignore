@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Environment secrets
+.env
+*.env.local
+
+# Development tools
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Alembic (migrations run separately)
+# alembic/   ← keep this; we need migrations in the image
+
+# Docs
+docs/
+*.md
+
+# Node (shouldn't exist in backend, but just in case)
+node_modules/

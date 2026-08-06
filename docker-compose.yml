@@ -1,0 +1,105 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Docker Compose – Development / Local Use
+#
+# Runs the full stack locally with hot-reload for the backend.
+# For production deployment use: docker compose -f docker-compose.prod.yml up
+#
+# Usage:
+#   1. Copy .env.example → .env and fill in values
+#   2. docker compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: expense_tracker_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-expense_tracker}
+      POSTGRES_USER:     ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-expense_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: expense_tracker_api
+    restart: unless-stopped
+    # Development: run with uvicorn hot-reload instead of gunicorn
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+      ENVIRONMENT:                  development
+      DATABASE_URL:                 postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-expense_tracker}
+      SECRET_KEY:                   ${SECRET_KEY:-dev-secret-key-change-in-production-32chars}
+      ACCESS_TOKEN_EXPIRE_MINUTES:  ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      REFRESH_TOKEN_EXPIRE_MINUTES: ${REFRESH_TOKEN_EXPIRE_MINUTES:-10080}
+      BACKEND_CORS_ORIGINS:         ${BACKEND_CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      LOG_LEVEL:                    ${LOG_LEVEL:-DEBUG}
+      RATE_LIMIT_ENABLED:           ${RATE_LIMIT_ENABLED:-true}
+      SENTRY_DSN:                   ${SENTRY_DSN:-}
+    volumes:
+      - ./backend:/app
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── React frontend (dev) ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: expense_tracker_web
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health.txt"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Redis (optional – reserved for future caching / rate limiting) ─────────
+  # Uncomment when Redis-backed rate limiting is implemented:
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: expense_tracker_cache
+  #   restart: unless-stopped
+  #   command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  # redis_data:
+  #   driver: local
