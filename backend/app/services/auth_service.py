@@ -25,8 +25,8 @@ class AuthService:
         db_user = User(
             email=clean_email,
             hashed_password=hashed_password,
-            full_name=sanitize_string(user_in.full_name),
-            currency_preference=sanitize_string(user_in.currency_preference) or "USD"
+            full_name=user_in.full_name,
+            currency_preference=user_in.currency_preference or "USD"
         )
         try:
             self.db.add(db_user)

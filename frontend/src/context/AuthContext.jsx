@@ -7,12 +7,13 @@ import {
   useContext
 } from 'react';
 import { authApi } from '../services/api/authApi';
+import { AUTH_STORAGE_KEYS } from '../services/api/apiClient';
 
 export const AuthContext = createContext(null);
 
-const TOKEN_KEY = 'set_auth_token';
-const REFRESH_TOKEN_KEY = 'set_refresh_token';
-const USER_KEY = 'set_auth_user';
+const TOKEN_KEY = AUTH_STORAGE_KEYS.TOKEN;
+const REFRESH_TOKEN_KEY = AUTH_STORAGE_KEYS.REFRESH_TOKEN;
+const USER_KEY = AUTH_STORAGE_KEYS.USER;
 
 function persistSession(token, refreshToken, user) {
   localStorage.setItem(TOKEN_KEY, token);

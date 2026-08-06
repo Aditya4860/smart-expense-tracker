@@ -61,6 +61,8 @@ class GoalService:
             target_amount=target,
             current_amount=current,
             deadline=goal.deadline,
+            description=goal.description,
+            priority=goal.priority,
             status=goal.status,
             created_at=goal.created_at,
             updated_at=goal.updated_at,

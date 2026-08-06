@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+export const AUTH_STORAGE_KEYS = {
+  TOKEN: 'set_auth_token',
+  REFRESH_TOKEN: 'set_refresh_token',
+  USER: 'set_auth_user',
+};
+
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
+  ? import.meta.env.VITE_API_URL
+  : 'http://localhost:8000/api/v1';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -12,7 +20,7 @@ const apiClient = axios.create({
 // Request Interceptor: Attach JWT token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('set_auth_token');
+    const token = localStorage.getItem(AUTH_STORAGE_KEYS.TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -48,7 +56,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('set_refresh_token');
+        const refreshToken = localStorage.getItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
         if (!refreshToken) throw new Error('Session expired');
 
         // Call backend refresh endpoint
@@ -61,9 +69,9 @@ apiClient.interceptors.response.use(
         const { access_token, refresh_token: new_refresh_token } = tokenData;
         
         // Update tokens
-        localStorage.setItem('set_auth_token', access_token);
+        localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN, access_token);
         if (new_refresh_token) {
-          localStorage.setItem('set_refresh_token', new_refresh_token);
+          localStorage.setItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN, new_refresh_token);
         }
         
         // Retry original request with new token
@@ -71,9 +79,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.warn('Session expired or token refresh failed.');
-        localStorage.removeItem('set_auth_token');
-        localStorage.removeItem('set_refresh_token');
-        localStorage.removeItem('set_auth_user');
+        localStorage.removeItem(AUTH_STORAGE_KEYS.TOKEN);
+        localStorage.removeItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
+        localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
         window.dispatchEvent(new Event('auth-unauthorized'));
       }
     }
