@@ -51,3 +51,24 @@ def test_create_notification_api(mock_service):
     assert response.status_code == 201
     assert response.json()["success"] is True
     assert response.json()["data"]["title"] == "Welcome"
+
+def test_get_unread_count_api(mock_service):
+    mock_service.get_counts.return_value = {"unread_count": 3, "total_count": 10}
+    response = client.get("/api/v1/notifications/unread-count")
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    assert response.json()["data"]["unread_count"] == 3
+    assert response.json()["data"]["total_count"] == 10
+
+def test_mark_all_read_api(mock_service):
+    mock_service.mark_all_as_read.return_value = True
+    response = client.post("/api/v1/notifications/mark-all-read")
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+
+def test_seed_demo_notifications_api(mock_service):
+    mock_service.seed_sample_notifications.return_value = []
+    response = client.post("/api/v1/notifications/seed-demo")
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+

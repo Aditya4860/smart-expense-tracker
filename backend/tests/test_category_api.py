@@ -55,3 +55,23 @@ def test_create_category_api(mock_service):
     assert response.status_code == 201
     assert response.json()["success"] is True
     assert response.json()["data"]["name"] == "Food"
+
+def test_seed_categories_api(mock_service):
+    mock_service.seed_default_presets.return_value = [
+        {
+            "id": str(uuid4()),
+            "user_id": str(uuid4()),
+            "name": "Food & Dining",
+            "type": "EXPENSE",
+            "icon": "🍽️",
+            "color": "text-orange-400",
+            "created_at": "2024-01-01T12:00:00",
+            "updated_at": "2024-01-01T12:00:00"
+        }
+    ]
+    response = client.post("/api/v1/categories/seed")
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    assert len(response.json()["data"]) == 1
+    assert response.json()["data"][0]["name"] == "Food & Dining"
+

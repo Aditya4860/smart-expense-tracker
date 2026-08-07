@@ -34,3 +34,7 @@ class CategoryService:
         if not success:
             raise NotFoundException("Category not found or you can't delete it")
         return success
+
+    async def seed_default_presets(self, user_id: str) -> Sequence[Category]:
+        return await self.repository.seed_default_presets(user_id)
+

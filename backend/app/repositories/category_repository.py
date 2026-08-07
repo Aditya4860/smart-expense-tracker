@@ -86,3 +86,35 @@ class CategoryRepository:
             await self.db.rollback()
             logger.error(f"Error deleting category {category_id}: {e}")
             raise
+
+    async def seed_default_presets(self, user_id: str) -> Sequence[Category]:
+        from app.constants.default_categories import DEFAULT_CATEGORIES
+        try:
+            result = await self.db.execute(
+                select(Category).where(Category.user_id == user_id)
+            )
+            existing = result.scalars().all()
+            existing_keys = {(c.name.lower().strip(), c.type) for c in existing}
+
+            added_any = False
+            for cat in DEFAULT_CATEGORIES:
+                if (cat["name"].lower().strip(), cat["type"]) not in existing_keys:
+                    db_cat = Category(
+                        user_id=user_id,
+                        name=cat["name"],
+                        type=cat["type"],
+                        icon=cat["icon"],
+                        color=cat["color"]
+                    )
+                    self.db.add(db_cat)
+                    added_any = True
+
+            if added_any:
+                await self.db.commit()
+
+            return await self.list_categories(user_id)
+        except Exception as e:
+            await self.db.rollback()
+            logger.error(f"Error seeding default categories for user {user_id}: {e}")
+            raise
+

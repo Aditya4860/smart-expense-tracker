@@ -12,6 +12,7 @@ from app.api.v1.budget import router as budget_router
 from app.api.v1.goals import router as goals_router
 from app.api.v1.category import router as category_router
 from app.api.v1.notifications import router as notifications_router
+from app.api.v1.recurring_transactions import router as recurring_router
 
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
@@ -21,3 +22,5 @@ api_router.include_router(budget_router, prefix="/budget", tags=["Budget"])
 api_router.include_router(goals_router, prefix="/goals", tags=["Goals"])
 api_router.include_router(category_router, prefix="/categories", tags=["Categories"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(recurring_router, prefix="/recurring-transactions", tags=["Recurring Transactions"])
+

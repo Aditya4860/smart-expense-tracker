@@ -33,6 +33,14 @@ async def list_categories(
     """List all categories (user-specific and system default)."""
     return await service.list_categories(str(current_user.id), skip=skip, limit=limit)
 
+@router.post("/seed", response_model=List[CategoryResponse])
+async def seed_categories(
+    current_user: User = Depends(get_current_user),
+    service: CategoryService = Depends(get_category_service)
+):
+    """Seed missing default preset categories for the current user."""
+    return await service.seed_default_presets(str(current_user.id))
+
 @router.get("/{id}", response_model=CategoryResponse)
 async def get_category(
     id: str,
