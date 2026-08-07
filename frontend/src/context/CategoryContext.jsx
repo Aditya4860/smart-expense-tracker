@@ -57,6 +57,21 @@ export function CategoryProvider({ children }) {
     };
   }, [categories]);
 
+  const seedPresets = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      setLoading(true);
+      const data = await categoryApi.seedPresets();
+      setCategories(data);
+      return data;
+    } catch (error) {
+      console.error('Failed to seed preset categories:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
   const value = {
     categories,
     expenseCategories,
@@ -64,6 +79,7 @@ export function CategoryProvider({ children }) {
     getCategoryById,
     getCategoryMeta,
     fetchCategories,
+    seedPresets,
     loading
   };
 

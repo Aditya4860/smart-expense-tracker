@@ -8,9 +8,10 @@ import CategoryModal from '../components/categories/CategoryModal';
 import { EDIT_ICON, DELETE_ICON } from '../components/ui/FormField';
 
 export default function Categories() {
-  const { categories, fetchCategories, loading } = useCategory();
+  const { categories, fetchCategories, seedPresets, loading } = useCategory();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('ALL');
+  const [seeding, setSeeding] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('EXPENSE');
@@ -22,6 +23,17 @@ export default function Categories() {
       return true;
     });
   }, [categories, search, filterType]);
+
+  const handleSeedPresets = async () => {
+    try {
+      setSeeding(true);
+      await seedPresets();
+    } catch (err) {
+      alert(err.message || 'Failed to restore default categories');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
@@ -40,9 +52,17 @@ export default function Categories() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Categories</h1>
-            <p className="text-sm text-slate-400">Manage your income and expense categories.</p>
+            <p className="text-sm text-slate-400">Manage standard and custom categories for all modules.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={handleSeedPresets} 
+              variant="secondary" 
+              disabled={seeding || loading}
+              className="text-xs sm:text-sm"
+            >
+              {seeding ? 'Restoring...' : '✨ Restore Standard Presets'}
+            </Button>
             <Button onClick={() => { setModalType('EXPENSE'); setIsModalOpen(true); }} variant="primary">+ Expense Category</Button>
             <Button onClick={() => { setModalType('INCOME'); setIsModalOpen(true); }} variant="outline">+ Income Category</Button>
           </div>
@@ -72,7 +92,14 @@ export default function Categories() {
             {loading && categories.length === 0 ? (
               <p className="text-center py-6 text-slate-400">Loading categories...</p>
             ) : filtered.length === 0 ? (
-              <p className="text-center py-6 text-slate-400">No categories found.</p>
+              <div className="text-center py-10 space-y-3">
+                <p className="text-slate-400">No categories found matching your criteria.</p>
+                {categories.length === 0 && (
+                  <Button onClick={handleSeedPresets} variant="primary" disabled={seeding}>
+                    {seeding ? 'Populating...' : '✨ Populate Standard Presets (22 Categories)'}
+                  </Button>
+                )}
+              </div>
             ) : (
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-surface-800/50 text-xs uppercase text-slate-500">

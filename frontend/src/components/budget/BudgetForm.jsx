@@ -129,6 +129,18 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
               aria-describedby={err('monthlyLimit') ? 'bf-monthlyLimit-error' : undefined}
               className={inputClass('monthlyLimit')}
             />
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {[2000, 5000, 10000, 20000, 50000].map(amt => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'monthlyLimit', value: String(amt) } })}
+                  className="px-2 py-0.5 text-[11px] rounded bg-surface-700/60 hover:bg-brand-500/20 text-slate-400 hover:text-brand-300 border border-surface-600/40 transition-colors"
+                >
+                  ₹{amt >= 1000 ? `${amt / 1000}k` : amt}
+                </button>
+              ))}
+            </div>
             <FieldError id="bf-monthlyLimit-error" message={err('monthlyLimit')} />
           </div>
 

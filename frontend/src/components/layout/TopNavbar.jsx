@@ -2,6 +2,7 @@ import { memo, useContext, useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { ThemeContext } from '../../context/ThemeContext';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -135,15 +136,9 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
 
             <div className="h-4 w-px bg-surface-700 hidden lg:block mx-1"></div>
 
-            {/* Notifications */}
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-[8px] text-surface-400 hover:bg-surface-800 hover:text-white transition-all"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
-                <path fillRule="evenodd" d="M4 8a6 6 0 1 1 12 0c0 1.887.454 3.665 1.257 5.234a.75.75 0 0 1-.515 1.076 32.91 32.91 0 0 1-3.256.508 3.5 3.5 0 0 1-6.972 0 32.903 32.903 0 0 1-3.256-.508.75.75 0 0 1-.515-1.076A11.448 11.448 0 0 0 4 8Zm6 7c-.655 0-1.286-.02-1.9-.057A2 2 0 0 0 12 15H10Z" clipRule="evenodd" />
-              </svg>
-            </button>
+            {/* Notifications Dropdown */}
+            <NotificationDropdown />
+
 
             {/* Theme Toggle */}
             <button

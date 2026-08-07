@@ -7,6 +7,7 @@ import DateSelect from '../ui/DateSelect';
 import Select from '../ui/Select';
 import useFormState from '../../hooks/useFormState';
 import { todayString } from '../../utils/formatters';
+import { GOAL_PRESETS } from '../../constants/goalPresets';
 
 const PRIORITIES = [
   { value: 'high', label: 'High' },
@@ -42,12 +43,29 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
   const isEdit = Boolean(initialValues);
 
   const {
-    values, errors, setErrors, touched, setTouched,
+    values, setValues, errors, setErrors, touched, setTouched,
     handleChange, handleBlur, err, inputClass,
   } = useFormState(
     initialValues ? valuesFromGoal(initialValues) : defaultValues(),
     validateGoalForm
   );
+
+  const applyPreset = useCallback((preset) => {
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + (preset.targetMonthsAhead || 12));
+    const targetDateStr = targetDate.toISOString().slice(0, 10);
+
+    setValues(prev => ({
+      ...prev,
+      title: preset.title,
+      description: preset.description,
+      targetAmount: preset.targetAmount,
+      monthlyContribution: preset.monthlyContribution,
+      priority: preset.priority,
+      targetDate: targetDateStr,
+    }));
+    setErrors({});
+  }, [setValues, setErrors]);
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
@@ -62,12 +80,34 @@ export default function GoalForm({ initialValues, onSubmit, onCancel, loading = 
     onSubmit(values);
   }, [values, onSubmit, setTouched, setErrors]);
 
-
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full" id="goal-form">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {/* Main Grid */}
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* Quick Presets for New Goals */}
+          {!isEdit && (
+            <div className="sm:col-span-2 bg-surface-800/40 p-3 rounded-xl border border-surface-700/60">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-brand-400">✨ Choose a Goal Preset</span>
+                <span className="text-[11px] text-slate-400">Autofills targets & recommendations</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {GOAL_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-lg bg-surface-700/60 hover:bg-brand-500/20 hover:text-brand-300 text-slate-300 border border-surface-600/40 hover:border-brand-500/40 transition-colors"
+                  >
+                    <span>{preset.icon}</span>
+                    <span>{preset.title.split('(')[0].trim()}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Title */}
           <div className="sm:col-span-2">
             <FormLabel htmlFor="gf-title" required>Goal Name</FormLabel>

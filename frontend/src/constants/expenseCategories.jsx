@@ -98,6 +98,7 @@ export const CATEGORIES = [
     label:   'Housing & Rent',
     color:   'text-indigo-400',
     bg:      'bg-indigo-500/15',
+    emoji:   '🏠',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z" clipRule="evenodd" />
@@ -105,10 +106,35 @@ export const CATEGORIES = [
     ),
   },
   {
+    id:      'personal_care',
+    label:   'Personal Care & Wellness',
+    color:   'text-emerald-400',
+    bg:      'bg-emerald-500/15',
+    emoji:   '💇',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+        <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 3.314 6 10 6 10s6-6.686 6-10a6 6 0 0 0-6-6Zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    id:      'investments',
+    label:   'Investments & Savings',
+    color:   'text-lime-400',
+    bg:      'bg-lime-500/15',
+    emoji:   '📈',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+        <path fillRule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v3.19l2.72-2.72a.75.75 0 1 1 1.06 1.06l-4 4a.75.75 0 0 1-1.06 0l-2.47-2.47-3.72 3.72a.75.75 0 0 1-1.06-1.06l4.25-4.25a.75.75 0 0 1 1.06 0l2.47 2.47V3a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
     id:      'other',
-    label:   'Other',
+    label:   'Other Expenses',
     color:   'text-slate-400',
     bg:      'bg-slate-500/15',
+    emoji:   '📦',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
         <path d="M3 10a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM8.5 10a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM15.5 8.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />

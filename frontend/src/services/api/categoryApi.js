@@ -20,5 +20,10 @@ export const categoryApi = {
   deleteCategory: async (id) => {
     const response = await apiClient.delete(`/categories/${id}`);
     return response.data;
+  },
+
+  seedPresets: async () => {
+    const response = await apiClient.post('/categories/seed');
+    return response.data;
   }
 };
