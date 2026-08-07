@@ -62,6 +62,12 @@ function getNotificationConfig(type) {
         color: 'text-indigo-400 bg-indigo-500/15 border-indigo-500/30',
         badge: 'Recurring',
       };
+    case 'REMINDER':
+      return {
+        icon: '⏰',
+        color: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
+        badge: 'Reminder',
+      };
     case 'MONTHLY_SUMMARY':
       return {
         icon: '📊',
@@ -196,6 +202,7 @@ const NotificationDropdown = memo(function NotificationDropdown() {
               { id: 'UNREAD', label: `Unread (${unreadCount})` },
               { id: 'BUDGET', label: 'Budgets' },
               { id: 'GOALS', label: 'Goals' },
+              { id: 'REMINDERS', label: 'Reminders' },
               { id: 'TRANSACTIONS', label: 'Transactions' },
             ].map(tab => (
               <button

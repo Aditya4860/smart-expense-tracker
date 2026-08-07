@@ -19,12 +19,18 @@ import UpcomingGoalsWidget from '../components/dashboard/UpcomingGoalsWidget';
 import GoalInsightsWidget from '../components/dashboard/GoalInsightsWidget';
 import GoalModal from '../components/goals/GoalModal';
 import GoalForm from '../components/goals/GoalForm';
+import UpcomingRemindersWidget from '../components/dashboard/UpcomingRemindersWidget';
+import RecentNotificationsWidget from '../components/dashboard/RecentNotificationsWidget';
+import RecurringSummaryWidget from '../components/dashboard/RecurringSummaryWidget';
+import RecurringModal from '../components/recurring/RecurringModal';
+import RecurringForm from '../components/recurring/RecurringForm';
 import Card from '../components/ui/Card';
 import useExpenses from '../hooks/useExpenses';
 import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
 import useBudget from '../hooks/useBudget';
 import useGoals from '../hooks/useGoals';
+import useRecurring from '../hooks/useRecurring';
 import { useCategory } from '../context/CategoryContext';
 import { CATEGORY_MAP } from '../constants/expenseCategories';
 import { formatCurrency } from '../utils/formatters';
@@ -157,16 +163,19 @@ function DashboardInner() {
   const { analytics  } = useAnalytics();
   const { addBudget  } = useBudget();
   const { addGoal    } = useGoals();
+  const { addRecurring } = useRecurring();
 
-  const [expenseOpen,  setExpenseOpen]  = useState(false);
-  const [incomeOpen,   setIncomeOpen]   = useState(false);
-  const [budgetOpen,   setBudgetOpen]   = useState(false);
-  const [goalOpen,     setGoalOpen]     = useState(false);
+  const [expenseOpen,   setExpenseOpen]   = useState(false);
+  const [incomeOpen,    setIncomeOpen]    = useState(false);
+  const [budgetOpen,    setBudgetOpen]    = useState(false);
+  const [goalOpen,      setGoalOpen]      = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
   
-  const [savingExp,    setSavingExp]    = useState(false);
-  const [savingInc,    setSavingInc]    = useState(false);
-  const [savingBud,    setSavingBud]    = useState(false);
-  const [savingGoal,   setSavingGoal]   = useState(false);
+  const [savingExp,       setSavingExp]       = useState(false);
+  const [savingInc,       setSavingInc]       = useState(false);
+  const [savingBud,       setSavingBud]       = useState(false);
+  const [savingGoal,      setSavingGoal]      = useState(false);
+  const [savingRecurring, setSavingRecurring] = useState(false);
 
   const handleAddExpense = useCallback((values) => {
     setSavingExp(true);
@@ -195,6 +204,18 @@ function DashboardInner() {
     setSavingGoal(false);
     setGoalOpen(false);
   }, [addGoal]);
+
+  const handleAddRecurring = useCallback(async (values) => {
+    setSavingRecurring(true);
+    try {
+      await addRecurring(values);
+      setRecurringOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingRecurring(false);
+    }
+  }, [addRecurring]);
 
   return (
     <>
@@ -236,6 +257,13 @@ function DashboardInner() {
           <GoalInsightsWidget />
         </div>
 
+        {/* Automation & Schedules row: Reminders, Recurring Schedules, Recent Alerts */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <UpcomingRemindersWidget />
+          <RecurringSummaryWidget onAddNew={() => setRecurringOpen(true)} />
+          <RecentNotificationsWidget />
+        </div>
+
         {/* Bottom row — recent transactions */}
         <RecentTransactions />
       </div>
@@ -256,6 +284,10 @@ function DashboardInner() {
       <GoalModal isOpen={goalOpen} onClose={() => setGoalOpen(false)} title="Create Goal">
         <GoalForm onSubmit={handleAddGoal} onCancel={() => setGoalOpen(false)} loading={savingGoal} />
       </GoalModal>
+
+      <RecurringModal isOpen={recurringOpen} onClose={() => setRecurringOpen(false)} title="New Recurring Schedule">
+        <RecurringForm onSubmit={handleAddRecurring} onCancel={() => setRecurringOpen(false)} loading={savingRecurring} />
+      </RecurringModal>
     </>
   );
 }

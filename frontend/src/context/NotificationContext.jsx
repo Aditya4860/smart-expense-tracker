@@ -156,6 +156,10 @@ export function NotificationProvider({ children }) {
         return notifications.filter(n =>
           n.type === 'GOAL_ACHIEVED' || n.type === 'GOAL_MILESTONE'
         );
+      case 'REMINDERS':
+        return notifications.filter(n =>
+          n.type === 'REMINDER'
+        );
       case 'TRANSACTIONS':
         return notifications.filter(n =>
           n.type === 'LARGE_EXPENSE' ||

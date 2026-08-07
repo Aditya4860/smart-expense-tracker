@@ -59,7 +59,13 @@ function IncomeSearch() {
 
 // ── Inner page (consumes IncomeContext) ────────────────────────────────────
 
+import { useSearchParams } from 'react-router-dom';
+import RecurringList from '../components/recurring/RecurringList';
+
 function IncomeInner() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'recurring' ? 'recurring' : 'all';
+
   const { addIncome } = useIncome();
   const [addOpen, setAddOpen] = useState(false);
   const [saving,  setSaving]  = useState(false);
@@ -76,6 +82,14 @@ function IncomeInner() {
     }
   }, [addIncome]);
 
+  const handleTabChange = (tab) => {
+    if (tab === 'recurring') {
+      setSearchParams({ tab: 'recurring' });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -84,41 +98,78 @@ function IncomeInner() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Income</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Track all your income sources in one place.
+            Track all your income sources, paychecks, and recurring revenue streams.
           </p>
         </div>
-        <Button
-          id="open-add-income-modal"
-          variant="primary"
-          size="md"
-          onClick={() => setAddOpen(true)}
-        >
-          {PlusIcon}
-          Add Income
-        </Button>
+
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-surface-800 p-1 border border-surface-700">
+            <button
+              type="button"
+              onClick={() => handleTabChange('all')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                activeTab === 'all'
+                  ? 'bg-white text-surface-950 shadow-sm'
+                  : 'text-surface-400 hover:text-white'
+              }`}
+            >
+              All Income
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('recurring')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                activeTab === 'recurring'
+                  ? 'bg-white text-surface-950 shadow-sm'
+                  : 'text-surface-400 hover:text-white'
+              }`}
+            >
+              🔄 Recurring Schedules
+            </button>
+          </div>
+
+          {activeTab === 'all' && (
+            <Button
+              id="open-add-income-modal"
+              variant="primary"
+              size="md"
+              onClick={() => setAddOpen(true)}
+            >
+              {PlusIcon}
+              Add Income
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Summary cards */}
-      <IncomeSummary />
+      {activeTab === 'recurring' ? (
+        <RecurringList initialType="INCOME" />
+      ) : (
+        <>
+          {/* Summary cards */}
+          <IncomeSummary />
 
-      {/* Search toolbar */}
-      <IncomeSearch />
+          {/* Search toolbar */}
+          <IncomeSearch />
 
-      {/* Table */}
-      <IncomeTable />
+          {/* Table */}
+          <IncomeTable />
 
-      {/* Add income modal */}
-      <IncomeModal
-        isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
-        title="Add Income"
-      >
-        <IncomeForm
-          onSubmit={handleAdd}
-          onCancel={() => setAddOpen(false)}
-          loading={saving}
-        />
-      </IncomeModal>
+          {/* Add income modal */}
+          <IncomeModal
+            isOpen={addOpen}
+            onClose={() => setAddOpen(false)}
+            title="Add Income"
+          >
+            <IncomeForm
+              onSubmit={handleAdd}
+              onCancel={() => setAddOpen(false)}
+              loading={saving}
+            />
+          </IncomeModal>
+        </>
+      )}
     </div>
   );
 }

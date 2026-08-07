@@ -10,6 +10,7 @@ import { IncomeProvider } from './context/IncomeContext';
 import { AnalyticsProvider } from './context/AnalyticsContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { GoalProvider } from './context/GoalContext';
+import { RecurringProvider } from './context/RecurringContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PageLoader from './components/PageLoader';
 
@@ -37,40 +38,41 @@ function App() {
             <TransactionProvider>
               <ExpenseProvider>
                 <IncomeProvider>
-                  <AnalyticsProvider>
-                    <BudgetProvider>
-                      <GoalProvider>
-                        <BrowserRouter>
-                          {/* Suspense wraps all routes — shows PageLoader during lazy chunk fetch */}
-                          <Suspense fallback={<PageLoader />}>
-                            <Routes>
-                              {/* Public routes */}
-                              <Route path="/"         element={<Landing />}  />
-                              <Route path="/login"    element={<Login />}    />
-                              <Route path="/register" element={<Register />} />
+                  <RecurringProvider>
+                    <AnalyticsProvider>
+                      <BudgetProvider>
+                        <GoalProvider>
+                          <BrowserRouter>
+                            {/* Suspense wraps all routes — shows PageLoader during lazy chunk fetch */}
+                            <Suspense fallback={<PageLoader />}>
+                              <Routes>
+                                {/* Public routes */}
+                                <Route path="/"         element={<Landing />}  />
+                                <Route path="/login"    element={<Login />}    />
+                                <Route path="/register" element={<Register />} />
 
-                              {/* Protected routes */}
-                              <Route element={<ProtectedRoute />}>
-                                <Route path="/dashboard"  element={<Dashboard />}  />
-                                <Route path="/expenses"   element={<Expenses />}   />
-                                <Route path="/income"     element={<Income />}     />
-                                <Route path="/analytics"  element={<Analytics />}  />
-                                <Route path="/budget"     element={<Budget />}     />
-                                <Route path="/goals"      element={<Goals />}      />
-                                <Route path="/reminders"  element={<Reminders />}  />
-                                <Route path="/reports"    element={<Reports />}    />
-                                <Route path="/categories" element={<Categories />} />
-                              </Route>
+                                {/* Protected routes */}
+                                <Route element={<ProtectedRoute />}>
+                                  <Route path="/dashboard"  element={<Dashboard />}  />
+                                  <Route path="/expenses"   element={<Expenses />}   />
+                                  <Route path="/income"     element={<Income />}     />
+                                  <Route path="/analytics"  element={<Analytics />}  />
+                                  <Route path="/budget"     element={<Budget />}     />
+                                  <Route path="/goals"      element={<Goals />}      />
+                                  <Route path="/reminders"  element={<Reminders />}  />
+                                  <Route path="/reports"    element={<Reports />}    />
+                                  <Route path="/categories" element={<Categories />} />
+                                </Route>
 
-
-                              {/* Catch-all */}
-                              <Route path="*" element={<Navigate to="/" replace />} />
-                            </Routes>
-                          </Suspense>
-                        </BrowserRouter>
-                      </GoalProvider>
-                    </BudgetProvider>
-                  </AnalyticsProvider>
+                                {/* Catch-all */}
+                                <Route path="*" element={<Navigate to="/" replace />} />
+                              </Routes>
+                            </Suspense>
+                          </BrowserRouter>
+                        </GoalProvider>
+                      </BudgetProvider>
+                    </AnalyticsProvider>
+                  </RecurringProvider>
                 </IncomeProvider>
               </ExpenseProvider>
             </TransactionProvider>

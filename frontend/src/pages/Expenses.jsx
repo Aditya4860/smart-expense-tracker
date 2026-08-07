@@ -27,7 +27,13 @@ const PlusIcon = (
 
 // ── Inner page (consumes context) ──────────────────────────────────────────
 
+import { useSearchParams } from 'react-router-dom';
+import RecurringList from '../components/recurring/RecurringList';
+
 function ExpensesInner() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'recurring' ? 'recurring' : 'all';
+
   const { addExpense, summary, filters } = useExpenses();
   const [addOpen,     setAddOpen]     = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -47,6 +53,14 @@ function ExpensesInner() {
     }
   }, [addExpense]);
 
+  const handleTabChange = (tab) => {
+    if (tab === 'recurring') {
+      setSearchParams({ tab: 'recurring' });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -55,95 +69,132 @@ function ExpensesInner() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Expenses</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Track, search and manage all your spending in one place.
+            Track, search and manage all your spending and recurring commitments in one place.
           </p>
         </div>
-        <Button
-          id="open-add-expense-modal"
-          variant="primary"
-          size="md"
-          onClick={() => setAddOpen(true)}
-        >
-          {PlusIcon}
-          Add Expense
-        </Button>
-      </div>
 
-      {/* ── Summary row ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          id="stat-total"
-          label="Total Spent"
-          value={formatCurrency(summary.total)}
-          sub={`${summary.count} ${summary.count === 1 ? 'expense' : 'expenses'}`}
-          valueCls="text-danger-400"
-        />
-        <StatCard
-          id="stat-count"
-          label="Transactions"
-          value={String(summary.count)}
-          sub="All time"
-          valueCls="text-white"
-        />
-        <StatCard
-          id="stat-largest"
-          label="Largest"
-          value={summary.count > 0 ? formatCurrency(summary.largest) : '—'}
-          sub="Single expense"
-          valueCls="text-yellow-400"
-        />
-        <StatCard
-          id="stat-average"
-          label="Average"
-          value={summary.count > 0 ? formatCurrency(summary.average) : '—'}
-          sub="Per transaction"
-          valueCls="text-accent-400"
-        />
-      </div>
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-surface-800 p-1 border border-surface-700">
+            <button
+              type="button"
+              onClick={() => handleTabChange('all')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                activeTab === 'all'
+                  ? 'bg-white text-surface-950 shadow-sm'
+                  : 'text-surface-400 hover:text-white'
+              }`}
+            >
+              All Expenses
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('recurring')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                activeTab === 'recurring'
+                  ? 'bg-white text-surface-950 shadow-sm'
+                  : 'text-surface-400 hover:text-white'
+              }`}
+            >
+              🔄 Recurring Schedules
+            </button>
+          </div>
 
-      {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <ExpenseSearch />
-        <Button
-          id="toggle-expense-filters"
-          variant={activeFilters ? 'primary' : 'secondary'}
-          size="md"
-          onClick={() => setFiltersOpen(o => !o)}
-          aria-expanded={filtersOpen}
-          aria-controls="expense-filters-panel"
-        >
-          {FilterIcon}
-          Filters
-          {activeFilters && (
-            <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold">
-              {Object.values(filters).filter(Boolean).length}
-            </span>
+          {activeTab === 'all' && (
+            <Button
+              id="open-add-expense-modal"
+              variant="primary"
+              size="md"
+              onClick={() => setAddOpen(true)}
+            >
+              {PlusIcon}
+              Add Expense
+            </Button>
           )}
-        </Button>
+        </div>
       </div>
 
-      {/* ── Filters panel ───────────────────────────────────────────────── */}
-      {filtersOpen && (
-        <div id="expense-filters-panel">
-          <ExpenseFilters onClose={() => setFiltersOpen(false)} />
-        </div>
+      {activeTab === 'recurring' ? (
+        <RecurringList initialType="EXPENSE" />
+      ) : (
+        <>
+          {/* ── Summary row ─────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard
+              id="stat-total"
+              label="Total Spent"
+              value={formatCurrency(summary.total)}
+              sub={`${summary.count} ${summary.count === 1 ? 'expense' : 'expenses'}`}
+              valueCls="text-danger-400"
+            />
+            <StatCard
+              id="stat-count"
+              label="Transactions"
+              value={String(summary.count)}
+              sub="All time"
+              valueCls="text-white"
+            />
+            <StatCard
+              id="stat-largest"
+              label="Largest"
+              value={summary.count > 0 ? formatCurrency(summary.largest) : '—'}
+              sub="Single expense"
+              valueCls="text-yellow-400"
+            />
+            <StatCard
+              id="stat-average"
+              label="Average"
+              value={summary.count > 0 ? formatCurrency(summary.average) : '—'}
+              sub="Per transaction"
+              valueCls="text-accent-400"
+            />
+          </div>
+
+          {/* ── Toolbar ─────────────────────────────────────────────────────── */}
+          <div className="flex items-center gap-3">
+            <ExpenseSearch />
+            <Button
+              id="toggle-expense-filters"
+              variant={activeFilters ? 'primary' : 'secondary'}
+              size="md"
+              onClick={() => setFiltersOpen(o => !o)}
+              aria-expanded={filtersOpen}
+              aria-controls="expense-filters-panel"
+            >
+              {FilterIcon}
+              Filters
+              {activeFilters && (
+                <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold">
+                  {Object.values(filters).filter(Boolean).length}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* ── Filters panel ───────────────────────────────────────────────── */}
+          {filtersOpen && (
+            <div id="expense-filters-panel">
+              <ExpenseFilters onClose={() => setFiltersOpen(false)} />
+            </div>
+          )}
+
+          {/* ── Table ───────────────────────────────────────────────────────── */}
+          <ExpenseTable />
+
+          {/* ── Add modal ───────────────────────────────────────────────────── */}
+          <ExpenseModal
+            isOpen={addOpen}
+            onClose={() => setAddOpen(false)}
+            title="Add Expense"
+          >
+            <ExpenseForm
+              onSubmit={handleAdd}
+              onCancel={() => setAddOpen(false)}
+              loading={saving}
+            />
+          </ExpenseModal>
+        </>
       )}
-
-      {/* ── Table ───────────────────────────────────────────────────────── */}
-      <ExpenseTable />
-
-      {/* ── Add modal ───────────────────────────────────────────────────── */}
-      <ExpenseModal
-        isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
-        title="Add Expense"
-      >
-        <ExpenseForm
-          onSubmit={handleAdd}
-          onCancel={() => setAddOpen(false)}
-          loading={saving}
-        />
-      </ExpenseModal>
     </div>
   );
 }
