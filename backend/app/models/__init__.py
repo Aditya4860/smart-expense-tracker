@@ -8,7 +8,10 @@ from app.models.goal import Goal
 from app.models.goal_contribution import GoalContribution
 from app.models.recurring_transaction import RecurringTransaction
 from app.models.notification import Notification
+from app.models.reminder import Reminder
+from app.models.reminder_history import ReminderHistory
 from app.models.audit_log import AuditLog
 
 # Expose Base for Alembic
+
 from app.core.database import Base

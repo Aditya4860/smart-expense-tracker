@@ -19,10 +19,12 @@ const NAV_LINKS = [
   { path: '/income', label: 'Income' },
   { path: '/budget', label: 'Budget' },
   { path: '/goals', label: 'Goals' },
+  { path: '/reminders', label: 'Reminders' },
   { path: '/analytics', label: 'Analytics' },
   { path: '/reports', label: 'Reports' },
   { path: '/categories', label: 'Categories' },
 ];
+
 
 /**
  * TopNavbar — Premium minimal top navigation.

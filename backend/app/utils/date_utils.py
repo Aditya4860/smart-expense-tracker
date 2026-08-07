@@ -1,6 +1,8 @@
 from datetime import date, timedelta
+from typing import Any
 import calendar
 from app.models.enums import RecurringFrequency
+
 
 def add_months(sourcedate: date, months: int) -> date:
     """Add a specified number of months to a date, clamping days to month maximum."""
@@ -18,16 +20,20 @@ def add_years(sourcedate: date, years: int) -> date:
         # Handles Feb 29 on non-leap years
         return sourcedate.replace(year=sourcedate.year + years, day=28)
 
-def calculate_next_occurrence(from_date: date, frequency: RecurringFrequency) -> date:
-    """Calculates the subsequent occurrence date based on recurring frequency."""
-    if frequency == RecurringFrequency.DAILY:
+def calculate_next_occurrence(from_date: date, frequency: Any) -> date:
+    """Calculates the subsequent occurrence date based on recurring/reminder frequency."""
+    freq_str = frequency.value if hasattr(frequency, "value") else str(frequency)
+    freq_str = freq_str.upper()
+
+    if freq_str == "DAILY":
         return from_date + timedelta(days=1)
-    elif frequency == RecurringFrequency.WEEKLY:
+    elif freq_str == "WEEKLY":
         return from_date + timedelta(weeks=1)
-    elif frequency == RecurringFrequency.MONTHLY:
+    elif freq_str == "MONTHLY":
         return add_months(from_date, 1)
-    elif frequency == RecurringFrequency.QUARTERLY:
+    elif freq_str == "QUARTERLY":
         return add_months(from_date, 3)
-    elif frequency == RecurringFrequency.YEARLY:
+    elif freq_str == "YEARLY":
         return add_years(from_date, 1)
     return from_date + timedelta(days=30)
+

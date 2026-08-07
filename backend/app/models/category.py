@@ -21,6 +21,8 @@ class Category(BaseModel):
     expenses = relationship("Expense", back_populates="category")
     budgets = relationship("Budget", back_populates="category")
     recurring_transactions = relationship("RecurringTransaction", back_populates="category")
+    reminders = relationship("Reminder", back_populates="category")
+
 
     __table_args__ = (
         Index("ix_categories_user_type", "user_id", "type"),

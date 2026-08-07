@@ -27,9 +27,30 @@ class RecurringStatus(str, enum.Enum):
     COMPLETED = "COMPLETED"
 
 class Role(str, enum.Enum):
-
     USER = "USER"
     ADMIN = "ADMIN"
+
+class ReminderType(str, enum.Enum):
+    BILL = "BILL"
+    SUBSCRIPTION = "SUBSCRIPTION"
+    EMI = "EMI"
+    SAVINGS = "SAVINGS"
+    BUDGET = "BUDGET"
+    GOAL = "GOAL"
+    CUSTOM = "CUSTOM"
+
+class ReminderFrequency(str, enum.Enum):
+    ONCE = "ONCE"
+    DAILY = "DAILY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
+
+class ReminderStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    SNOOZED = "SNOOZED"
+    DISMISSED = "DISMISSED"
+    CANCELLED = "CANCELLED"
 
 class NotificationType(str, enum.Enum):
     BUDGET_EXCEEDED = "BUDGET_EXCEEDED"
@@ -41,5 +62,7 @@ class NotificationType(str, enum.Enum):
     MONTHLY_SUMMARY = "MONTHLY_SUMMARY"
     TRANSACTION_FAILED = "TRANSACTION_FAILED"
     RECURRING_EXECUTED = "RECURRING_EXECUTED"
+    REMINDER = "REMINDER"
     SYSTEM = "SYSTEM"
+
 
