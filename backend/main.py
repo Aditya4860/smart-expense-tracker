@@ -17,6 +17,7 @@ from app.api.v1 import api_router
 from app.core.exceptions import BaseAPIException
 from app.core.logging import logger
 from app.core.database import AsyncSessionLocal
+from app.core.scheduler import start_scheduler, shutdown_scheduler, get_scheduler_status
 
 # ── Configure structured logging on import ────────────────────────────────────
 configure_logging(level=settings.LOG_LEVEL, environment=settings.ENVIRONMENT)
@@ -56,12 +57,22 @@ async def lifespan(app: FastAPI):
         if settings.ENVIRONMENT == "production":
             raise
 
+    # Start background scheduler
+    try:
+        start_scheduler()
+    except Exception as exc:
+        logger.error(f"Failed to start background scheduler: {exc}", exc_info=True)
+
     yield  # ← application runs here
 
     # ── SHUTDOWN ─────────────────────────────────────────────────────────────
-    logger.info(f"Shutting down {settings.PROJECT_NAME} — draining connections...")
-    # AsyncSessionLocal sessions are closed per-request; nothing to drain here.
+    logger.info(f"Shutting down {settings.PROJECT_NAME} — draining connections & background tasks...")
+    try:
+        shutdown_scheduler()
+    except Exception as exc:
+        logger.error(f"Error shutting down scheduler: {exc}", exc_info=True)
     logger.info("Shutdown complete.")
+
 
 # Hide interactive API docs in production for security
 _is_prod = settings.ENVIRONMENT == "production"
@@ -268,7 +279,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # ── Enhanced Health Check ─────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 async def health_check():
-    """Returns service health including database connectivity status."""
+    """Returns service health including database and background scheduler status."""
     db_status = "ok"
     db_error = None
     try:
@@ -279,7 +290,10 @@ async def health_check():
         db_error = "Database unreachable"
         logger.error(f"Health check DB failure: {exc}")
 
-    overall = "healthy" if db_status == "ok" else "degraded"
+    scheduler_info = get_scheduler_status()
+    scheduler_ok = scheduler_info.get("status") == "running"
+
+    overall = "healthy" if (db_status == "ok" and scheduler_ok) else "degraded"
     status_code = 200 if db_status == "ok" else 503
 
     payload = {
@@ -288,10 +302,12 @@ async def health_check():
         "environment": settings.ENVIRONMENT,
         "services": {
             "database": db_status,
+            "scheduler": scheduler_info,
         },
     }
     if db_error:
         payload["services"]["database_error"] = db_error
 
     return JSONResponse(content=payload, status_code=status_code)
+
 
