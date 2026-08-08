@@ -22,32 +22,38 @@ export function NotificationProvider({ children }) {
       setNotifications(data);
       const unread = data.filter(n => !n.isRead).length;
       setUnreadCount(unread);
+      return data;
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
       setError(err.message || 'Failed to load notifications');
+      return [];
     } finally {
       setLoading(false);
     }
   }, [user]);
 
-  // Fetch quick unread counter
+  // Fetch quick unread counter & reconcile if out of sync
   const fetchUnreadCount = useCallback(async () => {
     if (!user) return;
     try {
       const counts = await notificationApi.getUnreadCount();
-      setUnreadCount(counts.unread_count || 0);
+      const count = Number(counts.unread_count ?? counts.unreadCount ?? 0);
+      setUnreadCount(count);
+      return count;
     } catch (err) {
       console.error('Failed to fetch unread count:', err);
+      return 0;
     }
   }, [user]);
 
-  // Initial load and periodic polling (every 45s)
+  // Initial load and periodic polling (every 30s)
   useEffect(() => {
     if (user) {
       fetchNotifications();
+      fetchUnreadCount();
       const interval = setInterval(() => {
-        fetchUnreadCount();
-      }, 45000);
+        fetchNotifications();
+      }, 30000);
       return () => clearInterval(interval);
     } else {
       setNotifications([]);

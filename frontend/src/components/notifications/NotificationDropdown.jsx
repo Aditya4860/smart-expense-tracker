@@ -97,6 +97,7 @@ const NotificationDropdown = memo(function NotificationDropdown() {
     loading,
     activeFilter,
     setActiveFilter,
+    fetchNotifications,
     markAsRead,
     markAsUnread,
     markAllAsRead,
@@ -107,6 +108,13 @@ const NotificationDropdown = memo(function NotificationDropdown() {
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Fetch fresh notifications whenever dropdown is opened
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen, fetchNotifications]);
 
   // Close dropdown on outside click or Escape
   useEffect(() => {

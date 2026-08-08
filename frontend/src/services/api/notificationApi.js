@@ -1,14 +1,14 @@
 import apiClient from './apiClient';
 
 const mapToFrontend = (apiNotification) => ({
-  id: apiNotification.id,
-  title: apiNotification.title,
-  message: apiNotification.message,
-  type: apiNotification.type || 'SYSTEM',
-  isRead: apiNotification.is_read,
+  id: String(apiNotification.id),
+  title: apiNotification.title || '',
+  message: apiNotification.message || '',
+  type: String(apiNotification.type || 'SYSTEM').toUpperCase(),
+  isRead: Boolean(apiNotification.is_read ?? apiNotification.isRead),
   data: apiNotification.data || null,
-  date: apiNotification.created_at,
-  updatedAt: apiNotification.updated_at,
+  date: apiNotification.created_at || apiNotification.date || new Date().toISOString(),
+  updatedAt: apiNotification.updated_at || apiNotification.updatedAt,
 });
 
 export const notificationApi = {
@@ -23,42 +23,50 @@ export const notificationApi = {
       params.type = type;
     }
     const response = await apiClient.get('/notifications', { params });
-    return response.data.map(mapToFrontend);
+    const rawList = Array.isArray(response.data)
+      ? response.data
+      : (Array.isArray(response.data?.data) ? response.data.data : []);
+    return rawList.map(mapToFrontend);
   },
 
   getUnreadCount: async () => {
     const response = await apiClient.get('/notifications/unread-count');
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   markAsRead: async (id) => {
     const response = await apiClient.post(`/notifications/${id}/mark-read`);
-    return mapToFrontend(response.data);
+    const data = response.data?.data || response.data;
+    return mapToFrontend(data);
   },
 
   markAsUnread: async (id) => {
     const response = await apiClient.post(`/notifications/${id}/mark-unread`);
-    return mapToFrontend(response.data);
+    const data = response.data?.data || response.data;
+    return mapToFrontend(data);
   },
 
   markAllAsRead: async () => {
     const response = await apiClient.post('/notifications/mark-all-read');
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   deleteNotification: async (id) => {
     const response = await apiClient.delete(`/notifications/${id}`);
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   clearReadNotifications: async () => {
     const response = await apiClient.post('/notifications/clear-read');
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   seedDemoNotifications: async () => {
     const response = await apiClient.post('/notifications/seed-demo');
-    return response.data.map(mapToFrontend);
+    const rawList = Array.isArray(response.data)
+      ? response.data
+      : (Array.isArray(response.data?.data) ? response.data.data : []);
+    return rawList.map(mapToFrontend);
   },
 };
 
