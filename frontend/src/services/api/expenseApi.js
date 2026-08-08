@@ -13,15 +13,22 @@ const mapToFrontend = (apiExpense) => ({
   type: 'expense'
 });
 
-const mapToBackend = (uiExpense) => ({
-  merchant: uiExpense.merchant || null,
-  description: uiExpense.description || null,
-  amount: Number(uiExpense.amount),
-  category_id: uiExpense.category,
-  payment_method: uiExpense.paymentMethod || null,
-  date: uiExpense.date,
-  receipt_url: uiExpense.receiptUrl || null,
-});
+const mapToBackend = (uiExpense) => {
+  const cat = uiExpense.category || uiExpense.category_id || uiExpense.categoryId;
+  const rawReceipt = uiExpense.receiptUrl || uiExpense.receipt_url;
+  const receipt_url = rawReceipt && String(rawReceipt).trim() !== '' ? String(rawReceipt).trim() : null;
+  const rawDate = uiExpense.date;
+
+  return {
+    merchant: uiExpense.merchant ? String(uiExpense.merchant).trim() : null,
+    description: uiExpense.description ? String(uiExpense.description).trim() : null,
+    amount: Number(uiExpense.amount || 0),
+    category_id: cat && String(cat).trim() !== '' ? String(cat).trim() : null,
+    payment_method: uiExpense.paymentMethod || uiExpense.payment_method || null,
+    date: rawDate ? (typeof rawDate === 'string' ? rawDate.split('T')[0] : rawDate) : new Date().toISOString().slice(0, 10),
+    receipt_url: receipt_url,
+  };
+};
 
 export const expenseApi = {
   getExpenses: async (params = {}) => {

@@ -83,6 +83,12 @@ def configure_logging(level: str = "INFO", environment: str = "development") -> 
         level:       Log level string (DEBUG | INFO | WARNING | ERROR | CRITICAL).
         environment: 'production' → JSON formatter; anything else → colour formatter.
     """
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     numeric_level = getattr(logging, level.upper(), logging.INFO)
 
     handler = logging.StreamHandler(sys.stdout)

@@ -18,6 +18,13 @@ class ExpenseBase(BaseModel):
     def sanitize_text(cls, v):
         return sanitize_string(v) if isinstance(v, str) else v
 
+    @field_validator("receipt_url", mode="before")
+    @classmethod
+    def sanitize_receipt_url(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
+
 class ExpenseCreate(ExpenseBase):
     pass
 
@@ -34,6 +41,13 @@ class ExpenseUpdate(BaseModel):
     @classmethod
     def sanitize_text(cls, v):
         return sanitize_string(v) if isinstance(v, str) else v
+
+    @field_validator("receipt_url", mode="before")
+    @classmethod
+    def sanitize_receipt_url(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 class ExpenseResponse(ExpenseBase):
     id: UUID

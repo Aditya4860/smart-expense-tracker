@@ -51,6 +51,7 @@ export const reminderApi = {
   },
 
   createReminder: async (data) => {
+    const rawCat = data.categoryId || data.category_id || data.category;
     const payload = {
       title: data.title,
       description: data.description || null,
@@ -59,7 +60,7 @@ export const reminderApi = {
       frequency: data.frequency || 'ONCE',
       due_date: data.dueDate || data.due_date,
       due_time: data.dueTime || data.due_time || null,
-      category_id: data.categoryId || data.category_id || null,
+      category_id: rawCat && String(rawCat).trim() !== '' ? String(rawCat).trim() : null,
       is_auto_notified: data.isAutoNotified !== undefined ? data.isAutoNotified : true,
     };
     const response = await apiClient.post('/reminders', payload);
@@ -67,6 +68,7 @@ export const reminderApi = {
   },
 
   updateReminder: async (id, data) => {
+    const rawCat = data.categoryId !== undefined ? data.categoryId : data.category_id !== undefined ? data.category_id : data.category;
     const payload = {
       title: data.title,
       description: data.description,
@@ -75,7 +77,7 @@ export const reminderApi = {
       frequency: data.frequency,
       due_date: data.dueDate || data.due_date,
       due_time: data.dueTime || data.due_time,
-      category_id: data.categoryId || data.category_id,
+      category_id: rawCat !== undefined ? (rawCat && String(rawCat).trim() !== '' ? String(rawCat).trim() : null) : undefined,
       status: data.status,
       is_auto_notified: data.isAutoNotified,
       snooze_until: data.snoozeUntil || data.snooze_until,

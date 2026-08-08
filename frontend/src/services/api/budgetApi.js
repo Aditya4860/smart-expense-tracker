@@ -18,11 +18,14 @@ const mapToFrontend = (apiBudget) => {
   };
 };
 
-const mapToBackend = (uiBudget) => ({
-  amount: Number(uiBudget.amount || uiBudget.monthlyLimit),
-  period: uiBudget.period || 'MONTHLY',
-  category_id: uiBudget.category || uiBudget.category_id,
-});
+const mapToBackend = (uiBudget) => {
+  const cat = uiBudget.category || uiBudget.category_id || uiBudget.categoryId;
+  return {
+    amount: Number(uiBudget.amount || uiBudget.monthlyLimit || 0),
+    period: uiBudget.period ? String(uiBudget.period).toUpperCase() : 'MONTHLY',
+    category_id: cat && String(cat).trim() !== '' ? String(cat).trim() : null,
+  };
+};
 
 export const budgetApi = {
   getBudgets: async () => {

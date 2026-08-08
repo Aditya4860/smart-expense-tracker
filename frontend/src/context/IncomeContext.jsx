@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { incomeApi } from '../services/api/incomeApi';
+import { useAuth } from './AuthContext';
 
 const INITIAL_FILTERS = {
   category: '',
@@ -11,6 +12,7 @@ const INITIAL_FILTERS = {
 const IncomeContext = createContext(null);
 
 export function IncomeProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [income, setIncome] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,6 +24,11 @@ export function IncomeProvider({ children }) {
   // ── Fetching Data ───────────────────────────────────────────────────────
 
   const fetchIncome = useCallback(async () => {
+    if (!isAuthenticated) {
+      setIncome([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -48,7 +55,7 @@ export function IncomeProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, filters]);
+  }, [isAuthenticated, searchQuery, filters]);
 
   useEffect(() => {
     fetchIncome();

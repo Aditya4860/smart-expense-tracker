@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { goalApi } from '../services/api/goalApi';
 import { calculateGoalProgressRaw, calculateGoalRemainingRaw, calculateRemainingMonthsRaw } from '../utils/goalUtils';
+import { useAuth } from './AuthContext';
 
 const GoalContext = createContext(null);
 
 export function GoalProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,6 +14,11 @@ export function GoalProvider({ children }) {
   // ── Fetching Data ───────────────────────────────────────────────────────
 
   const fetchGoals = useCallback(async () => {
+    if (!isAuthenticated) {
+      setGoals([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -48,7 +55,7 @@ export function GoalProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchGoals();

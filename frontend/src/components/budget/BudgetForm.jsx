@@ -103,6 +103,7 @@ export default function BudgetForm({ initialValues, onSubmit, onCancel, loading 
             <FormLabel htmlFor="bf-category" required>Category</FormLabel>
             <CategorySelect
               id="bf-category"
+              name="category"
               value={values.category}
               onChange={handleChange}
               onBlur={handleBlur}

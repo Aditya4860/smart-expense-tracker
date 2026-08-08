@@ -79,12 +79,14 @@ export default function Select({ id, name, value, options, onChange, onBlur, err
 
       {isOpen && (
         <ul
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-[10px] border border-surface-700/60 bg-surface-900 shadow-2xl py-1 text-sm text-white"
+          className="absolute left-0 right-0 z-[100] mt-1.5 max-h-64 w-full overflow-auto rounded-xl border border-surface-600 bg-surface-800 shadow-2xl py-1 text-sm text-white focus:outline-none"
           role="listbox"
           tabIndex={-1}
         >
           {options.map((opt) => {
             const isSelected = String(opt.value) === String(value);
+            const isAction = opt.isAction || opt.value === 'create_new';
+
             return (
               <li
                 key={opt.value}
@@ -94,13 +96,20 @@ export default function Select({ id, name, value, options, onChange, onBlur, err
                 onClick={() => handleSelect(opt.value)}
                 onKeyDown={(e) => handleOptionKeyDown(e, opt.value)}
                 className={[
-                  'cursor-pointer px-4 py-2 transition-colors',
-                  isSelected 
-                    ? 'bg-primary-500/10 text-primary-400 font-semibold border-l-2 border-primary-500 pl-3' 
-                    : 'text-slate-300 hover:bg-surface-700 hover:text-white pl-4'
+                  'cursor-pointer px-4 py-2.5 transition-colors flex items-center justify-between',
+                  isAction
+                    ? 'border-t border-surface-700/80 mt-1 text-primary-400 font-semibold hover:bg-primary-500/20 hover:text-primary-300 pl-4 sticky bottom-0 bg-surface-800'
+                    : isSelected 
+                    ? 'bg-primary-500/20 text-primary-400 font-semibold border-l-4 border-primary-500 pl-3' 
+                    : 'text-slate-200 hover:bg-surface-700 hover:text-white pl-4'
                 ].join(' ')}
               >
-                {opt.label}
+                <span className="truncate flex items-center gap-2">{opt.label}</span>
+                {isSelected && !isAction && (
+                  <svg className="h-4 w-4 text-primary-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </li>
             );
           })}

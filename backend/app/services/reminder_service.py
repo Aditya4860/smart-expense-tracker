@@ -47,11 +47,17 @@ class ReminderService:
             raise BadRequestException("Amount must be greater than 0.")
 
         if reminder_in.category_id and self.category_repository:
-            category = await self.category_repository.get_category(
-                str(reminder_in.category_id), str(user_id)
-            )
-            if not category:
-                raise NotFoundException("Category not found.")
+            try:
+                category = await self.category_repository.get_category(
+                    str(reminder_in.category_id), str(user_id)
+                )
+                if not category:
+                    reminder_in.category_id = None
+                else:
+                    reminder_in.category_id = category.id
+            except Exception as e:
+                logger.warning(f"Error checking category for reminder: {e}")
+                reminder_in.category_id = None
 
         return await self.repository.create_reminder(user_id, reminder_in)
 
@@ -103,11 +109,17 @@ class ReminderService:
             raise BadRequestException("Amount must be greater than 0.")
 
         if reminder_in.category_id and self.category_repository:
-            category = await self.category_repository.get_category(
-                str(reminder_in.category_id), str(user_id)
-            )
-            if not category:
-                raise NotFoundException("Category not found.")
+            try:
+                category = await self.category_repository.get_category(
+                    str(reminder_in.category_id), str(user_id)
+                )
+                if not category:
+                    reminder_in.category_id = None
+                else:
+                    reminder_in.category_id = category.id
+            except Exception as e:
+                logger.warning(f"Error checking category for reminder: {e}")
+                reminder_in.category_id = None
 
         updated = await self.repository.update_reminder(
             reminder_id, user_id, reminder_in

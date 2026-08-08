@@ -132,6 +132,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, loading
             <FormLabel htmlFor="ef-category" required>Category</FormLabel>
             <CategorySelect
               id="ef-category"
+              name="category"
               value={values.category}
               onChange={handleChange}
               onBlur={handleBlur}

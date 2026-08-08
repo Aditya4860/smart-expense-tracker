@@ -8,12 +8,14 @@ import {
 } from 'react';
 import { budgetApi } from '../services/api/budgetApi';
 import useExpenses from '../hooks/useExpenses';
+import { useAuth } from './AuthContext';
 
 // ── Context ────────────────────────────────────────────────────────────────
 
 const BudgetContext = createContext(null);
 
 export function BudgetProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,6 +23,11 @@ export function BudgetProvider({ children }) {
   // ── Fetching Data ───────────────────────────────────────────────────────
 
   const fetchBudgets = useCallback(async () => {
+    if (!isAuthenticated) {
+      setBudgets([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -34,7 +41,7 @@ export function BudgetProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchBudgets();

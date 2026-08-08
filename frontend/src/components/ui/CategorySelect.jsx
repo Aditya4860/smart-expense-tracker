@@ -4,58 +4,87 @@ import Select from '../ui/Select';
 import CategoryModal from '../categories/CategoryModal';
 
 /**
- * CategorySelect — styled category <select>.
+ * CategorySelect — styled category dropdown with preset list and "+ Create Category" at the bottom.
  *
  * Props:
  *   id       — element id for label association
- *   value    — selected category id string
+ *   name     — field name (defaults to 'category')
+ *   value    — selected category id or name
  *   onChange — native change handler (e) => void
  *   onBlur   — native blur handler  (e) => void  (optional)
- *   error    — validation error string, drives red border
+ *   error    — validation error string
  *   type     — 'INCOME' or 'EXPENSE'
  */
 const CategorySelect = memo(function CategorySelect({
   id = 'category',
+  name = 'category',
   value,
   onChange,
   onBlur,
   error,
-  type = 'INCOME'
+  type = 'EXPENSE'
 }) {
   const { incomeCategories, expenseCategories } = useCategory();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categories = type === 'INCOME' ? incomeCategories : expenseCategories;
+  const fieldName = name || (id && id.includes('category') ? 'category' : id) || 'category';
+
+  // Find selected category ID even if value is a name or legacy key
+  const normalizedValue = useMemo(() => {
+    if (!value) return '';
+    const match = categories.find(
+      c => String(c.id).toLowerCase() === String(value).toLowerCase() ||
+           String(c.name).toLowerCase() === String(value).toLowerCase()
+    );
+    return match ? match.id : value;
+  }, [categories, value]);
 
   const options = useMemo(() => {
     const list = categories.map(cat => ({
       value: cat.id,
-      label: `${cat.icon || '💰'}  ${cat.name}`
+      label: `${cat.icon || (type === 'INCOME' ? '💰' : '📦')}  ${cat.name}`
     }));
     return [
       { value: '', label: 'Select a category' },
       ...list,
-      { value: 'create_new', label: '+ Create Category' }
+      { value: 'create_new', label: '+ Create Category', isAction: true }
     ];
-  }, [categories]);
+  }, [categories, type]);
 
   const handleChange = useCallback((e) => {
-    if (e.target.value === 'create_new') {
+    const selectedVal = e.target.value;
+    if (selectedVal === 'create_new') {
       setIsModalOpen(true);
-      // Do not trigger onChange for 'create_new', reset to previous value or ''
-      const syntheticEvent = { target: { name: e.target.name, value: '' } };
-      if (onChange) onChange(syntheticEvent);
     } else {
-      if (onChange) onChange(e);
+      if (onChange) {
+        onChange({
+          target: {
+            name: fieldName,
+            value: selectedVal
+          }
+        });
+      }
     }
-  }, [onChange]);
+  }, [onChange, fieldName]);
+
+  const handleCategoryCreated = useCallback((newCategory) => {
+    if (onChange && newCategory) {
+      onChange({
+        target: {
+          name: fieldName,
+          value: newCategory.id
+        }
+      });
+    }
+  }, [onChange, fieldName]);
 
   return (
     <>
       <Select
         id={id}
-        name="category"
-        value={value}
+        name={fieldName}
+        value={normalizedValue}
         onChange={handleChange}
         onBlur={onBlur}
         error={error}
@@ -64,6 +93,7 @@ const CategorySelect = memo(function CategorySelect({
       <CategoryModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+        onCreated={handleCategoryCreated}
         type={type} 
       />
     </>
@@ -71,4 +101,3 @@ const CategorySelect = memo(function CategorySelect({
 });
 
 export default CategorySelect;
-

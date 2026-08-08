@@ -13,11 +13,14 @@ const mapGoalToFrontend = (apiGoal) => ({
 });
 
 const mapGoalToBackend = (uiGoal) => ({
-  name: uiGoal.title,
-  target_amount: Number(uiGoal.targetAmount),
-  deadline: uiGoal.targetDate || null,
-  description: uiGoal.description || null,
-  priority: uiGoal.priority || 'medium',
+  name: (uiGoal.name || uiGoal.title || '').trim(),
+  target_amount: Number(uiGoal.targetAmount || uiGoal.target_amount || 0),
+  current_amount: uiGoal.currentAmount !== undefined && uiGoal.currentAmount !== ''
+    ? Number(uiGoal.currentAmount)
+    : (uiGoal.current_amount !== undefined && uiGoal.current_amount !== '' ? Number(uiGoal.current_amount) : 0),
+  deadline: uiGoal.targetDate || uiGoal.deadline || null,
+  description: uiGoal.description ? String(uiGoal.description).trim() : null,
+  priority: (uiGoal.priority || 'medium').toLowerCase(),
   status: uiGoal.status || 'ACTIVE',
 });
 

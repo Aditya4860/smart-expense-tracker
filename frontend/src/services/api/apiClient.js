@@ -93,6 +93,10 @@ apiClient.interceptors.response.use(
       } else if (typeof error.response.data.detail === 'string') {
         error.message = error.response.data.detail;
       }
+    } else if (!error.response) {
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        error.message = 'Unable to connect to the backend server. Please verify the backend service is running on http://localhost:8000.';
+      }
     }
 
     return Promise.reject(error);

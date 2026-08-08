@@ -34,10 +34,12 @@ const CLOSE_ICON = (
 );
 
 const SIZE_CLASSES = {
-  sm: 'sm:max-w-md',
-  md: 'sm:max-w-lg',
-  lg: 'sm:max-w-2xl',
+  sm: 'sm:max-w-lg',
+  md: 'sm:max-w-2xl',
+  lg: 'sm:max-w-3xl',
   xl: 'sm:max-w-4xl',
+  '2xl': 'sm:max-w-5xl',
+  '3xl': 'sm:max-w-6xl',
 };
 
 export default function Modal({

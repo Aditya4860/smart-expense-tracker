@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { expenseApi } from '../services/api/expenseApi';
+import { useAuth } from './AuthContext';
 
 const INITIAL_FILTERS = {
   category:      '',
@@ -11,6 +12,7 @@ const INITIAL_FILTERS = {
 const ExpenseContext = createContext(null);
 
 export function ExpenseProvider({ children }) {
+  const { isAuthenticated } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,6 +28,11 @@ export function ExpenseProvider({ children }) {
   // ── Fetching Data ───────────────────────────────────────────────────────
 
   const fetchExpenses = useCallback(async () => {
+    if (!isAuthenticated) {
+      setExpenses([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -57,7 +64,7 @@ export function ExpenseProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, filters, page, limit]);
+  }, [isAuthenticated, searchQuery, filters, page, limit]);
 
   useEffect(() => {
     fetchExpenses();

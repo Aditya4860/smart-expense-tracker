@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCategory } from '../../context/CategoryContext';
-
+import Select from '../ui/Select';
+import CategorySelect from '../ui/CategorySelect';
 
 const REMINDER_TYPES = [
   { value: 'BILL', label: '📄 Bill Reminder' },
@@ -14,9 +15,9 @@ const REMINDER_TYPES = [
 
 const FREQUENCIES = [
   { value: 'ONCE', label: 'One-time' },
-  { value: 'DAILY', label: 'Daily' },
-  { value: 'WEEKLY', label: 'Weekly' },
-  { value: 'MONTHLY', label: 'Monthly' },
+  { value: 'DAILY', label: 'Daily (Every day)' },
+  { value: 'WEEKLY', label: 'Weekly (Every 7 days)' },
+  { value: 'MONTHLY', label: 'Monthly (Every month)' },
 ];
 
 export default function ReminderFormModal({
@@ -27,7 +28,6 @@ export default function ReminderFormModal({
   isSubmitting = false,
 }) {
   const { categories = [] } = useCategory();
-
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -98,23 +98,26 @@ export default function ReminderFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl sm:max-w-3xl rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl shadow-black/50 animate-scale-up max-h-[92dvh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-surface-700/80 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/15 text-primary-400 border border-primary-500/20">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </span>
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-              {initialData ? 'Edit Reminder' : 'Create New Reminder'}
-            </h2>
+            <div>
+              <h2 className="text-base font-bold text-white">
+                {initialData ? 'Edit Reminder' : 'Create New Reminder'}
+              </h2>
+              <p className="text-xs text-surface-400">Set scheduled alerts for recurring bills, EMIs, or targets</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded-lg p-2 text-surface-400 hover:bg-surface-800 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -122,18 +125,18 @@ export default function ReminderFormModal({
           </button>
         </div>
 
-        {error && (
-          <div className="mt-4 rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-xs font-medium text-rose-600 dark:text-rose-400">
-            {error}
-          </div>
-        )}
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
+          {error && (
+            <div className="rounded-xl bg-danger-500/15 border border-danger-500/30 p-3.5 text-xs font-medium text-danger-400">
+              {error}
+            </div>
+          )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Reminder Title <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Reminder Title <span className="text-danger-400">*</span>
             </label>
             <input
               type="text"
@@ -141,52 +144,45 @@ export default function ReminderFormModal({
               placeholder="e.g. WiFi Bill Payment, Car EMI, Netflix Renewal"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="input w-full"
+              autoFocus
             />
           </div>
 
           {/* Type & Frequency row */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="relative z-30">
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
                 Reminder Type
               </label>
-              <select
+              <Select
+                id="reminder-type"
+                name="type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              >
-                {REMINDER_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                options={REMINDER_TYPES}
+              />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="relative z-20">
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
                 Repeat Frequency
               </label>
-              <select
+              <Select
+                id="reminder-frequency"
+                name="frequency"
                 value={frequency}
                 onChange={(e) => setFrequency(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              >
-                {FREQUENCIES.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
+                options={FREQUENCIES}
+              />
             </div>
           </div>
 
           {/* Amount & Category */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Amount (₹) <span className="text-slate-400 font-normal">(Optional)</span>
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+                Amount (₹) <span className="text-surface-500 font-normal">(Optional)</span>
               </label>
               <input
                 type="number"
@@ -195,105 +191,96 @@ export default function ReminderFormModal({
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="input w-full tabular-nums font-mono"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Category <span className="text-slate-400 font-normal">(Optional)</span>
+            <div className="relative z-10">
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+                Category <span className="text-surface-500 font-normal">(Optional)</span>
               </label>
-              <select
+              <CategorySelect
+                id="reminder-category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              >
-                <option value="">General / None</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                type="EXPENSE"
+              />
             </div>
           </div>
 
           {/* Due Date & Due Time */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Due Date <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+                Due Date <span className="text-danger-400">*</span>
               </label>
               <input
                 type="date"
                 required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="input w-full font-mono text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Due Time <span className="text-slate-400 font-normal">(Optional)</span>
+              <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+                Due Time <span className="text-surface-500 font-normal">(Optional)</span>
               </label>
               <input
                 type="time"
                 value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="input w-full font-mono text-sm"
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Notes / Description <span className="text-slate-400 font-normal">(Optional)</span>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Notes / Description <span className="text-surface-500 font-normal">(Optional)</span>
             </label>
             <textarea
-              rows="2"
-              placeholder="Add payment portal link, policy number, or instructions..."
+              rows="3"
+              placeholder="Add payment portal link, policy number, or reference instructions..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="input w-full text-sm resize-none"
             />
           </div>
 
           {/* Auto-notify switch */}
-          <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3">
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+          <div className="flex items-center justify-between rounded-xl bg-surface-800/80 border border-surface-700 p-4">
+            <div className="flex flex-col space-y-0.5">
+              <span className="text-sm font-semibold text-white">
                 Auto In-App Notification
               </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Send an alert when this reminder is due
+              <span className="text-xs text-surface-400">
+                Send an alert and update dashboard notification badge when this reminder is due
               </span>
             </div>
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={isAutoNotified}
-                onChange={(e) => setIsAutoNotified(e.target.checked)}
-                className="peer sr-only"
-              />
-              <div className="peer h-5 w-9 rounded-full bg-slate-300 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full dark:bg-slate-700"></div>
-            </label>
+            <input
+              type="checkbox"
+              checked={isAutoNotified}
+              onChange={(e) => setIsAutoNotified(e.target.checked)}
+              className="h-5 w-5 rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-0 cursor-pointer flex-shrink-0"
+            />
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+          <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/80 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              className="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-300 hover:bg-surface-800 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 disabled:opacity-50 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 disabled:opacity-50 transition-all"
             >
               {isSubmitting ? (
                 <>

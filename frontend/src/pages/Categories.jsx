@@ -8,7 +8,7 @@ import CategoryModal from '../components/categories/CategoryModal';
 import { EDIT_ICON, DELETE_ICON } from '../components/ui/FormField';
 
 export default function Categories() {
-  const { categories, fetchCategories, seedPresets, loading } = useCategory();
+  const { categories, fetchCategories, createCategory, deleteCategory, seedPresets, loading } = useCategory();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('ALL');
   const [seeding, setSeeding] = useState(false);
@@ -29,7 +29,7 @@ export default function Categories() {
       setSeeding(true);
       await seedPresets();
     } catch (err) {
-      alert(err.message || 'Failed to restore default categories');
+      console.warn('Failed to restore presets:', err);
     } finally {
       setSeeding(false);
     }
@@ -38,10 +38,9 @@ export default function Categories() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await categoryApi.deleteCategory(id);
-        fetchCategories();
+        await deleteCategory(id);
       } catch (err) {
-        alert(err.message || 'Failed to delete category');
+        console.warn('Failed to delete category:', err);
       }
     }
   };

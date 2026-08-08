@@ -47,7 +47,24 @@ class RecurringTransactionService:
                 str(recurring_in.category_id), str(user_id)
             )
             if not category:
-                raise NotFoundException("Category not found.")
+                seeded = await self.category_repository.seed_default_presets(str(user_id))
+                for c in seeded:
+                    if str(c.id) == str(recurring_in.category_id) or c.name.lower() == str(recurring_in.category_id).lower():
+                        category = c
+                        break
+                if not category and seeded:
+                    for c in seeded:
+                        if c.type == recurring_in.type:
+                            category = c
+                            break
+                    if not category:
+                        category = seeded[0]
+                if category:
+                    recurring_in.category_id = category.id
+                else:
+                    raise NotFoundException("Category not found.")
+            else:
+                recurring_in.category_id = category.id
 
         return await self.repository.create_recurring_transaction(user_id, recurring_in)
 
@@ -99,7 +116,15 @@ class RecurringTransactionService:
                 str(recurring_in.category_id), str(user_id)
             )
             if not category:
-                raise NotFoundException("Category not found.")
+                seeded = await self.category_repository.seed_default_presets(str(user_id))
+                for c in seeded:
+                    if str(c.id) == str(recurring_in.category_id) or c.name.lower() == str(recurring_in.category_id).lower():
+                        category = c
+                        break
+                if category:
+                    recurring_in.category_id = category.id
+            else:
+                recurring_in.category_id = category.id
 
         updated = await self.repository.update_recurring_transaction(
             recurring_id, user_id, recurring_in

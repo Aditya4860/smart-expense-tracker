@@ -110,6 +110,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, loading 
             <FormLabel htmlFor="if-category" required>Category</FormLabel>
             <CategorySelect
               id="if-category"
+              name="category"
               value={values.category}
               onChange={handleChange}
               onBlur={handleBlur}

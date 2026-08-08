@@ -1,22 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCategory } from '../../context/CategoryContext';
 import Button from '../ui/Button';
+import CategorySelect from '../ui/CategorySelect';
+import Select from '../ui/Select';
 
 const FREQUENCY_OPTIONS = [
-  { value: 'DAILY', label: 'Daily' },
-  { value: 'WEEKLY', label: 'Weekly' },
-  { value: 'MONTHLY', label: 'Monthly' },
-  { value: 'QUARTERLY', label: 'Quarterly' },
-  { value: 'YEARLY', label: 'Yearly' },
+  { value: 'DAILY', label: 'Daily (Every day)' },
+  { value: 'WEEKLY', label: 'Weekly (Every 7 days)' },
+  { value: 'MONTHLY', label: 'Monthly (Every month)' },
+  { value: 'QUARTERLY', label: 'Quarterly (Every 3 months)' },
+  { value: 'YEARLY', label: 'Yearly (Every year)' },
 ];
 
 const PAYMENT_METHODS = [
-  'Credit Card',
-  'Debit Card',
   'Bank Transfer',
   'UPI',
-  'Cash',
+  'Credit Card',
+  'Debit Card',
   'Auto Debit / NACH',
+  'Cash',
   'PayPal',
   'Other',
 ];
@@ -28,7 +30,7 @@ export default function RecurringForm({
   onCancel,
   loading = false,
 }) {
-  const { categories } = useCategory();
+  const { incomeCategories, expenseCategories } = useCategory();
 
   const [type, setType] = useState(initialData?.type || defaultType);
   const [title, setTitle] = useState(initialData?.title || '');
@@ -52,28 +54,34 @@ export default function RecurringForm({
   const [description, setDescription] = useState(initialData?.description || '');
   const [errors, setErrors] = useState({});
 
-  // Filter categories by type
-  const relevantCategories = categories.filter((c) => c.type === type);
-
-  // Set default category when type changes or categories load
+  // Ensure category is updated if switching between Income and Expense
+  const activeCategories = type === 'INCOME' ? incomeCategories : expenseCategories;
   useEffect(() => {
-    if (!categoryId && relevantCategories.length > 0) {
-      setCategoryId(relevantCategories[0].id);
-    } else if (categoryId) {
-      const match = relevantCategories.find((c) => c.id === categoryId);
-      if (!match && relevantCategories.length > 0) {
-        setCategoryId(relevantCategories[0].id);
+    if (activeCategories && activeCategories.length > 0) {
+      const match = activeCategories.find((c) => c.id === categoryId);
+      if (!match) {
+        setCategoryId(activeCategories[0].id);
       }
     }
-  }, [type, relevantCategories, categoryId]);
+  }, [type, activeCategories, categoryId]);
+
+  const handleTypeChange = (newType) => {
+    setType(newType);
+    const targetCategories = newType === 'INCOME' ? incomeCategories : expenseCategories;
+    if (targetCategories && targetCategories.length > 0) {
+      setCategoryId(targetCategories[0].id);
+    } else {
+      setCategoryId('');
+    }
+  };
 
   const validate = () => {
     const errs = {};
     if (!title.trim()) {
-      errs.title = 'Title is required';
+      errs.title = 'Schedule title is required';
     }
     if (!amount || Number(amount) <= 0) {
-      errs.amount = 'Valid amount greater than 0 is required';
+      errs.amount = 'Enter a valid amount greater than 0';
     }
     if (!categoryId) {
       errs.categoryId = 'Please select a category';
@@ -114,213 +122,209 @@ export default function RecurringForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Type Selector Tabs */}
-      <div className="flex rounded-xl bg-surface-800 p-1 border border-surface-700">
-        <button
-          type="button"
-          onClick={() => setType('EXPENSE')}
-          className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
-            type === 'EXPENSE'
-              ? 'bg-danger-500/20 text-danger-400 border border-danger-500/30 shadow-sm'
-              : 'text-surface-400 hover:text-white'
-          }`}
-        >
-          💸 Recurring Expense
-        </button>
-        <button
-          type="button"
-          onClick={() => setType('INCOME')}
-          className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
-            type === 'INCOME'
-              ? 'bg-success-500/20 text-success-400 border border-success-500/30 shadow-sm'
-              : 'text-surface-400 hover:text-white'
-          }`}
-        >
-          💰 Recurring Income
-        </button>
-      </div>
-
-      {/* Title & Amount */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      {/* Scrollable Form Body */}
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+        {/* Type Selector Tabs */}
         <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Schedule Title <span className="text-red-400">*</span>
+          <label className="block text-xs font-semibold text-surface-300 uppercase tracking-wider mb-2">
+            Schedule Type
           </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={type === 'EXPENSE' ? 'e.g. Netflix Subscription, House Rent' : 'e.g. Salary, Consulting Retainer'}
-            className="input w-full"
-            autoFocus
-          />
-          {errors.title && <p className="text-[11px] text-red-400 mt-1">{errors.title}</p>}
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-surface-800 p-1.5 border border-surface-700">
+            <button
+              type="button"
+              onClick={() => handleTypeChange('EXPENSE')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                type === 'EXPENSE'
+                  ? 'bg-danger-500/20 text-danger-400 border border-danger-500/40 shadow-sm shadow-danger-500/10'
+                  : 'text-surface-400 hover:text-white hover:bg-surface-700/50'
+              }`}
+            >
+              <span>💸</span> Recurring Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeChange('INCOME')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                type === 'INCOME'
+                  ? 'bg-success-500/20 text-success-400 border border-success-500/40 shadow-sm shadow-success-500/10'
+                  : 'text-surface-400 hover:text-white hover:bg-surface-700/50'
+              }`}
+            >
+              <span>💰</span> Recurring Income
+            </button>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Amount (₹) <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className="input w-full tabular-nums font-mono"
-          />
-          {errors.amount && <p className="text-[11px] text-red-400 mt-1">{errors.amount}</p>}
-        </div>
-      </div>
-
-      {/* Category & Frequency */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Category <span className="text-red-400">*</span>
-          </label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="input w-full"
-          >
-            {relevantCategories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.icon || '🏷️'} {cat.name}
-              </option>
-            ))}
-          </select>
-          {errors.categoryId && <p className="text-[11px] text-red-400 mt-1">{errors.categoryId}</p>}
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Frequency <span className="text-red-400">*</span>
-          </label>
-          <select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-            className="input w-full font-medium"
-          >
-            {FREQUENCY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Start Date & End Date */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Start Date <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="input w-full font-mono text-xs"
-          />
-          {errors.startDate && <p className="text-[11px] text-red-400 mt-1">{errors.startDate}</p>}
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-semibold text-surface-300">
-              End Date
+        {/* Title & Amount Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Schedule Title <span className="text-danger-400">*</span>
             </label>
-            <label className="inline-flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isNeverEnding}
-                onChange={(e) => setIsNeverEnding(e.target.checked)}
-                className="rounded border-surface-600 bg-surface-800 text-brand-500 focus:ring-0 h-3.5 w-3.5"
-              />
-              <span className="text-[11px] text-surface-400">Never ending</span>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={type === 'EXPENSE' ? 'e.g. Netflix, House Rent, Gym' : 'e.g. Salary, Client Retainer, Dividends'}
+              className="input w-full"
+              autoFocus
+            />
+            {errors.title && <p className="text-xs text-danger-400 mt-1">{errors.title}</p>}
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Amount (₹) <span className="text-danger-400">*</span>
             </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="input w-full tabular-nums font-mono"
+            />
+            {errors.amount && <p className="text-xs text-danger-400 mt-1">{errors.amount}</p>}
+          </div>
+        </div>
+
+        {/* Category & Frequency Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="relative z-30">
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Category <span className="text-danger-400">*</span>
+            </label>
+            <CategorySelect
+              id="recurring-category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              error={errors.categoryId}
+              type={type}
+            />
+            {errors.categoryId && <p className="text-xs text-danger-400 mt-1">{errors.categoryId}</p>}
+          </div>
+
+          <div className="relative z-20">
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Frequency <span className="text-danger-400">*</span>
+            </label>
+            <Select
+              id="recurring-frequency"
+              name="frequency"
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value)}
+              options={FREQUENCY_OPTIONS}
+            />
+          </div>
+        </div>
+
+        {/* Start Date & End Date Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Start Date <span className="text-danger-400">*</span>
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="input w-full font-mono text-sm"
+            />
+            {errors.startDate && <p className="text-xs text-danger-400 mt-1">{errors.startDate}</p>}
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-surface-300">
+                End Date
+              </label>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isNeverEnding}
+                  onChange={(e) => setIsNeverEnding(e.target.checked)}
+                  className="rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-0 h-4 w-4 cursor-pointer"
+                />
+                <span className="text-xs text-surface-400 font-medium">Never ending</span>
+              </label>
+            </div>
+            <input
+              type="date"
+              disabled={isNeverEnding}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={`input w-full font-mono text-sm ${
+                isNeverEnding ? 'opacity-40 cursor-not-allowed bg-surface-950' : ''
+              }`}
+            />
+            {errors.endDate && <p className="text-xs text-danger-400 mt-1">{errors.endDate}</p>}
+          </div>
+        </div>
+
+        {/* Payment Method & Source / Vendor */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="relative z-10">
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              Payment Method
+            </label>
+            <Select
+              id="recurring-payment-method"
+              name="paymentMethod"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              options={PAYMENT_METHODS.map((pm) => ({ value: pm, label: pm }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+              {type === 'EXPENSE' ? 'Merchant / Vendor' : 'Income Source'}
+            </label>
+            <input
+              type="text"
+              value={merchant}
+              onChange={(e) => setMerchant(e.target.value)}
+              placeholder={type === 'EXPENSE' ? 'e.g. Netflix, Landlord, Society' : 'e.g. Employer Inc, Client ABC'}
+              className="input w-full"
+            />
+          </div>
+        </div>
+
+        {/* Auto Process Toggle */}
+        <div className="rounded-xl border border-surface-700 bg-surface-800/80 p-4 flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold text-white">Auto-generate Transaction</p>
+            <p className="text-xs text-surface-400 leading-relaxed">
+              Automatically create the financial transaction and update budgets, goals, and analytics when due.
+            </p>
           </div>
           <input
-            type="date"
-            disabled={isNeverEnding}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className={`input w-full font-mono text-xs ${
-              isNeverEnding ? 'opacity-40 cursor-not-allowed bg-surface-900' : ''
-            }`}
+            type="checkbox"
+            checked={autoProcess}
+            onChange={(e) => setAutoProcess(e.target.checked)}
+            className="h-5 w-5 rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-0 cursor-pointer flex-shrink-0"
           />
-          {errors.endDate && <p className="text-[11px] text-red-400 mt-1">{errors.endDate}</p>}
-        </div>
-      </div>
-
-      {/* Payment Method & Merchant / Source */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            Payment Method
-          </label>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            className="input w-full text-xs"
-          >
-            {PAYMENT_METHODS.map((pm) => (
-              <option key={pm} value={pm}>
-                {pm}
-              </option>
-            ))}
-          </select>
         </div>
 
+        {/* Notes / Description */}
         <div>
-          <label className="block text-xs font-semibold text-surface-300 mb-1">
-            {type === 'EXPENSE' ? 'Merchant / Vendor' : 'Income Source'}
+          <label className="block text-xs font-semibold text-surface-300 mb-1.5">
+            Description / Notes <span className="text-surface-500 font-normal">(Optional)</span>
           </label>
-          <input
-            type="text"
-            value={merchant}
-            onChange={(e) => setMerchant(e.target.value)}
-            placeholder={type === 'EXPENSE' ? 'e.g. Netflix, Landlord' : 'e.g. Acme Corp, Client XYZ'}
-            className="input w-full text-xs"
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Additional details, account numbers, or reference notes..."
+            className="input w-full text-sm resize-none"
           />
         </div>
       </div>
 
-      {/* Auto Process Toggle */}
-      <div className="rounded-xl border border-surface-700/80 bg-surface-800/60 p-3 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold text-white">Auto-generate Transaction</p>
-          <p className="text-[11px] text-surface-400">
-            Automatically create the financial transaction and update budgets/analytics when due.
-          </p>
-        </div>
-        <input
-          type="checkbox"
-          checked={autoProcess}
-          onChange={(e) => setAutoProcess(e.target.checked)}
-          className="h-4 w-4 rounded border-surface-600 bg-surface-800 text-brand-500 focus:ring-0 cursor-pointer"
-        />
-      </div>
-
-      {/* Notes / Description */}
-      <div>
-        <label className="block text-xs font-semibold text-surface-300 mb-1">
-          Description / Notes (Optional)
-        </label>
-        <textarea
-          rows={2}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Additional details about this recurring schedule..."
-          className="input w-full text-xs"
-        />
-      </div>
-
-      {/* Form Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-surface-700">
+      {/* Action Buttons Footer */}
+      <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-surface-700/80 px-6 py-4 bg-surface-900 rounded-b-2xl">
         <Button
           type="button"
           variant="secondary"

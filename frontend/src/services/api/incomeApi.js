@@ -12,13 +12,18 @@ const mapToFrontend = (apiIncome) => ({
   type: 'income',
 });
 
-const mapToBackend = (uiIncome) => ({
-  amount: Number(uiIncome.amount),
-  date: uiIncome.date,
-  source: uiIncome.source || null,
-  description: uiIncome.description || null,
-  category_id: uiIncome.category || uiIncome.category_id,
-});
+const mapToBackend = (uiIncome) => {
+  const cat = uiIncome.category || uiIncome.category_id || uiIncome.categoryId;
+  const rawDate = uiIncome.date;
+
+  return {
+    amount: Number(uiIncome.amount || 0),
+    date: rawDate ? (typeof rawDate === 'string' ? rawDate.split('T')[0] : rawDate) : new Date().toISOString().slice(0, 10),
+    source: uiIncome.source ? String(uiIncome.source).trim() : null,
+    description: uiIncome.description ? String(uiIncome.description).trim() : null,
+    category_id: cat && String(cat).trim() !== '' ? String(cat).trim() : null,
+  };
+};
 
 export const incomeApi = {
   getIncome: async (params = {}) => {

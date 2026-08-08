@@ -40,40 +40,48 @@ export const recurringApi = {
   },
 
   createRecurringTransaction: async (data) => {
+    const rawCat = data.categoryId || data.category_id || data.category;
+    const rawStartDate = data.startDate || data.start_date;
+    const rawEndDate = data.endDate || data.end_date;
+
     const payload = {
-      type: data.type,
-      amount: Number(data.amount),
-      frequency: data.frequency,
-      category_id: data.categoryId || data.category_id,
-      title: data.title || null,
-      description: data.description || null,
-      merchant: data.merchant || null,
+      type: (data.type || 'EXPENSE').toUpperCase(),
+      amount: Number(data.amount || 0),
+      frequency: (data.frequency || 'MONTHLY').toUpperCase(),
+      category_id: rawCat && String(rawCat).trim() !== '' ? String(rawCat).trim() : null,
+      title: data.title ? String(data.title).trim() : null,
+      description: data.description ? String(data.description).trim() : null,
+      merchant: data.merchant ? String(data.merchant).trim() : null,
       payment_method: data.paymentMethod || data.payment_method || null,
-      start_date: data.startDate || data.start_date,
-      end_date: data.endDate || data.end_date || null,
-      is_never_ending: data.isNeverEnding !== undefined ? data.isNeverEnding : true,
-      auto_process: data.autoProcess !== undefined ? data.autoProcess : true,
+      start_date: rawStartDate ? (typeof rawStartDate === 'string' ? rawStartDate.split('T')[0] : rawStartDate) : new Date().toISOString().slice(0, 10),
+      end_date: rawEndDate ? (typeof rawEndDate === 'string' ? rawEndDate.split('T')[0] : rawEndDate) : null,
+      is_never_ending: rawEndDate ? false : (data.isNeverEnding !== undefined ? Boolean(data.isNeverEnding) : true),
+      auto_process: data.autoProcess !== undefined ? Boolean(data.autoProcess) : true,
     };
     const response = await apiClient.post('/recurring-transactions', payload);
     return mapToFrontend(response.data);
   },
 
   updateRecurringTransaction: async (id, data) => {
+    const rawCat = data.categoryId !== undefined ? data.categoryId : data.category_id !== undefined ? data.category_id : data.category;
+    const rawStartDate = data.startDate !== undefined ? data.startDate : data.start_date;
+    const rawEndDate = data.endDate !== undefined ? data.endDate : data.end_date;
+
     const payload = {
-      type: data.type,
+      type: data.type ? String(data.type).toUpperCase() : undefined,
       amount: data.amount !== undefined ? Number(data.amount) : undefined,
-      frequency: data.frequency,
-      category_id: data.categoryId || data.category_id,
-      title: data.title,
-      description: data.description,
-      merchant: data.merchant,
-      payment_method: data.paymentMethod || data.payment_method,
-      start_date: data.startDate || data.start_date,
-      end_date: data.endDate || data.end_date,
-      is_never_ending: data.isNeverEnding,
+      frequency: data.frequency ? String(data.frequency).toUpperCase() : undefined,
+      category_id: rawCat !== undefined ? (rawCat && String(rawCat).trim() !== '' ? String(rawCat).trim() : null) : undefined,
+      title: data.title !== undefined ? (data.title ? String(data.title).trim() : null) : undefined,
+      description: data.description !== undefined ? (data.description ? String(data.description).trim() : null) : undefined,
+      merchant: data.merchant !== undefined ? (data.merchant ? String(data.merchant).trim() : null) : undefined,
+      payment_method: data.paymentMethod !== undefined ? data.paymentMethod : data.payment_method,
+      start_date: rawStartDate ? (typeof rawStartDate === 'string' ? rawStartDate.split('T')[0] : rawStartDate) : undefined,
+      end_date: rawEndDate !== undefined ? (rawEndDate ? (typeof rawEndDate === 'string' ? rawEndDate.split('T')[0] : rawEndDate) : null) : undefined,
+      is_never_ending: data.isNeverEnding !== undefined ? Boolean(data.isNeverEnding) : undefined,
       next_date: data.nextDate || data.next_date,
-      status: data.status,
-      auto_process: data.autoProcess,
+      status: data.status ? String(data.status).toUpperCase() : undefined,
+      auto_process: data.autoProcess !== undefined ? Boolean(data.autoProcess) : undefined,
     };
     // Strip undefined
     Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
