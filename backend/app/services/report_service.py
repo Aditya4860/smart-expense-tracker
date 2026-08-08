@@ -104,18 +104,18 @@ class ReportService:
     ) -> List[CategoryBreakdown]:
         result = await self.db.execute(
             select(
-                Category.id.label("category_id"),
-                Category.name.label("category_name"),
+                Expense.category_id.label("category_id"),
+                func.coalesce(Category.name, "Uncategorized").label("category_name"),
                 func.coalesce(func.sum(Expense.amount), 0).label("total_amount"),
                 func.count(Expense.id).label("tx_count"),
             )
-            .join(Category, Expense.category_id == Category.id)
+            .outerjoin(Category, Expense.category_id == Category.id)
             .where(and_(
                 Expense.user_id == user_id,
                 Expense.date >= start,
                 Expense.date <= end,
             ))
-            .group_by(Category.id, Category.name)
+            .group_by(Expense.category_id, Category.name)
             .order_by(func.sum(Expense.amount).desc())
         )
         return [
@@ -134,18 +134,18 @@ class ReportService:
     ) -> List[CategoryBreakdown]:
         result = await self.db.execute(
             select(
-                Category.id.label("category_id"),
-                Category.name.label("category_name"),
+                Income.category_id.label("category_id"),
+                func.coalesce(Category.name, "Uncategorized").label("category_name"),
                 func.coalesce(func.sum(Income.amount), 0).label("total_amount"),
                 func.count(Income.id).label("tx_count"),
             )
-            .join(Category, Income.category_id == Category.id)
+            .outerjoin(Category, Income.category_id == Category.id)
             .where(and_(
                 Income.user_id == user_id,
                 Income.date >= start,
                 Income.date <= end,
             ))
-            .group_by(Category.id, Category.name)
+            .group_by(Income.category_id, Category.name)
             .order_by(func.sum(Income.amount).desc())
         )
         return [

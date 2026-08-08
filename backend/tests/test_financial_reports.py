@@ -113,3 +113,33 @@ def test_cash_flow_report_api(mock_report_svc):
     assert response.status_code == 200
     assert response.json()["success"] is True
     assert response.json()["data"]["net_cash_flow"] == 2500.0
+
+
+def test_report_service_calculation_helpers():
+    from app.services.report_service import _pct, _round2, _month_range
+    from datetime import date
+
+    # Precision tests
+    assert _round2(123.456) == 123.46
+    assert _round2(0.0001) == 0.0
+    assert _round2(100) == 100.0
+
+    # Percentage tests
+    assert _pct(50, 100) == 50.0
+    assert _pct(0, 100) == 0.0
+    assert _pct(100, 0) == 0.0  # Zero division guard
+    assert _pct(150, 100) == 100.0  # Clamped
+
+    # Month range date boundary tests
+    start, end = _month_range(2026, 2)
+    assert start == date(2026, 2, 1)
+    assert end == date(2026, 2, 28)
+
+    start, end = _month_range(2024, 2)  # Leap year
+    assert start == date(2024, 2, 1)
+    assert end == date(2024, 2, 29)
+
+    start, end = _month_range(2026, 7)
+    assert start == date(2026, 7, 1)
+    assert end == date(2026, 7, 31)
+

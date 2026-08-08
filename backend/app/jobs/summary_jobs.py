@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from datetime import date
+from calendar import monthrange
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -26,12 +27,9 @@ async def run_monthly_summaries_job(session: AsyncSession, reference_date: date 
         prev_year = today.year
         prev_month = today.month - 1
 
+    last_day = monthrange(prev_year, prev_month)[1]
     start_date = date(prev_year, prev_month, 1)
-    # Next month start minus 1 day is end of prev_month
-    if prev_month == 12:
-        end_date = date(prev_year, 12, 31)
-    else:
-        end_date = date(prev_year, prev_month + 1, 1)
+    end_date = date(prev_year, prev_month, last_day)
 
     month_name = start_date.strftime("%B %Y")
     logger.info(f"[Job: MonthlySummaries] Generating summaries for: {month_name}")

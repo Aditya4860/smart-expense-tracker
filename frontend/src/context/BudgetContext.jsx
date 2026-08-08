@@ -160,9 +160,20 @@ export function BudgetProvider({ children }) {
         // Skip savings contributions if the toggle is OFF
         if (!includeSavings && e.type === 'savings_contribution') return sum;
         
-        if (e.category !== budget.category) return sum;
+        const catMatch = (
+          (e.category && budget.category && String(e.category) === String(budget.category)) ||
+          (e.category_id && budget.category_id && String(e.category_id) === String(budget.category_id)) ||
+          (e.category && budget.category_id && String(e.category) === String(budget.category_id)) ||
+          (e.category_id && budget.category && String(e.category_id) === String(budget.category)) ||
+          (e.categoryName && budget.categoryName && e.categoryName.toLowerCase() === budget.categoryName.toLowerCase()) ||
+          (e.category && budget.categoryName && String(e.category).toLowerCase() === String(budget.categoryName).toLowerCase()) ||
+          (e.categoryName && budget.category && String(e.categoryName).toLowerCase() === String(budget.category).toLowerCase())
+        );
+
+        if (!catMatch) return sum;
         
-        const [eYear, eMonth] = (e.date || '').split('-');
+        const rawDate = typeof e.date === 'string' ? e.date.split('T')[0] : '';
+        const [eYear, eMonth] = rawDate.split('-');
         if (Number(eMonth) === bMonth && Number(eYear) === bYear) {
           return sum + (Number(e.amount) || 0);
         }
