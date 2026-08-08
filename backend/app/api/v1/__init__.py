@@ -14,6 +14,7 @@ from app.api.v1.category import router as category_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.recurring_transactions import router as recurring_router
 from app.api.v1.reminders import router as reminders_router
+from app.api.v1.reports import router as reports_router
 
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
@@ -25,5 +26,6 @@ api_router.include_router(category_router, prefix="/categories", tags=["Categori
 api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(recurring_router, prefix="/recurring-transactions", tags=["Recurring Transactions"])
 api_router.include_router(reminders_router, prefix="/reminders", tags=["Reminders"])
+api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 
 
