@@ -2,7 +2,7 @@
 reports.py — Financial Reporting and Export API Router.
 
 All endpoints are JWT-protected. Users can only access their own data.
-Reports are computed on-demand via ReportService and ExportService.
+Reports are computed on-demand via ReportService, ExportService, and PdfService.
 
 Report Endpoints:
   GET /reports/monthly       — Monthly Financial Report
@@ -13,21 +13,28 @@ Report Endpoints:
   GET /reports/savings-goals — Savings Goal Report
   GET /reports/cash-flow     — Cash Flow Report
 
-Export Endpoints (CSV & Excel):
+Export Endpoints (CSV, Excel, PDF):
   GET /reports/expenses/export/csv
   GET /reports/expenses/export/excel
+  GET /reports/expenses/export/pdf
   GET /reports/income/export/csv
   GET /reports/income/export/excel
+  GET /reports/income/export/pdf
   GET /reports/transactions/export/csv
   GET /reports/transactions/export/excel
   GET /reports/budget/export/csv
   GET /reports/budget/export/excel
+  GET /reports/budget/export/pdf
   GET /reports/savings-goals/export/csv
   GET /reports/savings-goals/export/excel
+  GET /reports/savings-goals/export/pdf
   GET /reports/monthly/export/csv
   GET /reports/monthly/export/excel
+  GET /reports/monthly/export/pdf
   GET /reports/yearly/export/csv
   GET /reports/yearly/export/excel
+  GET /reports/yearly/export/pdf
+  GET /reports/cash-flow/export/pdf
 """
 from calendar import monthrange
 from datetime import date
@@ -49,12 +56,14 @@ from app.schemas.report_schema import (
     YearlyReportResponse,
 )
 from app.services.export_service import ExportService
+from app.services.pdf_service import PdfService
 from app.services.report_service import ReportService
 
 router = APIRouter(tags=["Reports"])
 
 CSV_MEDIA_TYPE = "text/csv; charset=utf-8"
 EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+PDF_MEDIA_TYPE = "application/pdf"
 
 
 def _get_report_service(db: AsyncSession = Depends(get_db_session)) -> ReportService:
@@ -63,6 +72,10 @@ def _get_report_service(db: AsyncSession = Depends(get_db_session)) -> ReportSer
 
 def _get_export_service(db: AsyncSession = Depends(get_db_session)) -> ExportService:
     return ExportService(db)
+
+
+def _get_pdf_service(db: AsyncSession = Depends(get_db_session)) -> PdfService:
+    return PdfService(db)
 
 
 def _current_year_month() -> tuple[int, int]:
@@ -246,7 +259,7 @@ async def cash_flow_report(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# EXPORT ENDPOINTS (CSV & Excel)
+# EXPORT ENDPOINTS (CSV, Excel & PDF)
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── 1. Expenses Export ─────────────────────────────────────────────────────
@@ -317,6 +330,31 @@ async def export_expenses_excel(
     )
 
 
+@router.get(
+    "/expenses/export/pdf",
+    summary="Export Expense Report to PDF",
+    description="Export detailed expense analysis report with KPIs and tables to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_expenses_pdf(
+    start_date: Optional[date] = Query(None, description="Filter by start date"),
+    end_date: Optional[date] = Query(None, description="Filter by end date"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.expense_report_pdf(
+        user=current_user,
+        start_date=start_date,
+        end_date=end_date,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── 2. Income Export ───────────────────────────────────────────────────────
 
 @router.get(
@@ -373,6 +411,31 @@ async def export_income_excel(
     return Response(
         content=content,
         media_type=EXCEL_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get(
+    "/income/export/pdf",
+    summary="Export Income Report to PDF",
+    description="Export comprehensive income analysis report with KPIs and tables to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_income_pdf(
+    start_date: Optional[date] = Query(None, description="Filter by start date"),
+    end_date: Optional[date] = Query(None, description="Filter by end date"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.income_report_pdf(
+        user=current_user,
+        start_date=start_date,
+        end_date=end_date,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -481,6 +544,31 @@ async def export_budgets_excel(
     )
 
 
+@router.get(
+    "/budget/export/pdf",
+    summary="Export Budget Report to PDF",
+    description="Export monthly budget utilization statement with KPIs and progress table to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_budget_pdf(
+    year: Optional[int] = Query(None, ge=2000, le=2100, description="Year (defaults to current year)"),
+    month: Optional[int] = Query(None, ge=1, le=12, description="Month (defaults to current month)"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.budget_report_pdf(
+        user=current_user,
+        year=year,
+        month=month,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── 5. Savings Goals Export ────────────────────────────────────────────────
 
 @router.get(
@@ -521,6 +609,27 @@ async def export_savings_goals_excel(
     return Response(
         content=content,
         media_type=EXCEL_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get(
+    "/savings-goals/export/pdf",
+    summary="Export Savings Goals Report to PDF",
+    description="Export savings goals progress report with KPIs and tables to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_savings_goals_pdf(
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.savings_goal_report_pdf(
+        user=current_user,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -577,6 +686,31 @@ async def export_monthly_report_excel(
     )
 
 
+@router.get(
+    "/monthly/export/pdf",
+    summary="Export Monthly Report to PDF",
+    description="Export comprehensive monthly financial statement with executive KPIs, category breakdowns, and budget utilization to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_monthly_report_pdf(
+    year: Optional[int] = Query(None, ge=2000, le=2100, description="Year (defaults to current year)"),
+    month: Optional[int] = Query(None, ge=1, le=12, description="Month (defaults to current month)"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.monthly_report_pdf(
+        user=current_user,
+        year=year,
+        month=month,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── 7. Yearly Financial Report Export ──────────────────────────────────────
 
 @router.get(
@@ -621,5 +755,55 @@ async def export_yearly_report_excel(
     return Response(
         content=content,
         media_type=EXCEL_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get(
+    "/yearly/export/pdf",
+    summary="Export Yearly Report to PDF",
+    description="Export annual 12-month financial statement with executive KPIs and monthly averages to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_yearly_report_pdf(
+    year: Optional[int] = Query(None, ge=2000, le=2100, description="Year (defaults to current year)"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.yearly_report_pdf(
+        user=current_user,
+        year=year,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# ── 8. Cash Flow Report Export ─────────────────────────────────────────────
+
+@router.get(
+    "/cash-flow/export/pdf",
+    summary="Export Cash Flow Statement to PDF",
+    description="Export month-by-month cash flow statement with inflows, outflows, and net cash positions to downloadable PDF format.",
+    response_class=Response,
+)
+async def export_cash_flow_pdf(
+    start_date: Optional[date] = Query(None, description="Filter by start date"),
+    end_date: Optional[date] = Query(None, description="Filter by end date"),
+    current_user: User = Depends(get_current_user),
+    service: PdfService = Depends(_get_pdf_service),
+) -> Response:
+    pdf_bytes, filename = await service.cash_flow_report_pdf(
+        user=current_user,
+        start_date=start_date,
+        end_date=end_date,
+        currency=current_user.currency_preference or "INR",
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type=PDF_MEDIA_TYPE,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
