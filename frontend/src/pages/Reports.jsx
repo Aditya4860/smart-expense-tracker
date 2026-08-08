@@ -1,464 +1,453 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import DashboardLayout from '../layouts/DashboardLayout';
-import { useExpenseContext } from '../context/ExpenseContext';
-import { useIncomeContext } from '../context/IncomeContext';
-import { useBudgetContext } from '../context/BudgetContext';
-import { useGoals } from '../context/GoalContext';
-import { useAnalyticsContext } from '../context/AnalyticsContext';
-import { useCategory } from '../context/CategoryContext';
-import { exportToCSV, exportToExcel, triggerPDFPrint } from '../utils/exportUtils';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
-} from 'recharts';
+  Calendar,
+  CalendarDays,
+  TrendingDown,
+  TrendingUp,
+  PieChart,
+  Target,
+  Activity,
+  FileSpreadsheet,
+  FileText,
+  Download,
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
+import DashboardLayout from '../layouts/DashboardLayout';
+import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import EmptyState from '../components/ui/EmptyState';
+import ReportKpiCards from '../components/reports/ReportKpiCards';
+import ReportCharts from '../components/reports/ReportCharts';
+import ReportTable from '../components/reports/ReportTable';
+import reportApi from '../services/api/reportApi';
+import { MONTH_NAMES, todayString } from '../utils/formatters';
 
-const REPORT_TYPES = [
-  { id: 'monthly', label: 'Monthly Summary' },
-  { id: 'yearly', label: 'Yearly Summary' },
-  { id: 'expense', label: 'Expense by Category' },
-  { id: 'income', label: 'Income by Category' },
-  { id: 'savings', label: 'Savings & Goals Progress' },
-  { id: 'budget', label: 'Budget Utilization' },
-  { id: 'cashflow', label: 'Cash Flow Analysis' },
-  { id: 'analytics', label: 'Full Analytics Overview' },
+const REPORT_TABS = [
+  { id: 'monthly', label: 'Monthly', icon: Calendar, subtitle: 'Monthly statement & budget utilization' },
+  { id: 'yearly', label: 'Yearly', icon: CalendarDays, subtitle: 'Annual trends & monthly averages' },
+  { id: 'expenses', label: 'Expenses', icon: TrendingDown, subtitle: 'Category & payment breakdowns' },
+  { id: 'income', label: 'Income', icon: TrendingUp, subtitle: 'Revenue sources & cash inflow' },
+  { id: 'budget', label: 'Budget', icon: PieChart, subtitle: 'Category budget variance & limits' },
+  { id: 'savings-goals', label: 'Savings', icon: Target, subtitle: 'Financial goals & milestones' },
+  { id: 'cash-flow', label: 'Cash Flow', icon: Activity, subtitle: 'Inflow vs outflow statement' },
 ];
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const getMonthDateRange = (year, month) => {
+  const y = parseInt(year, 10);
+  const m = parseInt(month, 10);
+  const start = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return { start, end };
+};
 
 export default function Reports() {
-  const { expenses } = useExpenseContext();
-  const { income } = useIncomeContext();
-  const { budgets, calculateSpentBudget } = useBudgetContext();
-  const { goals, calculateProgress } = useGoals();
-  const { analytics } = useAnalyticsContext();
-  const { getCategoryMeta } = useCategory();
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
 
-  const [activeReport, setActiveReport] = useState('monthly');
-  const [reportYear, setReportYear] = useState(new Date().getFullYear().toString());
+  // Selected report type
+  const [activeTab, setActiveTab] = useState('monthly');
 
-  // ── Data Shapers ────────────────────────────────────────────────────────
+  // Date filters
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [endDate, setEndDate] = useState(() => todayString());
 
-  const reportData = useMemo(() => {
-    let tableData = [];
-    let chartData = [];
-    let title = '';
-    let chartType = 'bar'; // 'bar', 'pie', 'line'
+  // Data & status state
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    if (activeReport === 'monthly') {
-      title = `Monthly Summary (${reportYear})`;
-      chartType = 'bar';
-      
-      const monthlyMap = {};
-      for (let i = 1; i <= 12; i++) {
-        monthlyMap[i] = { month: i, Income: 0, Expense: 0, Net: 0 };
+  // Export states
+  const [exportingFormat, setExportingFormat] = useState(null); // 'csv' | 'excel' | 'pdf' | null
+  const [exportNotice, setExportNotice] = useState(null); // { type: 'success' | 'error', text: '' }
+
+  // Available year options (e.g. current year - 4 to current year + 1)
+  const yearOptions = useMemo(() => {
+    const years = [];
+    for (let y = currentYear + 1; y >= currentYear - 4; y--) {
+      years.push(y);
+    }
+    return years;
+  }, [currentYear]);
+
+  // Fetch report data on parameter change
+  const fetchReport = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let data = null;
+      switch (activeTab) {
+        case 'monthly':
+          data = await reportApi.getMonthlyReport(selectedYear, selectedMonth);
+          break;
+        case 'yearly':
+          data = await reportApi.getYearlyReport(selectedYear);
+          break;
+        case 'expenses':
+          data = await reportApi.getExpenseReport(startDate, endDate);
+          break;
+        case 'income':
+          data = await reportApi.getIncomeReport(startDate, endDate);
+          break;
+        case 'budget':
+          data = await reportApi.getBudgetReport(selectedYear, selectedMonth);
+          break;
+        case 'savings-goals':
+          data = await reportApi.getSavingsGoalReport();
+          break;
+        case 'cash-flow':
+          data = await reportApi.getCashFlowReport(startDate, endDate);
+          break;
+        default:
+          break;
       }
-      
-      income.forEach(inc => {
-        if (!inc.date) return;
-        const [y, m] = inc.date.split('-');
-        if (y === reportYear) monthlyMap[parseInt(m)].Income += inc.amount;
-      });
-      expenses.forEach(exp => {
-        if (!exp.date) return;
-        const [y, m] = exp.date.split('-');
-        if (y === reportYear) monthlyMap[parseInt(m)].Expense += exp.amount;
-      });
-
-      chartData = Object.values(monthlyMap).map(d => ({
-        ...d,
-        Net: d.Income - d.Expense,
-        MonthName: new Date(2000, d.month - 1).toLocaleString('default', { month: 'short' })
-      }));
-      
-      tableData = chartData.map(d => ({
-        Month: d.MonthName,
-        'Income ($)': d.Income.toFixed(2),
-        'Expense ($)': d.Expense.toFixed(2),
-        'Net ($)': d.Net.toFixed(2)
-      }));
-    } 
-    
-    else if (activeReport === 'yearly') {
-      title = 'Yearly Summary';
-      chartType = 'bar';
-      const yearMap = {};
-      
-      income.forEach(inc => {
-        if (!inc.date) return;
-        const y = inc.date.split('-')[0];
-        if (!yearMap[y]) yearMap[y] = { year: y, Income: 0, Expense: 0 };
-        yearMap[y].Income += inc.amount;
-      });
-      expenses.forEach(exp => {
-        if (!exp.date) return;
-        const y = exp.date.split('-')[0];
-        if (!yearMap[y]) yearMap[y] = { year: y, Income: 0, Expense: 0 };
-        yearMap[y].Expense += exp.amount;
-      });
-
-      chartData = Object.values(yearMap).sort((a,b) => a.year.localeCompare(b.year));
-      tableData = chartData.map(d => ({
-        Year: d.year,
-        'Income ($)': d.Income.toFixed(2),
-        'Expense ($)': d.Expense.toFixed(2),
-        'Net ($)': (d.Income - d.Expense).toFixed(2)
-      }));
+      setReportData(data);
+    } catch (err) {
+      console.error('Failed to load report:', err);
+      setError(err?.message || 'Unable to generate report data from the server.');
+    } finally {
+      setLoading(false);
     }
+  }, [activeTab, selectedYear, selectedMonth, startDate, endDate]);
 
-    else if (activeReport === 'expense') {
-      title = 'Expenses by Category';
-      chartType = 'pie';
-      const catMap = {};
-      
-      expenses.forEach(exp => {
-        if (exp.date && exp.date.startsWith(reportYear)) {
-          const catName = exp.categoryName || getCategoryMeta(exp.category, 'EXPENSE').name;
-          catMap[catName] = (catMap[catName] || 0) + exp.amount;
-        }
-      });
-      
-      chartData = Object.keys(catMap).map(k => ({ name: k, value: catMap[k] }));
-      tableData = chartData.map(d => ({
-        Category: d.name,
-        'Total Spent ($)': d.value.toFixed(2)
-      }));
-    }
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
 
-    else if (activeReport === 'income') {
-      title = 'Income by Source';
-      chartType = 'pie';
-      const catMap = {};
-      
-      income.forEach(inc => {
-        if (inc.date && inc.date.startsWith(reportYear)) {
-          const source = inc.source || inc.categoryName || getCategoryMeta(inc.category, 'INCOME').name || 'Other';
-          catMap[source] = (catMap[source] || 0) + inc.amount;
-        }
-      });
-      
-      chartData = Object.keys(catMap).map(k => ({ name: k, value: catMap[k] }));
-      tableData = chartData.map(d => ({
-        Source: d.name,
-        'Total Income ($)': d.value.toFixed(2)
-      }));
-    }
+  // Clear toast feedback after 4 seconds
+  useEffect(() => {
+    if (!exportNotice) return;
+    const timer = setTimeout(() => setExportNotice(null), 4500);
+    return () => clearTimeout(timer);
+  }, [exportNotice]);
 
-    else if (activeReport === 'savings') {
-      title = 'Savings & Goals Progress';
-      chartType = 'bar';
-      
-      chartData = goals.map(g => ({
-        name: g.title,
-        'Current ($)': g.currentAmount,
-        'Target ($)': g.targetAmount,
-        Progress: calculateProgress(g.id)
-      }));
+  // Trigger export download
+  const handleExport = async (format) => {
+    if (exportingFormat) return;
+    setExportingFormat(format);
+    setExportNotice(null);
 
-      tableData = chartData.map(d => ({
-        Goal: d.name,
-        'Current Amount ($)': d['Current ($)'].toFixed(2),
-        'Target Amount ($)': d['Target ($)'].toFixed(2),
-        'Progress (%)': d.Progress + '%'
-      }));
-    }
-
-    else if (activeReport === 'budget') {
-      title = 'Budget Utilization';
-      chartType = 'bar';
-      
-      chartData = budgets.map(b => ({
-        name: getCategoryMeta(b.category, 'EXPENSE').name || 'General',
-        'Spent ($)': calculateSpentBudget(b.id),
-        'Limit ($)': b.monthlyLimit,
-      }));
-
-      tableData = chartData.map(d => ({
-        'Budget Category': d.name,
-        'Limit ($)': d['Limit ($)'].toFixed(2),
-        'Spent ($)': d['Spent ($)'].toFixed(2),
-        'Remaining ($)': (d['Limit ($)'] - d['Spent ($)']).toFixed(2)
-      }));
-    }
-
-    else if (activeReport === 'cashflow') {
-      title = `Cash Flow Analysis (${reportYear})`;
-      chartType = 'line';
-      
-      const monthlyMap = {};
-      for (let i = 1; i <= 12; i++) {
-        monthlyMap[i] = { month: i, Flow: 0 };
+    try {
+      const params = {};
+      if (activeTab === 'monthly' || activeTab === 'budget') {
+        params.year = selectedYear;
+        params.month = selectedMonth;
+      } else if (activeTab === 'yearly') {
+        params.year = selectedYear;
+      } else if (activeTab === 'expenses' || activeTab === 'income' || activeTab === 'cash-flow') {
+        params.start_date = startDate;
+        params.end_date = endDate;
       }
-      
-      income.forEach(inc => {
-        if (inc.date && inc.date.startsWith(reportYear)) {
-          monthlyMap[parseInt(inc.date.split('-')[1])].Flow += inc.amount;
-        }
+
+      const filename = await reportApi.downloadExport(activeTab, format, params);
+      setExportNotice({
+        type: 'success',
+        text: `Report downloaded successfully: ${filename}`,
       });
-      expenses.forEach(exp => {
-        if (exp.date && exp.date.startsWith(reportYear)) {
-          monthlyMap[parseInt(exp.date.split('-')[1])].Flow -= exp.amount;
-        }
+    } catch (err) {
+      console.error(`Export ${format} failed:`, err);
+      setExportNotice({
+        type: 'error',
+        text: `Failed to export ${format.toUpperCase()} report: ${err?.message || 'Server error'}`,
       });
-
-      let cumulative = 0;
-      chartData = Object.values(monthlyMap).map(d => {
-        cumulative += d.Flow;
-        return {
-          MonthName: new Date(2000, d.month - 1).toLocaleString('default', { month: 'short' }),
-          'Net Flow': d.Flow,
-          'Cumulative Cash': cumulative
-        };
-      });
-
-      tableData = chartData.map(d => ({
-        Month: d.MonthName,
-        'Net Flow ($)': d['Net Flow'].toFixed(2),
-        'Cumulative Cash ($)': d['Cumulative Cash'].toFixed(2)
-      }));
+    } finally {
+      setExportingFormat(null);
     }
-
-    else if (activeReport === 'analytics') {
-      title = 'High-Level Analytics Overview';
-      chartType = 'none';
-      tableData = [
-        { Metric: 'Total Income', Value: `$${analytics?.totalIncome.toFixed(2)}` },
-        { Metric: 'Total Expenses', Value: `$${analytics?.totalExpense.toFixed(2)}` },
-        { Metric: 'Net Savings', Value: `$${analytics?.netSavings.toFixed(2)}` },
-        { Metric: 'Savings Rate', Value: `${analytics?.savingsRate.toFixed(1)}%` },
-      ];
-    }
-
-    return { title, chartType, chartData, tableData };
-  }, [activeReport, reportYear, expenses, income, budgets, goals, calculateProgress, calculateSpentBudget, analytics]);
-
-  // ── Render Helpers ──────────────────────────────────────────────────────
-
-  const renderChart = () => {
-    const { chartType, chartData } = reportData;
-    if (chartType === 'none' || chartData.length === 0) return null;
-
-    if (chartType === 'pie') {
-      return (
-        <ResponsiveContainer width="100%" height={350}>
-          <PieChart>
-            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} label>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-    }
-
-    if (chartType === 'line') {
-      return (
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="MonthName" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-            <Legend />
-            <Line type="monotone" dataKey="Net Flow" stroke="#f59e0b" strokeWidth={3} />
-            <Line type="monotone" dataKey="Cumulative Cash" stroke="#10b981" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
-      );
-    }
-
-    // Default: Bar Chart
-    const keys = Object.keys(chartData[0] || {}).filter(k => k !== 'MonthName' && k !== 'month' && k !== 'year' && k !== 'name' && k !== 'Progress');
-    return (
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-          <XAxis dataKey={chartData[0]?.MonthName ? "MonthName" : (chartData[0]?.year ? "year" : "name")} stroke="#94a3b8" />
-          <YAxis stroke="#94a3b8" />
-          <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-          <Legend />
-          {keys.map((k, i) => (
-            <Bar key={k} dataKey={k} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} />
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
-    );
   };
+
+  // Quick date presets for range-based reports
+  const applyPreset = (preset) => {
+    const now = new Date();
+    const curY = now.getFullYear();
+    const curM = now.getMonth() + 1;
+
+    if (preset === 'this-month') {
+      const { start, end } = getMonthDateRange(curY, curM);
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last-month') {
+      const prevM = curM === 1 ? 12 : curM - 1;
+      const prevY = curM === 1 ? curY - 1 : curY;
+      const { start, end } = getMonthDateRange(prevY, prevM);
+      setStartDate(start);
+      setEndDate(end);
+    } else if (preset === 'last-30') {
+      const prior = new Date(now);
+      prior.setDate(prior.getDate() - 30);
+      setStartDate(prior.toISOString().split('T')[0]);
+      setEndDate(now.toISOString().split('T')[0]);
+    } else if (preset === 'ytd') {
+      setStartDate(`${curY}-01-01`);
+      setEndDate(todayString());
+    }
+  };
+
+  const activeTabMeta = useMemo(() => {
+    return REPORT_TABS.find((t) => t.id === activeTab) || REPORT_TABS[0];
+  }, [activeTab]);
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto print-wrapper">
-        
-        {/* Navigation Breadcrumb / Back button */}
-        <div className="mb-4 no-print flex items-center justify-between">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-surface-800 transition-colors group border border-transparent hover:border-surface-700"
-          >
-            <svg 
-              className="w-4 h-4 transition-transform group-hover:-translate-x-1" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Dashboard
-          </Link>
-        </div>
+      <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 pb-12">
+        {/* Header with Export Action Toolbar */}
+        <PageHeader
+          title="Financial Reports & Analytics"
+          subtitle="Generate audit-ready reports, analyze trends, and export verified financial statements."
+          action={
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => handleExport('csv')}
+                disabled={loading || Boolean(exportingFormat)}
+                loading={exportingFormat === 'csv'}
+                className="gap-2 border-surface-700 bg-surface-800 hover:border-slate-500"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
+                <span>CSV</span>
+              </Button>
 
-        {/* Header - Hidden in Print */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Reports Module</h1>
-            <p className="text-surface-400 mt-1">Generate, analyze, and export your financial data.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/dashboard"
-              className="px-3.5 py-2 bg-surface-800/80 hover:bg-surface-700 text-slate-300 hover:text-white rounded-lg font-medium transition-colors border border-surface-700 text-sm inline-flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Dashboard
-            </Link>
-            <button 
-              onClick={() => exportToCSV(reportData.tableData, `${activeReport}_report`)}
-              className="px-4 py-2 bg-surface-800 hover:bg-surface-700 text-white rounded-lg font-medium transition-colors border border-surface-700 text-sm"
-            >
-              Export CSV
-            </button>
-            <button 
-              onClick={() => exportToExcel(reportData.tableData, `${activeReport}_report`)}
-              className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg font-medium transition-colors border border-emerald-500/30 text-sm"
-            >
-              Export Excel
-            </button>
-            <button 
-              onClick={triggerPDFPrint}
-              className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-medium shadow-sm transition-colors text-sm"
-            >
-              Download PDF
-            </button>
-          </div>
-        </div>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => handleExport('excel')}
+                disabled={loading || Boolean(exportingFormat)}
+                loading={exportingFormat === 'excel'}
+                className="gap-2 border-surface-700 bg-surface-800 hover:border-slate-500"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                <span>Excel (.xlsx)</span>
+              </Button>
 
-        {/* Controls - Hidden in Print */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 no-print p-4 bg-surface-900 border border-surface-800 rounded-xl">
-          <div className="flex flex-col gap-1.5 md:col-span-2">
-            <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Report Type</label>
-            <select 
-              value={activeReport} 
-              onChange={e => setActiveReport(e.target.value)}
-              className="input w-full"
-            >
-              {REPORT_TYPES.map(t => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Target Year</label>
-            <select 
-              value={reportYear} 
-              onChange={e => setReportYear(e.target.value)}
-              className="input w-full"
-            >
-              {[...Array(5)].map((_, i) => {
-                const year = new Date().getFullYear() - i;
-                return <option key={year} value={year}>{year}</option>;
-              })}
-            </select>
-          </div>
-        </div>
-
-        {/* Printable Report Area */}
-        <div className="bg-surface-900 border border-surface-800 rounded-xl overflow-hidden print-area">
-          <div className="p-6 border-b border-surface-800 flex justify-between items-center bg-surface-800/50">
-            <h2 className="text-xl font-bold text-white">{reportData.title}</h2>
-            <span className="text-sm font-mono text-surface-400">Generated: {new Date().toLocaleDateString()}</span>
-          </div>
-          
-          {/* Chart Area */}
-          {reportData.chartType !== 'none' && (
-            <div className="p-6 border-b border-surface-800 min-h-[400px] flex items-center justify-center bg-surface-900/50">
-              {renderChart()}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => handleExport('pdf')}
+                disabled={loading || Boolean(exportingFormat)}
+                loading={exportingFormat === 'pdf'}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download PDF</span>
+              </Button>
             </div>
-          )}
+          }
+        />
 
-          {/* Data Table */}
-          <div className="p-0 overflow-x-auto">
-            {reportData.tableData.length > 0 ? (
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase bg-surface-800/80 text-surface-300">
-                  <tr>
-                    {Object.keys(reportData.tableData[0]).map(key => (
-                      <th key={key} className="px-6 py-4 font-semibold tracking-wider">{key}</th>
+        {/* Download Feedback Banner */}
+        {exportNotice && (
+          <div
+            className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-medium transition-all ${
+              exportNotice.type === 'success'
+                ? 'border-success-500/30 bg-success-500/10 text-success-400'
+                : 'border-danger-500/30 bg-danger-500/10 text-danger-400'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              {exportNotice.type === 'success' ? (
+                <Sparkles className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span>{exportNotice.text}</span>
+            </div>
+            <button
+              onClick={() => setExportNotice(null)}
+              className="text-xs uppercase hover:underline opacity-80"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Report Selector Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {REPORT_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-primary-500 text-white shadow-glow-primary'
+                    : 'border border-surface-700 bg-surface-800 text-slate-400 hover:border-slate-600 hover:text-white'
+                }`}
+              >
+                <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Dynamic Filters & Date Controls Bar */}
+        <Card padding="md" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <span className="font-semibold text-white">{activeTabMeta.label} Report</span>
+            <span>•</span>
+            <span className="text-slate-400 text-xs">{activeTabMeta.subtitle}</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Monthly / Budget Controls: Month & Year Selector */}
+            {(activeTab === 'monthly' || activeTab === 'budget') && (
+              <>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Month:</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    className="rounded-lg border border-surface-700 bg-surface-900 px-3 py-1.5 text-sm text-white focus:border-primary-500 focus:outline-none"
+                  >
+                    {MONTH_NAMES.slice(1).map((name, index) => (
+                      <option key={name} value={index + 1}>
+                        {name}
+                      </option>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-800/50">
-                  {reportData.tableData.map((row, i) => (
-                    <tr key={i} className="hover:bg-surface-800/20 transition-colors">
-                      {Object.values(row).map((val, j) => (
-                        <td key={j} className="px-6 py-4 text-surface-200">{val}</td>
-                      ))}
-                    </tr>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Year:</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="rounded-lg border border-surface-700 bg-surface-900 px-3 py-1.5 text-sm text-white focus:border-primary-500 focus:outline-none"
+                  >
+                    {yearOptions.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Yearly Controls: Year Selector */}
+            {activeTab === 'yearly' && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Year:</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="rounded-lg border border-surface-700 bg-surface-900 px-3 py-1.5 text-sm text-white focus:border-primary-500 focus:outline-none"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
                   ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="p-8 text-center text-surface-400">
-                No data available for the selected parameters.
+                </select>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Print-specific CSS injected locally */}
-        <style>{`
-          @media print {
-            body {
-              background-color: white !important;
-              color: black !important;
-            }
-            .no-print, #top-navbar, .sidebar {
-              display: none !important;
-            }
-            .print-area {
-              background-color: white !important;
-              border: 1px solid #ccc !important;
-              color: black !important;
-              box-shadow: none !important;
-            }
-            .print-area h2 {
-              color: black !important;
-            }
-            .print-area th {
-              background-color: #f3f4f6 !important;
-              color: #374151 !important;
-              border-bottom: 2px solid #ccc;
-            }
-            .print-area td {
-              color: black !important;
-              border-bottom: 1px solid #eee;
-            }
-            .print-area .bg-surface-800\\/50, .print-area .bg-surface-900\\/50 {
-              background-color: transparent !important;
-            }
-            /* Attempt to make recharts look better on print */
-            .recharts-text {
-              fill: black !important;
-            }
-            .recharts-cartesian-grid line {
-              stroke: #eee !important;
-            }
-          }
-        `}</style>
+            {/* Expenses, Income, Cash Flow Controls: Date Range */}
+            {(activeTab === 'expenses' || activeTab === 'income' || activeTab === 'cash-flow') && (
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-slate-400 uppercase">From:</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="rounded-lg border border-surface-700 bg-surface-900 px-2.5 py-1 text-sm text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-slate-400 uppercase">To:</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="rounded-lg border border-surface-700 bg-surface-900 px-2.5 py-1 text-sm text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Range Presets */}
+                <div className="flex items-center gap-1 border-l border-surface-700/80 pl-2">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('this-month')}
+                    className="rounded-md bg-surface-700/60 px-2 py-1 text-xs font-medium text-slate-300 hover:bg-surface-700 hover:text-white"
+                  >
+                    This Month
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('last-month')}
+                    className="rounded-md bg-surface-700/60 px-2 py-1 text-xs font-medium text-slate-300 hover:bg-surface-700 hover:text-white"
+                  >
+                    Last Month
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('last-30')}
+                    className="rounded-md bg-surface-700/60 px-2 py-1 text-xs font-medium text-slate-300 hover:bg-surface-700 hover:text-white"
+                  >
+                    Last 30D
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('ytd')}
+                    className="rounded-md bg-surface-700/60 px-2 py-1 text-xs font-medium text-slate-300 hover:bg-surface-700 hover:text-white"
+                  >
+                    YTD
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchReport}
+              disabled={loading}
+              title="Refresh Report Data"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-surface-700 bg-surface-800 text-slate-400 hover:border-slate-500 hover:text-white transition-colors"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin text-primary-400' : ''}`} />
+            </button>
+          </div>
+        </Card>
+
+        {/* Error State Banner */}
+        {error && (
+          <Card padding="md" className="border-danger-500/40 bg-danger-500/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-danger-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-danger-300">Report Calculation Error</p>
+                  <p className="text-xs text-danger-400/90 mt-0.5">{error}</p>
+                </div>
+              </div>
+              <Button variant="secondary" size="sm" onClick={fetchReport} className="border-danger-500/40">
+                Retry Query
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Top Summary Cards / Financial KPIs */}
+        <ReportKpiCards reportType={activeTab} data={reportData} loading={loading} />
+
+        {/* Interactive Charts & Visualizations */}
+        <ReportCharts reportType={activeTab} data={reportData} loading={loading} />
+
+        {/* Structured Data & Breakdown Tables */}
+        <ReportTable reportType={activeTab} data={reportData} loading={loading} />
       </div>
     </DashboardLayout>
   );
