@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.report_service import ReportService
+from app.schemas.ai_schema import ChatMessage
 
 # ── Simple In-Memory TTLCache ────────────────────────────────────────────────
 # We cache AI insights per user for 5 minutes (300 seconds) to avoid heavy API usage.
@@ -267,3 +268,149 @@ class AIService:
         except Exception as e:
             logger.error(f"Anthropic API Error: {e}")
             return ["Error generating insights. Please try again later."]
+
+    # ── Conversational Chat Methods ──────────────────────────────────────────
+
+    async def chat(self, user_id: uuid.UUID, currency: str, messages: List[ChatMessage]) -> str:
+        """
+        Conversational assistant method.
+        Limits to last 10 messages to prevent token overflow.
+        """
+        # Truncate history
+        if len(messages) > 10:
+            messages = messages[-10:]
+
+        context_data = await self._gather_financial_context(user_id, currency)
+        if not context_data:
+            return "I don't have enough financial data to answer that. Try logging some income or expenses first!"
+
+        system_prompt = self._get_chat_system_prompt(context_data)
+
+        if self.provider == "mock":
+            return self._chat_mock(messages, context_data)
+        elif self.provider == "openai":
+            return await self._chat_openai(system_prompt, messages)
+        elif self.provider == "gemini":
+            return await self._chat_gemini(system_prompt, messages)
+        elif self.provider == "anthropic":
+            return await self._chat_anthropic(system_prompt, messages)
+        else:
+            logger.warning(f"Unknown AI provider '{self.provider}', falling back to mock chat.")
+            return self._chat_mock(messages, context_data)
+
+    def _get_chat_system_prompt(self, data: dict) -> str:
+        data_str = json.dumps(data)
+        return (
+            "You are an expert AI Financial Assistant for 'Smart Expense Tracker'. "
+            "You must answer the user's questions based strictly on the following JSON financial summary:\n\n"
+            f"{data_str}\n\n"
+            "RULES:\n"
+            "- Do NOT invent, assume, or hallucinate any numbers.\n"
+            "- If the data does not contain the answer, explicitly state that you don't have that information.\n"
+            "- You cannot modify, create, or delete any financial records. If requested, politely decline.\n"
+            "- Keep your answers concise, professional, and directly address the user's question."
+        )
+
+    def _chat_mock(self, messages: List[ChatMessage], data: dict) -> str:
+        # Very simple deterministic mock based on the last user message
+        last_msg = messages[-1].content.lower()
+        if "spend" in last_msg or "spent" in last_msg or "expense" in last_msg:
+            return f"You have spent {data['currency']} {data['monthly_summary'].get('total_expenses', 0):.2f} this month."
+        if "save" in last_msg or "saving" in last_msg:
+            return f"Your savings rate is {data['monthly_summary'].get('savings_rate_percentage', 0)}% this month."
+        if "budget" in last_msg:
+            return f"Your budget utilization is {data['budgets'].get('overall_utilization_percentage', 0)}%."
+        return "I am a mock assistant. Please connect a real AI provider to answer complex questions!"
+
+    async def _chat_openai(self, system_prompt: str, messages: List[ChatMessage]) -> str:
+        if not self.api_key:
+            return "Error: OpenAI API key is missing. Contact administrator."
+        
+        model = self.model or "gpt-4o-mini"
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload_messages = [{"role": "system", "content": system_prompt}]
+        for m in messages:
+            payload_messages.append({"role": m.role, "content": m.content})
+            
+        payload = {
+            "model": model,
+            "messages": payload_messages,
+            "temperature": 0.5
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, headers=headers, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                return resp.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            logger.error(f"OpenAI Chat API Error: {e}")
+            return "I'm sorry, but I'm having trouble connecting to my servers right now."
+
+    async def _chat_gemini(self, system_prompt: str, messages: List[ChatMessage]) -> str:
+        if not self.api_key:
+            return "Error: Gemini API key is missing. Contact administrator."
+        
+        model = self.model or "gemini-1.5-flash"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
+        headers = {"Content-Type": "application/json"}
+        
+        contents = []
+        for m in messages:
+            role = "model" if m.role == "assistant" else "user"
+            contents.append({
+                "role": role,
+                "parts": [{"text": m.content}]
+            })
+            
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": system_prompt}]
+            },
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.5
+            }
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, headers=headers, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            logger.error(f"Gemini Chat API Error: {e}")
+            return "I'm sorry, but I'm having trouble connecting to my servers right now."
+
+    async def _chat_anthropic(self, system_prompt: str, messages: List[ChatMessage]) -> str:
+        if not self.api_key:
+            return "Error: Anthropic API key is missing. Contact administrator."
+        
+        model = self.model or "claude-3-haiku-20240307"
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json"
+        }
+        
+        payload_messages = [{"role": m.role, "content": m.content} for m in messages]
+        
+        payload = {
+            "model": model,
+            "max_tokens": 512,
+            "temperature": 0.5,
+            "system": system_prompt,
+            "messages": payload_messages
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, headers=headers, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                return resp.json()["content"][0]["text"]
+        except Exception as e:
+            logger.error(f"Anthropic Chat API Error: {e}")
+            return "I'm sorry, but I'm having trouble connecting to my servers right now."

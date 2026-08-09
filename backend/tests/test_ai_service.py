@@ -104,3 +104,65 @@ def test_api_insights_authorized(mock_user):
         assert data["data"]["cached"] is False
         
     app.dependency_overrides.clear()
+
+@pytest.mark.asyncio
+async def test_ai_service_chat_mock(mock_user):
+    mock_db = AsyncMock()
+    ai_service = AIService(mock_db)
+    ai_service.provider = "mock"
+
+    # Mock the internal report fetches
+    ai_service.report_service.monthly_report = AsyncMock()
+    ai_service.report_service.monthly_report.return_value = MagicMock(
+        total_income=5000.0,
+        total_expenses=3000.0,
+        net_balance=2000.0,
+        savings_rate=15.0,
+        expense_by_category=[],
+        income_transaction_count=2,
+        expense_transaction_count=10
+    )
+    ai_service.report_service.budget_report = AsyncMock()
+    ai_service.report_service.budget_report.return_value = MagicMock(
+        overall_utilization_percentage=50.0,
+        over_budget_categories=[]
+    )
+    ai_service.report_service.savings_goal_report = AsyncMock()
+    ai_service.report_service.savings_goal_report.return_value = MagicMock(
+        overall_progress_percentage=20.0,
+        active_goals=1
+    )
+
+    from app.schemas.ai_schema import ChatMessage
+    
+    # Test spending question
+    msgs_spend = [ChatMessage(role="user", content="How much did I spend this month?")]
+    reply_spend = await ai_service.chat(mock_user.id, "INR", msgs_spend)
+    assert "3000.0" in reply_spend
+
+    # Test savings question
+    msgs_save = [ChatMessage(role="user", content="How much am I saving?")]
+    reply_save = await ai_service.chat(mock_user.id, "INR", msgs_save)
+    assert "15.0%" in reply_save
+
+def test_api_chat_authorized(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    
+    with patch("app.services.ai_service.AIService.chat", new_callable=AsyncMock) as mock_chat:
+        mock_chat.return_value = "You have spent ₹1,000 this month."
+        
+        payload = {
+            "messages": [
+                {"role": "user", "content": "How much did I spend?"}
+            ]
+        }
+        
+        response = client.post("/api/v1/ai/chat", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["data"]["reply"] == "You have spent ₹1,000 this month."
+        
+    app.dependency_overrides.clear()
+

@@ -21,3 +21,35 @@ class InsightResponse(BaseModel):
             }
         }
     )
+
+class ChatMessage(BaseModel):
+    role: str = Field(..., description="Role of the message author: 'user' or 'assistant'")
+    content: str = Field(..., description="Text content of the message")
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage] = Field(..., description="Conversation history")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "messages": [
+                    {"role": "user", "content": "How much did I spend this month?"}
+                ]
+            }
+        }
+    )
+
+class ChatResponse(BaseModel):
+    success: bool = True
+    reply: str = Field(..., description="The AI assistant's reply")
+    provider: str = Field(..., description="The AI provider used")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "reply": "You have spent ₹42,500.50 so far this month.",
+                "provider": "mock"
+            }
+        }
+    )
