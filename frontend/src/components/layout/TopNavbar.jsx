@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { path: '/analytics', label: 'Analytics' },
   { path: '/reports', label: 'Reports' },
   { path: '/categories', label: 'Categories' },
+  { path: '/ai-assistant', label: 'AI Assistant' },
 ];
 
 

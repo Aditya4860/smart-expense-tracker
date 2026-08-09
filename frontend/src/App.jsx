@@ -28,6 +28,7 @@ const Goals      = lazy(() => import('./pages/Goals'));
 const Reports    = lazy(() => import('./pages/Reports'));
 const Categories = lazy(() => import('./pages/Categories'));
 const Reminders  = lazy(() => import('./pages/Reminders'));
+const AIAssistant = lazy(() => import('./pages/AIAssistant'));
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
                                   <Route path="/reminders"  element={<Reminders />}  />
                                   <Route path="/reports"    element={<Reports />}    />
                                   <Route path="/categories" element={<Categories />} />
+                                  <Route path="/ai-assistant" element={<AIAssistant />} />
                                 </Route>
 
                                 {/* Catch-all */}
