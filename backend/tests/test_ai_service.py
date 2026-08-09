@@ -166,3 +166,65 @@ def test_api_chat_authorized(mock_user):
         
     app.dependency_overrides.clear()
 
+@pytest.mark.asyncio
+async def test_ai_service_recommendations_mock(mock_user):
+    mock_db = AsyncMock()
+    ai_service = AIService(mock_db)
+    ai_service.provider = "mock"
+
+    # Mock the internal report fetches
+    ai_service.report_service.monthly_report = AsyncMock()
+    ai_service.report_service.monthly_report.return_value = MagicMock(
+        total_income=5000.0,
+        total_expenses=3000.0,
+        net_balance=2000.0,
+        savings_rate=15.0,
+        expense_by_category=[],
+        currency="INR"
+    )
+    ai_service.report_service.budget_report = AsyncMock()
+    ai_service.report_service.budget_report.return_value = MagicMock(
+        overall_utilization_percentage=50.0,
+        over_budget_categories=[]
+    )
+    ai_service.report_service.savings_goal_report = AsyncMock()
+    ai_service.report_service.savings_goal_report.return_value = MagicMock(
+        overall_progress_percentage=20.0,
+        active_goals=1
+    )
+
+    recs, cached, provider = await ai_service.get_recommendations(mock_user.id, "INR")
+    
+    assert len(recs) > 0
+    assert not cached
+    assert provider == "mock"
+    assert "Increase Monthly Savings" in [r["title"] for r in recs]
+
+def test_api_recommendations_authorized(mock_user):
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    
+    with patch("app.services.ai_service.AIService.get_recommendations", new_callable=AsyncMock) as mock_rec:
+        mock_rec.return_value = (
+            [
+                {
+                    "title": "Reduce Dining Out",
+                    "description": "Cook at home.",
+                    "type": "SPENDING",
+                    "evidence": "You spent 80% of food budget."
+                }
+            ],
+            False,
+            "mock"
+        )
+        
+        response = client.get("/api/v1/ai/recommendations")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert len(data["data"]["recommendations"]) == 1
+        assert data["data"]["recommendations"][0]["title"] == "Reduce Dining Out"
+        assert data["data"]["recommendations"][0]["type"] == "SPENDING"
+        
+    app.dependency_overrides.clear()
+

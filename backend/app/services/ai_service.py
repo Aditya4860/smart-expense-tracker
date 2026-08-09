@@ -14,6 +14,7 @@ from app.schemas.ai_schema import ChatMessage
 # ── Simple In-Memory TTLCache ────────────────────────────────────────────────
 # We cache AI insights per user for 5 minutes (300 seconds) to avoid heavy API usage.
 _INSIGHTS_CACHE = {}
+_RECOMMENDATIONS_CACHE = {}
 CACHE_TTL = 300
 
 class AIService:
@@ -109,6 +110,155 @@ class AIService:
             }
         }
         return context
+
+    # ── Financial Recommendations Methods ────────────────────────────────────
+
+    async def get_recommendations(self, user_id: uuid.UUID, currency: str) -> Tuple[List[dict], bool, str]:
+        """
+        Returns (recommendations: List[dict], cached: bool, provider: str).
+        """
+        cache_key = str(user_id)
+        current_time = time.time()
+
+        if cache_key in _RECOMMENDATIONS_CACHE:
+            cached_data, timestamp = _RECOMMENDATIONS_CACHE[cache_key]
+            if current_time - timestamp < CACHE_TTL:
+                logger.info(f"Returning cached AI recommendations for user {user_id}")
+                return cached_data, True, self.provider
+            else:
+                del _RECOMMENDATIONS_CACHE[cache_key]
+
+        context_data = await self._gather_financial_context(user_id, currency)
+        if not context_data:
+            return [], False, self.provider
+
+        system_prompt = self._get_recommendations_system_prompt()
+
+        if self.provider == "mock":
+            recs = self._recommend_mock(context_data)
+        elif self.provider == "openai":
+            recs = await self._recommend_openai(system_prompt, context_data)
+        elif self.provider == "gemini":
+            recs = await self._recommend_gemini(system_prompt, context_data)
+        elif self.provider == "anthropic":
+            recs = await self._recommend_anthropic(system_prompt, context_data)
+        else:
+            recs = self._recommend_mock(context_data)
+
+        if recs:
+            _RECOMMENDATIONS_CACHE[cache_key] = (recs, current_time)
+
+        return recs, False, self.provider
+
+    def _get_recommendations_system_prompt(self) -> str:
+        return (
+            "You are an expert AI Financial Advisor. "
+            "Generate a maximum of 5 highly personalized, explainable financial recommendations based strictly on the provided JSON data. "
+            "Output strictly valid JSON with a single key 'recommendations' containing an array of objects. "
+            "Each object must have exactly these keys: 'title' (string), 'description' (string, actionable suggestion), 'type' (string, one of: BUDGET, SAVINGS, SPENDING, GOAL, WARNING), and 'evidence' (string, the exact math/fact driving this). "
+            "RULES:\n"
+            "- Never present predictions as guaranteed outcomes.\n"
+            "- Do NOT invent numbers.\n"
+            "- Be non-destructive (do not suggest deleting records blindly)."
+        )
+
+    def _recommend_mock(self, data: dict) -> List[dict]:
+        recs = []
+        monthly = data.get("monthly_summary", {})
+        budgets = data.get("budgets", {})
+        savings = data.get("savings_goals", {})
+
+        income = monthly.get("total_income", 0)
+        expenses = monthly.get("total_expenses", 0)
+
+        if expenses > income and income > 0:
+            recs.append({
+                "title": "Immediate Spending Reduction",
+                "description": "Consider halting all non-essential discretionary spending immediately until your next income cycle.",
+                "type": "WARNING",
+                "evidence": f"Your expenses ({data['currency']} {expenses}) currently exceed your income ({data['currency']} {income})."
+            })
+        
+        over_budget = budgets.get("over_budget_categories", [])
+        if over_budget:
+            recs.append({
+                "title": "Adjust Category Budgets",
+                "description": f"You are overspending in some categories. Consider increasing the budget limit or reducing consumption for {', '.join(over_budget[:2])}.",
+                "type": "BUDGET",
+                "evidence": f"You have exceeded your allocated budget for {len(over_budget)} categor{'y' if len(over_budget) == 1 else 'ies'}."
+            })
+
+        if monthly.get("savings_rate_percentage", 0) < 20 and (income - expenses) > 0:
+            recs.append({
+                "title": "Increase Monthly Savings",
+                "description": "Try transferring a portion of your remaining surplus into your savings goals to accelerate progress.",
+                "type": "SAVINGS",
+                "evidence": f"Your savings rate is currently {monthly.get('savings_rate_percentage', 0)}%, which is below the recommended 20% target."
+            })
+        
+        if not recs:
+            recs.append({
+                "title": "Keep Up the Good Work!",
+                "description": "You are managing your finances well. No urgent recommendations at this time.",
+                "type": "GOAL",
+                "evidence": "You have a positive net balance and no over-budget categories."
+            })
+
+        return recs[:5]
+
+    async def _recommend_openai(self, system_prompt: str, data: dict) -> List[dict]:
+        if not self.api_key: return []
+        payload = {
+            "model": self.model or "gpt-4o-mini",
+            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": json.dumps(data)}],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.5
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                parsed = json.loads(resp.json()["choices"][0]["message"]["content"])
+                return parsed.get("recommendations", [])
+        except Exception as e:
+            logger.error(f"OpenAI Recommendation Error: {e}")
+            return []
+
+    async def _recommend_gemini(self, system_prompt: str, data: dict) -> List[dict]:
+        if not self.api_key: return []
+        payload = {
+            "contents": [{"parts": [{"text": system_prompt}, {"text": json.dumps(data)}]}],
+            "generationConfig": {"temperature": 0.5, "responseMimeType": "application/json"}
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(f"https://generativelanguage.googleapis.com/v1beta/models/{self.model or 'gemini-1.5-flash'}:generateContent?key={self.api_key}", headers={"Content-Type": "application/json"}, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                parsed = json.loads(resp.json()["candidates"][0]["content"]["parts"][0]["text"])
+                return parsed.get("recommendations", [])
+        except Exception as e:
+            logger.error(f"Gemini Recommendation Error: {e}")
+            return []
+
+    async def _recommend_anthropic(self, system_prompt: str, data: dict) -> List[dict]:
+        if not self.api_key: return []
+        payload = {
+            "model": self.model or "claude-3-haiku-20240307",
+            "max_tokens": 1024,
+            "temperature": 0.5,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": json.dumps(data)}]
+        }
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post("https://api.anthropic.com/v1/messages", headers={"x-api-key": self.api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}, json=payload, timeout=20.0)
+                resp.raise_for_status()
+                content = resp.json()["content"][0]["text"]
+                parsed = json.loads(content)
+                return parsed.get("recommendations", [])
+        except Exception as e:
+            logger.error(f"Anthropic Recommendation Error: {e}")
+            return []
 
     def _get_system_prompt(self) -> str:
         return (
