@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     # ── Monitoring ─────────────────────────────────────────────────────────────
     SENTRY_DSN: Optional[str] = None         # Set in production to enable Sentry
 
+    # ── AI Financial Assistant ──────────────────────────────────────────────────
+    AI_PROVIDER: Literal["mock", "openai", "gemini", "anthropic"] = "mock"
+    AI_API_KEY: Optional[str] = None
+    AI_MODEL: Optional[str] = None  # Example: "gpt-4o-mini" or "gemini-1.5-flash"
+
     # ── Validators ─────────────────────────────────────────────────────────────
     @field_validator("SECRET_KEY")
     @classmethod
