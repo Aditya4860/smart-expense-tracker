@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/ui/PageHeader';
 import AIInsightsCard from '../components/ai/AIInsightsCard';
 import AIRecommendationsList from '../components/ai/AIRecommendationsList';
 import AIChatBox from '../components/ai/AIChatBox';
-import { getAIInsights, getAIRecommendations, sendAIChat } from '../services/api/aiApi';
+import { getAIInsights, getAIRecommendations } from '../services/api/aiApi';
 import EmptyState from '../components/ui/EmptyState';
 
-const AIAssistant = () => {
+const AIAssistantInner = () => {
     // Top-level State
     const [insights, setInsights] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loadingInsights, setLoadingInsights] = useState(true);
     const [loadingRecs, setLoadingRecs] = useState(true);
     const [error, setError] = useState(null);
-
-    // Chat State
-    const [chatHistory, setChatHistory] = useState([]);
-    const [chatLoading, setChatLoading] = useState(false);
 
     const fetchInitialData = useCallback(async () => {
         setLoadingInsights(true);
@@ -54,55 +51,24 @@ const AIAssistant = () => {
 
     useEffect(() => {
         fetchInitialData();
-        // We explicitly do not load chat history from localStorage
-        // to maintain security of sensitive financial context.
     }, [fetchInitialData]);
-
-    const handleSendMessage = async (text) => {
-        const newMessage = { role: 'user', content: text };
-        const updatedHistory = [...chatHistory, newMessage];
-        setChatHistory(updatedHistory);
-        setChatLoading(true);
-
-        try {
-            // We slice on backend, but we can also slice on frontend if desired.
-            // For now, we send the whole active session history.
-            const response = await sendAIChat(updatedHistory);
-            if (response.success) {
-                setChatHistory(prev => [...prev, { role: 'assistant', content: response.reply }]);
-            }
-        } catch (err) {
-            console.error("Chat error:", err);
-            setChatHistory(prev => [
-                ...prev, 
-                { role: 'assistant', content: "I'm sorry, I encountered an error. Please try again." }
-            ]);
-        } finally {
-            setChatLoading(false);
-        }
-    };
 
     return (
         <div className="space-y-6">
-            <PageHeader 
-                title="AI Financial Assistant" 
-                subtitle="Get personalized insights and chat with your smart financial advisor."
-            />
-
             {error ? (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
-                    <p className="text-red-400 mb-4">{error}</p>
+                <div className="bg-danger-500/10 border border-danger-500/20 rounded-sm p-6 text-center">
+                    <p className="text-danger-400 mb-4">{error}</p>
                     <button 
                         onClick={fetchInitialData}
-                        className="px-4 py-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                        className="px-4 py-2 bg-danger-500/20 text-danger-400 rounded-sm hover:bg-danger-500/30 transition-colors uppercase text-xs font-bold tracking-wider"
                     >
                         Retry Connection
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left Column: Insights & Recommendations */}
-                    <div className="lg:col-span-5 space-y-6">
+                <div className="flex flex-col xl:flex-row gap-6 items-start">
+                    {/* Left Column: Insights & Recommendations (35%) */}
+                    <div className="w-full xl:w-[35%] space-y-6 shrink-0">
                         <AIInsightsCard 
                             insights={insights} 
                             loading={loadingInsights} 
@@ -125,13 +91,9 @@ const AIAssistant = () => {
                         )}
                     </div>
 
-                    {/* Right Column: Chat Interface */}
-                    <div className="lg:col-span-7">
-                        <AIChatBox 
-                            messages={chatHistory} 
-                            loading={chatLoading} 
-                            onSendMessage={handleSendMessage} 
-                        />
+                    {/* Right Column: Chat Interface (65%) */}
+                    <div className="w-full xl:w-[65%]">
+                        <AIChatBox isCompact={false} />
                     </div>
                 </div>
             )}
@@ -139,4 +101,10 @@ const AIAssistant = () => {
     );
 };
 
-export default AIAssistant;
+export default function AIAssistant() {
+    return (
+        <DashboardLayout>
+            <AIAssistantInner />
+        </DashboardLayout>
+    );
+}

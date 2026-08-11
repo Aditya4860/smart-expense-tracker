@@ -25,6 +25,7 @@ import RecurringSummaryWidget from '../components/dashboard/RecurringSummaryWidg
 import RecurringModal from '../components/recurring/RecurringModal';
 import RecurringForm from '../components/recurring/RecurringForm';
 import Card from '../components/ui/Card';
+import AIFloatingWidget from '../components/ai/AIFloatingWidget';
 import useExpenses from '../hooks/useExpenses';
 import useIncome from '../hooks/useIncome';
 import useAnalytics from '../hooks/useAnalytics';
@@ -304,6 +305,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <DashboardInner />
+      <AIFloatingWidget />
     </DashboardLayout>
   );
 }

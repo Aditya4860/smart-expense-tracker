@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import { sendAIChat } from '../../services/api/aiApi';
 
 const SUGGESTED_QUESTIONS = [
     "How much did I spend this month?",
-    "Where am I overspending?",
-    "How is my savings goal progressing?",
-    "Compare this month with last month."
+    "Where did I spend the most?",
+    "Am I on track with my budget?",
+    "How are my goals progressing?"
 ];
 
-const AIChatBox = ({ messages, loading, onSendMessage }) => {
+export default function AIChatBox({ isCompact = false }) {
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
+    const inputRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -21,66 +23,110 @@ const AIChatBox = ({ messages, loading, onSendMessage }) => {
         scrollToBottom();
     }, [messages, loading]);
 
+    // Auto-focus input when not loading
+    useEffect(() => {
+        if (!loading && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [loading]);
+
+    const handleSendMessage = async (text) => {
+        if (!text.trim() || loading) return;
+        
+        const newMessage = { role: 'user', content: text };
+        const updatedHistory = [...messages, newMessage];
+        setMessages(updatedHistory);
+        setLoading(true);
+
+        try {
+            const response = await sendAIChat(updatedHistory);
+            if (response.success) {
+                setMessages(prev => [...prev, { role: 'assistant', content: response.reply }]);
+            }
+        } catch (err) {
+            console.error("Chat error:", err);
+            setMessages(prev => [
+                ...prev, 
+                { role: 'assistant', content: "I'm sorry, I encountered an error. Please try again." }
+            ]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!input.trim() || loading) return;
-        onSendMessage(input);
+        handleSendMessage(input);
         setInput('');
     };
 
     const handleChipClick = (question) => {
-        if (loading) return;
-        onSendMessage(question);
+        handleSendMessage(question);
     };
 
     return (
-        <Card className="flex flex-col h-[600px] max-h-[70vh] p-0 overflow-hidden">
+        <div className={`flex flex-col bg-surface-900 border border-surface-700/60 shadow-2xl relative overflow-hidden ${isCompact ? 'h-[500px] w-full rounded-xl' : 'h-[75vh] w-full rounded-none lg:border-y lg:border-l'}`}>
+            
             {/* Header */}
-            <div className="p-4 border-b border-surface-700 bg-surface-800/80 backdrop-blur flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-accent-500/20 flex items-center justify-center text-accent-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+            {!isCompact && (
+                <div className="p-5 border-b border-surface-800 bg-surface-950/80 backdrop-blur shrink-0 flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-primary-500/30 bg-primary-500/10 text-primary-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-surface-50">Financial Assistant</h3>
-                        <p className="text-xs text-surface-400">Ask me anything about your finances</p>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold tracking-tight text-white uppercase">AI FINANCIAL ASSISTANT</h2>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-success-500/30 bg-success-500/10">
+                                <span className="h-1.5 w-1.5 rounded-full bg-success-400 animate-pulse"></span>
+                                <span className="text-[9px] font-bold tracking-widest text-success-400 uppercase">Online</span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-surface-400 mt-0.5">Ask questions about your spending, income, budgets and goals.</p>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface-900/20">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin scrollbar-thumb-surface-700 scrollbar-track-transparent">
                 {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                        <div className="w-16 h-16 rounded-full bg-surface-800 flex items-center justify-center mb-4 text-surface-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+                        <div className="w-12 h-12 rounded border border-surface-700 bg-surface-800/50 flex items-center justify-center mb-6 text-surface-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </div>
-                        <h4 className="text-surface-200 font-medium mb-2">How can I help you today?</h4>
-                        <p className="text-surface-400 text-sm mb-6 max-w-xs">Try asking about your recent spending, budget limits, or savings progress.</p>
+                        <h3 className="text-white font-medium mb-2 tracking-tight">How can I assist you today?</h3>
+                        <p className="text-surface-400 text-sm mb-8 leading-relaxed">I can analyze your financial data and help you track your budget and savings goals.</p>
                         
-                        <div className="flex flex-wrap justify-center gap-2">
+                        <div className="flex flex-col gap-2 w-full">
                             {SUGGESTED_QUESTIONS.map((q, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => handleChipClick(q)}
-                                    className="px-3 py-1.5 text-xs bg-surface-800 text-surface-300 rounded-full border border-surface-700 hover:border-accent-500 hover:text-accent-400 transition-colors"
+                                    disabled={loading}
+                                    className="px-4 py-3 text-sm text-left bg-surface-800/30 text-surface-300 rounded border border-surface-700/50 hover:border-primary-500/50 hover:bg-primary-500/5 transition-all group relative overflow-hidden disabled:opacity-50"
                                 >
-                                    {q}
+                                    <span className="relative z-10">{q}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
                 ) : (
                     messages.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                        <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            {msg.role !== 'user' && (
+                                <div className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-surface-700 bg-surface-800 text-surface-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            )}
+                            <div className={`relative px-4 py-3 text-sm leading-relaxed max-w-[85%] ${
                                 msg.role === 'user' 
-                                    ? 'bg-accent-600 text-white rounded-tr-sm' 
-                                    : 'bg-surface-800 border border-surface-700 text-surface-200 rounded-tl-sm'
+                                    ? 'bg-primary-600 text-white rounded-l-lg rounded-br-lg shadow-sm' 
+                                    : 'bg-surface-800/80 border border-surface-700/60 text-surface-200 rounded-r-lg rounded-bl-lg'
                             }`}>
                                 {msg.content}
                             </div>
@@ -89,41 +135,48 @@ const AIChatBox = ({ messages, loading, onSendMessage }) => {
                 )}
                 
                 {loading && (
-                    <div className="flex justify-start">
-                        <div className="bg-surface-800 border border-surface-700 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-surface-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-surface-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-1.5 h-1.5 rounded-full bg-surface-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    <div className="flex w-full justify-start items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-surface-700 bg-surface-800 text-surface-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3 bg-surface-800/50 border border-surface-700/50 rounded-r-lg rounded-bl-lg text-xs font-mono tracking-widest text-surface-400 uppercase">
+                            AI Thinking
+                            <span className="flex gap-1 ml-1">
+                                <span className="h-1 w-1 rounded-full bg-surface-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                <span className="h-1 w-1 rounded-full bg-surface-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                <span className="h-1 w-1 rounded-full bg-surface-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            </span>
                         </div>
                     </div>
                 )}
-                <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} className="h-px w-full" />
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-surface-800/80 backdrop-blur border-t border-surface-700 shrink-0">
-                <form onSubmit={handleSubmit} className="relative flex items-center">
+            <div className="shrink-0 p-4 bg-surface-950/80 backdrop-blur-xl border-t border-surface-800 z-10">
+                <form onSubmit={handleSubmit} className="relative flex items-center group">
                     <input
+                        ref={inputRef}
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask about your finances..."
                         disabled={loading}
-                        className="w-full bg-surface-900 border border-surface-700 rounded-full py-3 pl-4 pr-12 text-sm text-surface-50 placeholder-surface-500 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 disabled:opacity-50 transition-colors"
+                        className="w-full bg-surface-900 border border-surface-700 rounded-sm py-3 pl-4 pr-12 text-sm text-white placeholder-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:opacity-50 transition-all shadow-inner group-hover:border-surface-600"
                     />
                     <button
                         type="submit"
                         disabled={!input.trim() || loading}
-                        className="absolute right-1.5 p-2 bg-accent-600 hover:bg-accent-500 disabled:bg-surface-700 disabled:text-surface-500 text-white rounded-full transition-colors flex items-center justify-center"
+                        className="absolute right-2 p-1.5 bg-primary-600 hover:bg-primary-500 disabled:bg-surface-800 disabled:text-surface-600 text-white rounded transition-all flex items-center justify-center group-hover:shadow-[0_0_10px_rgba(var(--color-primary-500),0.3)]"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                         </svg>
                     </button>
                 </form>
             </div>
-        </Card>
+        </div>
     );
-};
-
-export default AIChatBox;
+}
