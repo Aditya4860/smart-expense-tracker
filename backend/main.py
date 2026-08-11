@@ -131,7 +131,13 @@ async def security_headers_and_logging_middleware(request: Request, call_next):
         response.headers["X-XSS-Protection"] = "0"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+        
+        is_doc = request.url.path.startswith(("/docs", "/redoc", "/openapi.json", f"{settings.API_V1_STR}/openapi.json"))
+        if is_doc:
+            response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; img-src 'self' data: https://fastapi.tiangolo.com;"
+        else:
+            response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+            
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         # Request performance logging
@@ -147,7 +153,7 @@ async def security_headers_and_logging_middleware(request: Request, call_next):
             )
         
         # Do not wrap 204 No Content or documentation endpoints
-        if response.status_code == 204 or request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+        if response.status_code == 204 or is_doc:
             return response
 
         # Wrap successful JSON responses consistently

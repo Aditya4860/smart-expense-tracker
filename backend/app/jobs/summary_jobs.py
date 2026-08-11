@@ -120,3 +120,5 @@ async def run_monthly_summaries_job(session: AsyncSession, reference_date: date 
         "summaries_generated": total_summaries,
         "messages": messages,
     }
+
+

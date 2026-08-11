@@ -158,7 +158,7 @@ class RecurringTransactionRepository:
             .where(
                 and_(
                     RecurringTransaction.user_id == user_id,
-                    RecurringTransaction.status == RecurringStatus.ACTIVE,
+                    RecurringTransaction.status == RecurringStatus.ACTIVE.value,
                     RecurringTransaction.next_date <= target_date,
                 )
             )
@@ -176,7 +176,7 @@ class RecurringTransactionRepository:
             select(func.count(RecurringTransaction.id)).where(
                 and_(
                     RecurringTransaction.user_id == user_id,
-                    RecurringTransaction.status == RecurringStatus.ACTIVE,
+                    RecurringTransaction.status == RecurringStatus.ACTIVE.value,
                 )
             )
         )
@@ -184,7 +184,7 @@ class RecurringTransactionRepository:
             select(func.count(RecurringTransaction.id)).where(
                 and_(
                     RecurringTransaction.user_id == user_id,
-                    RecurringTransaction.status == RecurringStatus.PAUSED,
+                    RecurringTransaction.status == RecurringStatus.PAUSED.value,
                 )
             )
         )

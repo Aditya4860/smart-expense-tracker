@@ -51,6 +51,7 @@ class Settings(BaseSettings):
 
     # ── AI Financial Assistant ──────────────────────────────────────────────────
     AI_PROVIDER: Literal["mock", "openai", "gemini", "anthropic"] = "mock"
+    GEMINI_API_KEY: Optional[str] = None
     AI_API_KEY: Optional[str] = None
     AI_MODEL: Optional[str] = None  # Example: "gpt-4o-mini" or "gemini-1.5-flash"
 

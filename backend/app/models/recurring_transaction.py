@@ -8,9 +8,9 @@ from app.models.enums import TransactionType, RecurringFrequency, RecurringStatu
 class RecurringTransaction(BaseModel):
     __tablename__ = "recurring_transactions"
 
-    type = Column(Enum(TransactionType), nullable=False)
+    type = Column(Enum(TransactionType, native_enum=False, length=50), nullable=False)
     amount = Column(Numeric(12, 2), nullable=False)
-    frequency = Column(Enum(RecurringFrequency), nullable=False)
+    frequency = Column(Enum(RecurringFrequency, native_enum=False, length=50), nullable=False)
     
     title = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
@@ -24,7 +24,7 @@ class RecurringTransaction(BaseModel):
     next_date = Column(Date, nullable=False, index=True)
     last_processed_date = Column(Date, nullable=True)
     
-    status = Column(Enum(RecurringStatus), default=RecurringStatus.ACTIVE, nullable=False, index=True)
+    status = Column(Enum(RecurringStatus, native_enum=False, length=50), default=RecurringStatus.ACTIVE, nullable=False, index=True)
     auto_process = Column(Boolean, default=True, nullable=False)
     
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)

@@ -26,7 +26,9 @@ def clear_cache():
 async def test_ai_service_mock_provider(mock_user):
     mock_db = AsyncMock()
     ai_service = AIService(mock_db)
-    ai_service.provider = "mock"
+    from app.services.ai_providers.mock_provider import MockProvider
+    ai_service.provider_name = "mock"
+    ai_service.provider = MockProvider()
 
     # Mock the internal report fetches
     ai_service.report_service.monthly_report = AsyncMock()
@@ -109,7 +111,9 @@ def test_api_insights_authorized(mock_user):
 async def test_ai_service_chat_mock(mock_user):
     mock_db = AsyncMock()
     ai_service = AIService(mock_db)
-    ai_service.provider = "mock"
+    from app.services.ai_providers.mock_provider import MockProvider
+    ai_service.provider_name = "mock"
+    ai_service.provider = MockProvider()
 
     # Mock the internal report fetches
     ai_service.report_service.monthly_report = AsyncMock()
@@ -170,7 +174,9 @@ def test_api_chat_authorized(mock_user):
 async def test_ai_service_recommendations_mock(mock_user):
     mock_db = AsyncMock()
     ai_service = AIService(mock_db)
-    ai_service.provider = "mock"
+    from app.services.ai_providers.mock_provider import MockProvider
+    ai_service.provider_name = "mock"
+    ai_service.provider = MockProvider()
 
     # Mock the internal report fetches
     ai_service.report_service.monthly_report = AsyncMock()
