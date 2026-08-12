@@ -98,3 +98,10 @@ build/
 *.pem
 *.key
 secrets/
+
+# ==========================
+# Screenshot artifacts
+# ==========================
+capture.py
+run.bat
+.screenshot-env/
