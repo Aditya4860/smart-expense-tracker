@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ReminderCard from '../components/reminders/ReminderCard';
 import ReminderCalendar from '../components/reminders/ReminderCalendar';
@@ -156,9 +157,26 @@ export default function Reminders() {
     return true;
   });
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-12">
+      <motion.div 
+        className="space-y-6 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Toast Notification */}
         {feedbackMsg && (
           <div
@@ -174,7 +192,7 @@ export default function Reminders() {
         )}
 
         {/* Top Header & Quick Actions */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Reminders & Due Dates
@@ -224,10 +242,10 @@ export default function Reminders() {
               <span>Add Reminder</span>
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Summary Metric Cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -283,10 +301,10 @@ export default function Reminders() {
               {counts.total_count}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* View Switcher & Filters */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+        <motion.div variants={itemVariants} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
           {/* View Mode Buttons */}
           <div className="flex items-center rounded-xl bg-slate-100 p-1 dark:bg-slate-800/80">
             <button
@@ -359,20 +377,22 @@ export default function Reminders() {
               <option value="ALL">All Statuses</option>
             </select>
           </div>
-        </div>
+        </motion.div>
 
         {/* Content Views */}
+        <AnimatePresence mode="wait">
         {loading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
                 className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50"
               />
             ))}
-          </div>
+          </motion.div>
         ) : viewMode === 'calendar' ? (
-          <ReminderCalendar
+          <motion.div key="calendar" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            <ReminderCalendar
             reminders={reminders}
             onComplete={handleComplete}
             onSnooze={(r) => setSnoozeReminder(r)}
@@ -386,8 +406,9 @@ export default function Reminders() {
               setIsHistoryDrawerOpen(true);
             }}
           />
+          </motion.div>
         ) : (
-          <div>
+          <motion.div key="cards" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             {filteredReminders.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/50 py-16 text-center dark:border-slate-800 dark:bg-slate-900/30">
                 <span className="text-4xl mb-3">🔔</span>
@@ -431,8 +452,9 @@ export default function Reminders() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Modals & Drawers */}
         <ReminderFormModal
@@ -461,7 +483,7 @@ export default function Reminders() {
           reminder={historyReminder}
           historyList={globalHistory}
         />
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }

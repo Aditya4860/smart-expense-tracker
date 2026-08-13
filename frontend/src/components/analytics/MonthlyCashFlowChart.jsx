@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Rectangle,
 } from 'recharts';
 import useAnalytics from '../../hooks/useAnalytics';
 import { formatCurrency, formatCompactCurrency } from '../../utils/formatters';
@@ -16,20 +17,20 @@ import Card from '../ui/Card';
 // ── Palette (hex values — Recharts cannot use Tailwind classes) ────────────
 
 const COLORS = {
-  income:  '#34d399', // emerald-400 / success-400
-  expense: '#f87171', // red-400     / danger-400
-  balance: '#818cf8', // indigo-400  / primary-400
+  income:  '#059669', // darker green
+  expense: '#dc2626', // dark red
+  balance: '#06b6d4', // cyan
 };
 
 
 function CashFlowTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-surface-700/60 bg-surface-900 p-3 shadow-2xl text-sm">
+    <div className="rounded-xl border border-surface-700/60 bg-[#12141a]/90 backdrop-blur-md p-3 shadow-2xl text-sm">
       <p className="mb-2 font-semibold text-white">{label}</p>
       {payload.map(entry => (
         <div key={entry.dataKey} className="flex items-center gap-2 py-0.5">
-          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.fill || entry.color }} />
+          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.fill || entry.color, filter: `drop-shadow(0px 0px 4px ${entry.fill || entry.color})` }} />
           <span className="text-slate-400 capitalize">{entry.name}:</span>
           <span className="ml-auto pl-4 font-semibold tabular-nums" style={{ color: entry.fill || entry.color }}>
             {formatCurrency(entry.value)}
@@ -88,9 +89,9 @@ const MonthlyCashFlowChart = memo(function MonthlyCashFlowChart() {
             wrapperStyle={{ fontSize: 12, color: '#94a3b8', paddingTop: 12 }}
             formatter={value => <span className="capitalize">{value}</span>}
           />
-          <Bar dataKey="income"  name="Income"  fill={COLORS.income}  radius={[4, 4, 0, 0]} maxBarSize={40} />
-          <Bar dataKey="expense" name="Expense" fill={COLORS.expense} radius={[4, 4, 0, 0]} maxBarSize={40} />
-          <Bar dataKey="balance" name="Balance" fill={COLORS.balance} radius={[4, 4, 0, 0]} maxBarSize={40} />
+          <Bar dataKey="income"  name="Income"  fill={COLORS.income}  radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px ${COLORS.income})` }} />} />
+          <Bar dataKey="expense" name="Expense" fill={COLORS.expense} radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px ${COLORS.expense})` }} />} />
+          <Bar dataKey="balance" name="Balance" fill={COLORS.balance} radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px ${COLORS.balance})` }} />} />
         </BarChart>
       </ResponsiveContainer>
     </Card>

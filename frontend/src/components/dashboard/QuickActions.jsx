@@ -133,12 +133,11 @@ const ACTIONS = [
 // ── Shared UI ──────────────────────────────────────────────────────────────
 
 const itemClass = (action) => [
-  'group flex items-center justify-between gap-4 rounded-[10px] border border-surface-700',
-  'bg-surface-800 px-5 py-4 w-full h-full text-left',
+  'group flex flex-col items-center justify-center gap-2 rounded-2xl border border-transparent',
+  'bg-transparent p-3 w-20 h-24 text-center shrink-0',
   'transition-all duration-300',
-  'hover:-translate-y-1 hover:bg-surface-700 hover:shadow-card hover:border-surface-600',
-  'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-success-500',
-  action.borderHover,
+  'hover:-translate-y-1 hover:bg-surface-800 hover:border-surface-700',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-500',
 ].join(' ');
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -159,27 +158,19 @@ const QuickActions = memo(function QuickActions({ onAddExpense, onAddIncome, onA
       <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-surface-400 font-mono">
         Quick Actions
       </h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-row overflow-x-auto pb-4 gap-2 scrollbar-hide snap-x">
         {ACTIONS.map(action => {
           const inner = (
             <>
-              <div className="flex items-center gap-4 min-w-0">
-                <div className={[
-                  'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[8px]',
-                  action.iconBg,
-                  action.iconText,
-                  'transition-transform duration-300 group-hover:scale-110',
-                ].join(' ')}>
-                  {action.icon}
-                </div>
-                <div className="min-w-0">
-                  <p className={`text-sm font-semibold ${action.labelCls}`}>{action.label}</p>
-                  <p className="mt-0.5 text-[11px] font-mono text-surface-500 hidden sm:block">{action.description}</p>
-                </div>
+              <div className={[
+                'flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full',
+                action.iconBg,
+                action.iconText,
+                'transition-transform duration-300 group-hover:scale-110 shadow-sm',
+              ].join(' ')}>
+                {action.icon}
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-surface-600 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1">
-                <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
-              </svg>
+              <p className={`text-xs font-medium leading-tight ${action.labelCls}`}>{action.label}</p>
             </>
           );
 

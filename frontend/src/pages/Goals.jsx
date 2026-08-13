@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import GoalSummary from '../components/goals/GoalSummary';
 import GoalTable from '../components/goals/GoalTable';
@@ -85,10 +86,27 @@ function GoalsInner() {
     setAddSavingGoal(null);
   }, [addSavingGoal, addGoalSaving]);
 
-  return (
-    <div className="space-y-6">
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  return (
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+
+      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Savings Goals</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -98,11 +116,13 @@ function GoalsInner() {
         <Button id="open-add-goal-modal" variant="primary" size="md" onClick={() => setAddOpen(true)}>
           {PlusIcon} Add Goal
         </Button>
-      </div>
+      </motion.div>
 
-      <GoalSummary />
+      <motion.div variants={itemVariants}>
+        <GoalSummary />
+      </motion.div>
 
-      <div className="flex items-center justify-between gap-3">
+      <motion.div variants={itemVariants} className="flex items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
           {goals.length === 0 ? (
             <span className="text-slate-600">No goals yet</span>
@@ -127,27 +147,44 @@ function GoalsInner() {
             {GridIcon}
           </button>
         </div>
-      </div>
+      </motion.div>
 
-      {viewMode === 'table' ? (
-        <GoalTable onEdit={setEditGoal} onDelete={setDelGoal} onClickRow={setSelectedGoal} />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {goals.length === 0 ? (
-            <div className="col-span-full"><GoalEmptyState /></div>
-          ) : (
-            goals.map(goal => (
-              <GoalCard 
-                key={goal.id} 
-                goal={goal} 
-                onEdit={() => setEditGoal(goal)} 
-                onDelete={() => setDelGoal(goal)} 
-                onClick={() => setSelectedGoal(goal)} 
-              />
-            ))
-          )}
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {viewMode === 'table' ? (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <GoalTable onEdit={setEditGoal} onDelete={setDelGoal} onClickRow={setSelectedGoal} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {goals.length === 0 ? (
+              <div className="col-span-full"><GoalEmptyState /></div>
+            ) : (
+              goals.map(goal => (
+                <GoalCard 
+                  key={goal.id} 
+                  goal={goal} 
+                  onEdit={() => setEditGoal(goal)} 
+                  onDelete={() => setDelGoal(goal)} 
+                  onClick={() => setSelectedGoal(goal)} 
+                />
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Add Modal */}
       <GoalModal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Add Goal">
@@ -191,7 +228,7 @@ function GoalsInner() {
           </div>
         </div>
       </GoalModal>
-    </div>
+    </motion.div>
   );
 }
 

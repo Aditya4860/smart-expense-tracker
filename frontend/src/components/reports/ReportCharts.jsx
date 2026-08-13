@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,37 +13,39 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  Sector,
+  Rectangle,
 } from 'recharts';
 import Card from '../ui/Card';
 import Skeleton from '../ui/Skeleton';
 import { formatCurrency, formatCompactCurrency, MONTH_NAMES } from '../../utils/formatters';
 
 const PALETTE = [
-  '#009246', // Primary Brand Green
-  '#2563eb', // Blue
-  '#8b5cf6', // Violet
-  '#f59e0b', // Amber
-  '#ec4899', // Pink
   '#06b6d4', // Cyan
-  '#ef4444', // Red
-  '#10b981', // Emerald
-  '#6366f1', // Indigo
+  '#ec4899', // Pink
+  '#facc15', // Yellow
+  '#8b5cf6', // Violet
+  '#059669', // Darker Green
+  '#dc2626', // Dark Red
+  '#3b82f6', // Blue
   '#f97316', // Orange
+  '#14b8a6', // Teal
+  '#d946ef', // Fuchsia
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="rounded-xl border border-surface-700 bg-surface-900/95 p-3.5 shadow-2xl backdrop-blur-md">
+    <div className="rounded-xl border border-surface-700/60 bg-[#12141a]/90 p-3.5 shadow-2xl backdrop-blur-md">
       {label && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>}
       <div className="flex flex-col gap-1.5">
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill, filter: `drop-shadow(0px 0px 4px ${entry.color || entry.fill})` }} />
               <span className="text-slate-300 font-medium">{entry.name}:</span>
             </div>
-            <span className="font-semibold tabular-nums text-white">
+            <span className="font-semibold tabular-nums" style={{ color: entry.color || entry.fill || '#fff' }}>
               {typeof entry.value === 'number' ? formatCurrency(entry.value) : entry.value}
             </span>
           </div>
@@ -53,7 +55,33 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+// ── Active Shape for Pie Charts ───────────────────────────────────────────
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, share } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 12} dy={8} textAnchor="middle" fill="#fff" className="text-[13px] font-semibold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 10} dy={8} textAnchor="middle" fill={fill} className="text-sm font-bold tabular-nums" style={{ filter: `drop-shadow(0 0 4px ${fill})` }}>
+        {formatCurrency(value)} {share ? `(${Math.round(share)}%)` : ''}
+      </text>
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{ filter: `drop-shadow(0px 0px 10px ${fill})` }}
+      />
+    </g>
+  );
+};
+
 const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   if (loading) {
     return (
       <Card padding="lg" className="flex flex-col gap-4">
@@ -109,8 +137,8 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                     tickLine={false}
                     tickFormatter={formatCompactCurrency}
                   />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="amount" name="Spent" fill="#ef4444" radius={[4, 4, 0, 0]}>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                  <Bar dataKey="amount" name="Spent" fill="#ef4444" radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px ${props.fill})` }} />}>
                     {catData.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
                     ))}
@@ -136,12 +164,14 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                     innerRadius={60}
                     outerRadius={95}
                     paddingAngle={3}
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
                   >
                     {catData.map((_, index) => (
                       <Cell key={`pie-cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
                   <Legend
                     layout="horizontal"
                     verticalAlign="bottom"
@@ -189,10 +219,10 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#242B36" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} />
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} tickFormatter={formatCompactCurrency} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Net" name="Net Balance" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="Income" name="Income" fill="#22c55e" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #22c55e)` }} />} />
+                <Bar dataKey="Expenses" name="Expenses" fill="#ef4444" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #ef4444)` }} />} />
+                <Bar dataKey="Net" name="Net Balance" fill="#3b82f6" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #3b82f6)` }} />} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -236,12 +266,14 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                     innerRadius={55}
                     outerRadius={95}
                     paddingAngle={3}
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
                   >
                     {catData.map((_, index) => (
                       <Cell key={`cell-exp-${index}`} fill={PALETTE[index % PALETTE.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
                   <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -258,8 +290,8 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="#242B36" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} tickFormatter={formatCompactCurrency} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="amount" name="Amount" fill="#009246" radius={[4, 4, 0, 0]} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                  <Bar dataKey="amount" name="Amount" fill="#009246" radius={[20, 20, 20, 20]} maxBarSize={12} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #009246)` }} />} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -273,12 +305,14 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
         name: s.source,
         value: s.total_amount,
         count: s.transaction_count,
+        share: s.percentage,
       }));
 
       const catData = (data.by_category || []).map((c) => ({
         name: c.category_name,
         value: c.total_amount,
         count: c.transaction_count,
+        share: c.percentage,
       }));
 
       if (srcData.length === 0 && catData.length === 0) return null;
@@ -301,12 +335,14 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                     innerRadius={55}
                     outerRadius={95}
                     paddingAngle={3}
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
                   >
                     {(srcData.length ? srcData : catData).map((_, index) => (
                       <Cell key={`cell-inc-${index}`} fill={PALETTE[index % PALETTE.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
                   <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -323,8 +359,8 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="#242B36" vertical={false} />
                   <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} tickFormatter={formatCompactCurrency} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Total Inflow" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                  <Bar dataKey="value" name="Total Inflow" fill="#22c55e" radius={[20, 20, 20, 20]} maxBarSize={12} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #22c55e)` }} />} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -372,9 +408,9 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                   textAnchor="end"
                 />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} tickFormatter={formatCompactCurrency} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Budget" name="Budget Limit" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Spent" name="Actual Spent" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="Budget" name="Budget Limit" fill="#3b82f6" radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #3b82f6)` }} />} />
+                <Bar dataKey="Spent" name="Actual Spent" fill="#f59e0b" radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #f59e0b)` }} />} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -403,9 +439,9 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#242B36" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} tickFormatter={formatCompactCurrency} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Target" name="Target Amount" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Saved" name="Saved Amount" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="Target" name="Target Amount" fill="#6366f1" radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #6366f1)` }} />} />
+                <Bar dataKey="Saved" name="Saved Amount" fill="#10b981" radius={[20, 20, 20, 20]} maxBarSize={10} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #10b981)` }} />} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -447,10 +483,10 @@ const ReportCharts = memo(function ReportCharts({ reportType, data, loading }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#242B36" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} tickFormatter={formatCompactCurrency} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Inflow" name="Inflow" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Outflow" name="Outflow" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Net" name="Net Cash" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="Inflow" name="Inflow" fill="#22c55e" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #22c55e)` }} />} />
+                <Bar dataKey="Outflow" name="Outflow" fill="#ef4444" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #ef4444)` }} />} />
+                <Bar dataKey="Net" name="Net Cash" fill="#3b82f6" radius={[20, 20, 20, 20]} maxBarSize={8} activeBar={(props) => <Rectangle {...props} width={props.width + 2} style={{ filter: `drop-shadow(0px 0px 8px #3b82f6)` }} />} />
               </BarChart>
             </ResponsiveContainer>
           </div>

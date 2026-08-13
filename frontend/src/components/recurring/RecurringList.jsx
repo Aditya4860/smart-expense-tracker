@@ -1,4 +1,5 @@
 import { useState, useMemo, memo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import useRecurring from '../../hooks/useRecurring';
 import RecurringCard from './RecurringCard';
 import RecurringModal from './RecurringModal';
@@ -136,8 +137,25 @@ const RecurringList = memo(function RecurringList({
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Toast */}
       {feedback && (
         <div
@@ -154,7 +172,7 @@ const RecurringList = memo(function RecurringList({
 
       {/* Header & Metric Row */}
       {showHeader && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-surface-700 bg-surface-800/80 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-surface-400">
               Active Schedules
@@ -205,11 +223,11 @@ const RecurringList = memo(function RecurringList({
               {processing ? 'Processing...' : 'Run Due Now'}
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Filter and Action Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           <input
@@ -273,16 +291,17 @@ const RecurringList = memo(function RecurringList({
             Schedule Recurring
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Cards Grid */}
+      <AnimatePresence mode="wait">
       {loading && recurringTransactions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center text-surface-400">
+        <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center text-surface-400">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-surface-600 border-t-brand-400 mb-3"></div>
           <p className="text-sm">Loading recurring schedules...</p>
-        </div>
+        </motion.div>
       ) : filteredItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700 bg-surface-800/40 p-12 text-center">
+        <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700 bg-surface-800/40 p-12 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-800 text-2xl text-surface-400 mb-3 shadow-inner">
             🔄
           </div>
@@ -303,9 +322,9 @@ const RecurringList = memo(function RecurringList({
           >
             Create Your First Schedule
           </Button>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div key="grid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredItems.map((item) => (
             <RecurringCard
               key={item.id}
@@ -320,8 +339,9 @@ const RecurringList = memo(function RecurringList({
               onSkip={handleSkip}
             />
           ))}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Create / Edit Modal */}
       <RecurringModal
@@ -343,7 +363,7 @@ const RecurringList = memo(function RecurringList({
           loading={saving}
         />
       </RecurringModal>
-    </div>
+    </motion.div>
   );
 });
 

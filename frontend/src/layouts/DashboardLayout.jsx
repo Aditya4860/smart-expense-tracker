@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import TopNavbar from '../components/layout/TopNavbar';
 import PageContainer from '../components/layout/PageContainer';
+import AIFloatingWidget from '../components/ai/AIFloatingWidget';
 
 /**
  * DashboardLayout — root shell for all authenticated pages.
@@ -41,6 +42,8 @@ export default function DashboardLayout({ children }) {
         <TopNavbar mobileMenuOpen={mobileMenuOpen} onToggleMobileMenu={toggleMobileMenu} onCloseMobileMenu={closeMobileMenu} />
         <PageContainer>{children}</PageContainer>
       </div>
+
+      <AIFloatingWidget />
     </div>
   );
 }

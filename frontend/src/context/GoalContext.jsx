@@ -23,32 +23,13 @@ export function GoalProvider({ children }) {
     setError(null);
     try {
       const data = await goalApi.getGoals();
-      
-      // Fetch histories for all goals to maintain existing UI compatibility
-      const goalsWithHistory = await Promise.all(data.map(async (goal) => {
-        try {
-          const contributions = await goalApi.getContributions(goal.id);
-          return {
-            ...goal,
-            history: contributions.sort((a, b) => new Date(b.date) - new Date(a.date))
-          };
-        } catch {
-          return { ...goal, history: [] };
-        }
-      }));
-
       setGoals(prev => {
         const optimistic = prev.filter(g => String(g.id).startsWith('temp-'));
-        const mergedData = goalsWithHistory.map(serverGoal => {
-          const existingGoal = prev.find(g => g.id === serverGoal.id);
-          if (!existingGoal) return serverGoal;
-          const optimisticContribs = (existingGoal.history || []).filter(c => String(c.id).startsWith('temp-'));
-          return {
-            ...serverGoal,
-            history: [...optimisticContribs, ...(serverGoal.history || [])].sort((a, b) => new Date(b.date) - new Date(a.date))
-          };
-        });
-        return [...optimistic, ...mergedData];
+        const merged = data.map(serverGoal => ({
+          ...serverGoal,
+          history: prev.find(g => g.id === serverGoal.id)?.history || [],
+        }));
+        return [...optimistic, ...merged];
       });
     } catch (err) {
       setError(err.message || 'Failed to fetch goals');

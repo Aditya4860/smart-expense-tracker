@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import BudgetSummary from '../components/budget/BudgetSummary';
 import BudgetTable from '../components/budget/BudgetTable';
@@ -75,11 +76,28 @@ function BudgetInner() {
     }
   }, [delBudget, deleteBudget]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Budgets</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -95,13 +113,15 @@ function BudgetInner() {
           {PlusIcon}
           Add Budget
         </Button>
-      </div>
+      </motion.div>
 
       {/* ── Summary cards ────────────────────────────────────────────────── */}
-      <BudgetSummary />
+      <motion.div variants={itemVariants}>
+        <BudgetSummary />
+      </motion.div>
 
       {/* ── View toggle + count ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
           {budgets.length === 0 ? (
             <span className="text-slate-600">No budgets yet</span>
@@ -160,45 +180,62 @@ function BudgetInner() {
           </button>
         </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      {viewMode === 'table' ? (
-        <BudgetTable />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {budgets.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-700/50">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="h-8 w-8 text-slate-500"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-                </svg>
+      <AnimatePresence mode="wait">
+        {viewMode === 'table' ? (
+          <motion.div
+            key="table"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <BudgetTable />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {budgets.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-700/50">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="h-8 w-8 text-slate-500"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                  </svg>
+                </div>
+                <p className="text-base font-semibold text-white">No budgets yet</p>
+                <p className="mt-1 max-w-xs text-sm text-slate-500">
+                  Add your first budget using the button above to start planning your spending.
+                </p>
               </div>
-              <p className="text-base font-semibold text-white">No budgets yet</p>
-              <p className="mt-1 max-w-xs text-sm text-slate-500">
-                Add your first budget using the button above to start planning your spending.
-              </p>
-            </div>
-          ) : (
-            budgets.map(budget => (
-              <BudgetCard
-                key={budget.id}
-                budget={budget}
-                onEdit={() => setEditBudget(budget)}
-                onDelete={() => setDelBudget(budget)}
-              />
-            ))
-          )}
-        </div>
-      )}
+            ) : (
+              budgets.map(budget => (
+                <BudgetCard
+                  key={budget.id}
+                  budget={budget}
+                  onEdit={() => setEditBudget(budget)}
+                  onDelete={() => setDelBudget(budget)}
+                />
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Add modal ────────────────────────────────────────────────────── */}
       <BudgetModal
@@ -251,7 +288,7 @@ function BudgetInner() {
           </div>
         </div>
       </BudgetModal>
-    </div>
+    </motion.div>
   );
 }
 

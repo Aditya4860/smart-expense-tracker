@@ -25,7 +25,7 @@ const Card = memo(function Card({
   const base = [
     glass
       ? 'rounded-[10px] border border-white/10 bg-white/5 backdrop-blur-md'
-      : 'rounded-[10px] border-[1.5px] border-surface-700 bg-surface-800',
+      : 'rounded-[10px] border-[1px] border-surface-800 bg-[#0c0e12]',
     'shadow-card-dark',
     PADDING[padding] ?? PADDING.md,
     hover

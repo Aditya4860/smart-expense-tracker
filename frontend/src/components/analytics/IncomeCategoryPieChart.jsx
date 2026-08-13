@@ -3,10 +3,11 @@ import {
   PieChart,
   Pie,
   Cell,
-  Tooltip,
+  Sector,
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useState } from 'react';
 import useIncome from '../../hooks/useIncome';
 import { useCategory } from '../../context/CategoryContext';
 import { INCOME_CATEGORY_MAP } from '../../constants/incomeCategories';
@@ -33,22 +34,29 @@ const INCOME_CATEGORY_HEX = {
 const DEFAULT_HEX = '#6366f1';
 const PALETTE_FALLBACKS = ['#4ade80', '#60a5fa', '#c084fc', '#22d3ee', '#818cf8', '#2dd4bf', '#fb923c', '#f472b6', '#facc15'];
 
-// ── Custom tooltip ─────────────────────────────────────────────────────────
-
-function PieTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-  const { name, value, payload: inner } = payload[0];
+// ── Active Shape (Hover) ──────────────────────────────────────────────────
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, share } = props;
   return (
-    <div className="rounded-xl border border-surface-700/60 bg-surface-900 p-3 shadow-2xl text-sm">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: inner.fill }} />
-        <span className="font-semibold text-white">{name}</span>
-      </div>
-      <p className="text-success-400 font-semibold tabular-nums">{formatCurrency(value)}</p>
-      <p className="text-slate-500 text-xs">{inner.share}% of total</p>
-    </div>
+    <g>
+      <text x={cx} y={cy - 12} dy={8} textAnchor="middle" fill="#fff" className="text-[13px] font-semibold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 10} dy={8} textAnchor="middle" fill={fill} className="text-sm font-bold tabular-nums" style={{ filter: `drop-shadow(0 0 4px ${fill})` }}>
+        {formatCurrency(value)} ({share}%)
+      </text>
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{ filter: `drop-shadow(0px 0px 10px ${fill})` }}
+      />
+    </g>
   );
-}
+};
 
 // ── Custom legend ──────────────────────────────────────────────────────────
 
@@ -110,6 +118,8 @@ const IncomeCategoryPieChart = memo(function IncomeCategoryPieChart() {
     );
   }
 
+  const [activeIndex, setActiveIndex] = useState(0);
+
   return (
     <Card padding="lg">
       <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-500">
@@ -128,15 +138,24 @@ const IncomeCategoryPieChart = memo(function IncomeCategoryPieChart() {
             nameKey="name"
             animationBegin={0}
             animationDuration={600}
+            activeIndex={activeIndex}
+            activeShape={renderActiveShape}
+            onMouseEnter={(_, index) => setActiveIndex(index)}
           >
             {data.map((entry, i) => (
               <Cell key={`inc-cell-${i}`} fill={entry.fill} stroke="transparent" />
             ))}
           </Pie>
-          <Tooltip content={<PieTooltip />} />
-          <Legend content={<CustomLegend />} />
         </PieChart>
       </ResponsiveContainer>
+      <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2">
+        {data.map((entry, i) => (
+          <div key={entry.name} className="flex items-center gap-1.5 cursor-pointer" onMouseEnter={() => setActiveIndex(i)}>
+            <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.fill, filter: activeIndex === i ? `drop-shadow(0 0 6px ${entry.fill})` : 'none' }} />
+            <span className={`text-xs ${activeIndex === i ? 'text-white' : 'text-slate-400'}`}>{entry.name}</span>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 });

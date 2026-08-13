@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { motion } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import IncomeSummary from '../components/income/IncomeSummary';
 import IncomeTable from '../components/income/IncomeTable';
@@ -90,11 +91,28 @@ function IncomeInner() {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
 
       {/* Page header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Income</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -103,7 +121,7 @@ function IncomeInner() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-xl bg-surface-800 p-1 border border-surface-700">
             <button
               type="button"
@@ -141,20 +159,28 @@ function IncomeInner() {
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {activeTab === 'recurring' ? (
-        <RecurringList initialType="INCOME" />
+        <motion.div variants={itemVariants}>
+          <RecurringList initialType="INCOME" />
+        </motion.div>
       ) : (
         <>
           {/* Summary cards */}
-          <IncomeSummary />
+          <motion.div variants={itemVariants}>
+            <IncomeSummary />
+          </motion.div>
 
           {/* Search toolbar */}
-          <IncomeSearch />
+          <motion.div variants={itemVariants}>
+            <IncomeSearch />
+          </motion.div>
 
           {/* Table */}
-          <IncomeTable />
+          <motion.div variants={itemVariants}>
+            <IncomeTable />
+          </motion.div>
 
           {/* Add income modal */}
           <IncomeModal
@@ -170,7 +196,7 @@ function IncomeInner() {
           </IncomeModal>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
 

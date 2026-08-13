@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/ui/PageHeader';
 import AIInsightsCard from '../components/ai/AIInsightsCard';
@@ -53,10 +54,27 @@ const AIAssistantInner = () => {
         fetchInitialData();
     }, [fetchInitialData]);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { 
+            opacity: 1, 
+            transition: { staggerChildren: 0.1 } 
+        }
+    };
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+    };
+
     return (
-        <div className="space-y-6">
+        <motion.div 
+            className="space-y-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
             {error ? (
-                <div className="bg-danger-500/10 border border-danger-500/20 rounded-sm p-6 text-center">
+                <motion.div variants={itemVariants} className="bg-danger-500/10 border border-danger-500/20 rounded-sm p-6 text-center">
                     <p className="text-danger-400 mb-4">{error}</p>
                     <button 
                         onClick={fetchInitialData}
@@ -64,9 +82,9 @@ const AIAssistantInner = () => {
                     >
                         Retry Connection
                     </button>
-                </div>
+                </motion.div>
             ) : (
-                <div className="flex flex-col xl:flex-row gap-6 items-start">
+                <motion.div variants={itemVariants} className="flex flex-col xl:flex-row gap-6 items-start">
                     {/* Left Column: Insights & Recommendations (35%) */}
                     <div className="w-full xl:w-[35%] space-y-6 shrink-0">
                         <AIInsightsCard 
@@ -95,9 +113,9 @@ const AIAssistantInner = () => {
                     <div className="w-full xl:w-[65%]">
                         <AIChatBox isCompact={false} />
                     </div>
-                </div>
+                </motion.div>
             )}
-        </div>
+        </motion.div>
     );
 };
 

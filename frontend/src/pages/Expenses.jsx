@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ExpenseTable from '../components/expenses/ExpenseTable';
 import ExpenseModal from '../components/expenses/ExpenseModal';
@@ -61,11 +62,28 @@ function ExpensesInner() {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Expenses</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -74,7 +92,7 @@ function ExpensesInner() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-xl bg-surface-800 p-1 border border-surface-700">
             <button
               type="button"
@@ -112,14 +130,16 @@ function ExpensesInner() {
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {activeTab === 'recurring' ? (
-        <RecurringList initialType="EXPENSE" />
+        <motion.div variants={itemVariants}>
+          <RecurringList initialType="EXPENSE" />
+        </motion.div>
       ) : (
         <>
           {/* ── Summary row ─────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard
               id="stat-total"
               label="Total Spent"
@@ -148,38 +168,53 @@ function ExpensesInner() {
               sub="Per transaction"
               valueCls="text-accent-400"
             />
-          </div>
+          </motion.div>
 
           {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-          <div className="flex items-center gap-3">
-            <ExpenseSearch />
-            <Button
-              id="toggle-expense-filters"
-              variant={activeFilters ? 'primary' : 'secondary'}
-              size="md"
-              onClick={() => setFiltersOpen(o => !o)}
-              aria-expanded={filtersOpen}
-              aria-controls="expense-filters-panel"
-            >
-              {FilterIcon}
-              Filters
-              {activeFilters && (
-                <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold">
-                  {Object.values(filters).filter(Boolean).length}
-                </span>
-              )}
-            </Button>
-          </div>
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <ExpenseSearch />
+            </div>
+            <div className="shrink-0">
+              <Button
+                id="toggle-expense-filters"
+                variant={activeFilters ? 'primary' : 'secondary'}
+                size="md"
+                onClick={() => setFiltersOpen(o => !o)}
+                aria-expanded={filtersOpen}
+                aria-controls="expense-filters-panel"
+              >
+                {FilterIcon}
+                Filters
+                {activeFilters && (
+                  <span className="ml-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold">
+                    {Object.values(filters).filter(Boolean).length}
+                  </span>
+                )}
+              </Button>
+            </div>
+          </motion.div>
 
           {/* ── Filters panel ───────────────────────────────────────────────── */}
-          {filtersOpen && (
-            <div id="expense-filters-panel">
-              <ExpenseFilters onClose={() => setFiltersOpen(false)} />
-            </div>
-          )}
+          <AnimatePresence>
+            {filtersOpen && (
+              <motion.div 
+                id="expense-filters-panel"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <ExpenseFilters onClose={() => setFiltersOpen(false)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── Table ───────────────────────────────────────────────────────── */}
-          <ExpenseTable />
+          <motion.div variants={itemVariants}>
+            <ExpenseTable />
+          </motion.div>
 
           {/* ── Add modal ───────────────────────────────────────────────────── */}
           <ExpenseModal
@@ -195,7 +230,7 @@ function ExpensesInner() {
           </ExpenseModal>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
 

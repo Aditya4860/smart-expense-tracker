@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Sparkles,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
@@ -195,11 +196,29 @@ export default function Reports() {
     return REPORT_TABS.find((t) => t.id === activeTab) || REPORT_TABS[0];
   }, [activeTab]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1, 
+      transition: { staggerChildren: 0.1 } 
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
+
   return (
     <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 pb-12">
+      <motion.div 
+        className="w-full max-w-7xl mx-auto flex flex-col gap-6 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header with Export Action Toolbar */}
-        <PageHeader
+        <motion.div variants={itemVariants}>
+          <PageHeader
           title="Financial Reports & Analytics"
           subtitle="Generate audit-ready reports, analyze trends, and export verified financial statements."
           action={
@@ -242,10 +261,11 @@ export default function Reports() {
             </div>
           }
         />
+        </motion.div>
 
         {/* Download Feedback Banner */}
         {exportNotice && (
-          <div
+          <motion.div variants={itemVariants}
             className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-medium transition-all ${
               exportNotice.type === 'success'
                 ? 'border-success-500/30 bg-success-500/10 text-success-400'
@@ -266,11 +286,11 @@ export default function Reports() {
             >
               Dismiss
             </button>
-          </div>
+          </motion.div>
         )}
 
         {/* Report Selector Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <motion.div variants={itemVariants} className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {REPORT_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -289,9 +309,10 @@ export default function Reports() {
               </button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Dynamic Filters & Date Controls Bar */}
+        <motion.div variants={itemVariants}>
         <Card padding="md" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-slate-400">
             <span className="font-semibold text-white">{activeTabMeta.label} Report</span>
@@ -421,9 +442,11 @@ export default function Reports() {
             </button>
           </div>
         </Card>
+        </motion.div>
 
         {/* Error State Banner */}
         {error && (
+          <motion.div variants={itemVariants}>
           <Card padding="md" className="border-danger-500/40 bg-danger-500/10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -438,17 +461,24 @@ export default function Reports() {
               </Button>
             </div>
           </Card>
+          </motion.div>
         )}
 
         {/* Top Summary Cards / Financial KPIs */}
-        <ReportKpiCards reportType={activeTab} data={reportData} loading={loading} />
+        <motion.div variants={itemVariants}>
+          <ReportKpiCards reportType={activeTab} data={reportData} loading={loading} />
+        </motion.div>
 
         {/* Interactive Charts & Visualizations */}
-        <ReportCharts reportType={activeTab} data={reportData} loading={loading} />
+        <motion.div variants={itemVariants}>
+          <ReportCharts reportType={activeTab} data={reportData} loading={loading} />
+        </motion.div>
 
         {/* Structured Data & Breakdown Tables */}
-        <ReportTable reportType={activeTab} data={reportData} loading={loading} />
-      </div>
+        <motion.div variants={itemVariants}>
+          <ReportTable reportType={activeTab} data={reportData} loading={loading} />
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 }

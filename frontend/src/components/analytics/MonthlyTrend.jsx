@@ -16,8 +16,8 @@ import Card from '../ui/Card';
 // ── Palette ────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  income:  '#34d399',
-  expense: '#f87171',
+  income:  '#059669', // darker green
+  expense: '#dc2626', // dark red
 };
 
 
@@ -26,11 +26,11 @@ const COLORS = {
 function TrendTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-surface-700/60 bg-surface-900 p-3 shadow-2xl text-sm">
+    <div className="rounded-xl border border-surface-700/60 bg-[#12141a]/90 backdrop-blur-md p-3 shadow-2xl text-sm">
       <p className="mb-2 font-semibold text-white">{label}</p>
       {payload.map(entry => (
         <div key={entry.dataKey} className="flex items-center gap-2 py-0.5">
-          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color, filter: `drop-shadow(0px 0px 4px ${entry.color})` }} />
           <span className="text-slate-400 capitalize">{entry.name}:</span>
           <span className="ml-auto pl-4 font-semibold tabular-nums" style={{ color: entry.color }}>
             {formatCurrency(entry.value)}
@@ -91,18 +91,18 @@ const MonthlyTrend = memo(function MonthlyTrend() {
             dataKey="income"
             name="Income"
             stroke={COLORS.income}
-            strokeWidth={2.5}
-            dot={{ r: 3, fill: COLORS.income, strokeWidth: 0 }}
-            activeDot={{ r: 5, strokeWidth: 0 }}
+            strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 6, fill: COLORS.income, stroke: "#fff", strokeWidth: 2, style: { filter: `drop-shadow(0px 0px 8px ${COLORS.income})` } }}
           />
           <Line
             type="monotone"
             dataKey="expense"
             name="Expense"
             stroke={COLORS.expense}
-            strokeWidth={2.5}
-            dot={{ r: 3, fill: COLORS.expense, strokeWidth: 0 }}
-            activeDot={{ r: 5, strokeWidth: 0 }}
+            strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 6, fill: COLORS.expense, stroke: "#fff", strokeWidth: 2, style: { filter: `drop-shadow(0px 0px 8px ${COLORS.expense})` } }}
           />
         </LineChart>
       </ResponsiveContainer>
