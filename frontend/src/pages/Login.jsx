@@ -57,7 +57,8 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your Smart Expense Tracker account."
+      subtitle="Sign in to your Onyx account to continue."
+      googleLabel="Sign in with Google"
       footer={
         <>
           Don't have an account?{' '}
@@ -66,7 +67,7 @@ export default function Login() {
             to="/register"
             className="font-medium text-primary-400 hover:text-primary-300 transition-colors"
           >
-            Create one
+            Create one free
           </Link>
         </>
       }

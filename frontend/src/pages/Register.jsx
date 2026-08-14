@@ -92,6 +92,7 @@ export default function Register() {
     <AuthLayout
       title="Create an account"
       subtitle="Start tracking your expenses for free — no credit card required."
+      googleLabel="Sign up with Google"
       footer={
         <>
           Already have an account?{' '}
