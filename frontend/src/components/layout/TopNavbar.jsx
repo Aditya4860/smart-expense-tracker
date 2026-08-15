@@ -133,7 +133,8 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
       <header
         id="top-navbar"
         role="banner"
-        className={`fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-2 rounded-full bg-[#121212] px-2 py-2 shadow-2xl border border-white/10 w-[95%] max-w-[1000px] backdrop-blur-xl transition-all duration-300 ${isVisible ? 'top-6 translate-y-0 opacity-100' : '-top-20 -translate-y-full opacity-0'}`}
+        className={`fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-2 rounded-full px-2 py-2 shadow-2xl w-[95%] max-w-[1000px] backdrop-blur-xl transition-all duration-300 ${isVisible ? 'top-6 translate-y-0 opacity-100' : '-top-20 -translate-y-full opacity-0'}`}
+        style={{ backgroundColor: 'var(--bg-navbar)', border: '1px solid var(--border-default)' }}
       >
         {/* Left: Mobile hamburger & Logo */}
         <div className="flex items-center gap-2 pl-2">
@@ -216,20 +217,24 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
 
             {/* Dropdown Menu */}
             <div
-              className={`absolute right-0 mt-3 w-56 origin-top-right rounded-2xl border border-surface-700 bg-surface-800/95 py-2 shadow-xl backdrop-blur-xl transition-all duration-200 ${
+              className={`absolute right-0 mt-3 w-56 origin-top-right rounded-2xl py-2 shadow-xl backdrop-blur-xl transition-all duration-200 ${
                 isDropdownOpen
                   ? 'scale-100 opacity-100 visible translate-y-0'
                   : 'scale-95 opacity-0 invisible -translate-y-2'
               }`}
+              style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-default)' }}
             >
-              <div className="px-4 py-2 border-b border-surface-700/50 mb-2">
-                <p className="truncate text-sm font-medium text-white">{user?.name || 'User'}</p>
-                <p className="truncate text-xs text-surface-400">{user?.email}</p>
+              <div className="px-4 py-2 mb-2" style={{ borderBottom: '1px solid var(--border-default)' }}>
+                <p className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{user?.name || 'User'}</p>
+                <p className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
               </div>
 
               <button
                 onClick={() => { setIsDropdownOpen(false); setIsProfileOpen(true); }}
-                className="flex w-full items-center px-4 py-2 text-sm text-surface-300 hover:bg-surface-700 hover:text-white transition-colors"
+                className="flex w-full items-center px-4 py-2 text-sm transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-secondary)'; }}
               >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -237,7 +242,14 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
                 View Profile
               </button>
               
-              <NavLink to="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-sm text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
+              <NavLink
+                to="/settings"
+                onClick={() => setIsDropdownOpen(false)}
+                className="flex items-center px-4 py-2 text-sm transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

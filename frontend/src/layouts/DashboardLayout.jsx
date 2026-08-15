@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }) {
   const closeMobileMenu  = useCallback(() => setMobileMenuOpen(false), []);
 
   return (
-    <div className="min-h-screen bg-surface-950 text-white">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-page)', color: 'var(--text-primary)' }}>
 
       {/* Subtle grain overlay */}
       <div 
