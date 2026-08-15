@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import { ThemeContext } from '../../context/ThemeContext';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import ProfileModal from '../profile/ProfileModal';
+import SettingsModal from '../settings/SettingsModal';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -41,6 +42,7 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Carousel state
@@ -242,10 +244,9 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
                 View Profile
               </button>
               
-              <NavLink
-                to="/settings"
-                onClick={() => setIsDropdownOpen(false)}
-                className="flex items-center px-4 py-2 text-sm transition-colors"
+              <button
+                onClick={() => { setIsDropdownOpen(false); setIsSettingsOpen(true); }}
+                className="flex w-full items-center px-4 py-2 text-sm transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-secondary)'; }}
@@ -255,7 +256,7 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 Settings
-              </NavLink>
+              </button>
 
               <button onClick={handleLogout} className="flex w-full items-center px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors mt-2 border-t border-surface-700/50 pt-2">
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -305,6 +306,9 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
 
       {/* Profile Modal */}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </>
   );
 });
