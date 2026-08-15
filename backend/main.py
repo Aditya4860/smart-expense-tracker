@@ -25,6 +25,7 @@ configure_logging(level=settings.LOG_LEVEL, environment=settings.ENVIRONMENT)
 # ── Optional Sentry error monitoring ─────────────────────────────────────────
 if settings.SENTRY_DSN:
     try:
+        # pyrefly: ignore [import-error, missing-import]
         import sentry_sdk
         sentry_sdk.init(
             dsn=settings.SENTRY_DSN,

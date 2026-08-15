@@ -171,6 +171,23 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (data) => {
+    try {
+      const updated = await authApi.updateMe(data);
+      const newUser = {
+        ...user,
+        name: updated.full_name || user?.name,
+        full_name: updated.full_name,
+        currency_preference: updated.currency_preference,
+      };
+      localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+      setUser(newUser);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message || 'Update failed.' };
+    }
+  }, [user]);
+
   const value = useMemo(() => ({
     user,
     token,
@@ -179,13 +196,15 @@ export function AuthProvider({ children }) {
     login,
     logout,
     register,
+    updateProfile,
   }), [
     user,
     token,
     loading,
     login,
     logout,
-    register
+    register,
+    updateProfile,
   ]);
 
   return (

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { ThemeContext } from '../../context/ThemeContext';
 import NotificationDropdown from '../notifications/NotificationDropdown';
+import ProfileModal from '../profile/ProfileModal';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -39,6 +40,7 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
   const navigate = useNavigate();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Carousel state
@@ -225,12 +227,15 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
                 <p className="truncate text-xs text-surface-400">{user?.email}</p>
               </div>
 
-              <NavLink to="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-sm text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
+              <button
+                onClick={() => { setIsDropdownOpen(false); setIsProfileOpen(true); }}
+                className="flex w-full items-center px-4 py-2 text-sm text-surface-300 hover:bg-surface-700 hover:text-white transition-colors"
+              >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 View Profile
-              </NavLink>
+              </button>
               
               <NavLink to="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center px-4 py-2 text-sm text-surface-300 hover:bg-surface-700 hover:text-white transition-colors">
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,12 +262,12 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
       {/* Mobile Navigation Drawer */}
       <div
         className={[
-          'fixed inset-y-0 left-0 z-50 w-64 transform bg-[#121212] border-r border-surface-700 transition-transform duration-300 lg:hidden',
+          'fixed inset-y-0 left-0 z-50 w-64 transform bg-[#0a0b0f] border-r border-white/8 transition-transform duration-300 lg:hidden',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         ].join(' ')}
       >
-        <div className="flex h-14 items-center justify-between border-b border-surface-700 px-4">
-          <span className="text-sm font-bold tracking-tight text-white">Smart Tracker</span>
+        <div className="flex h-14 items-center justify-between border-b border-white/8 px-4">
+          <span className="text-sm font-bold tracking-tight text-white">Onyx</span>
           <button onClick={onCloseMobileMenu} className="text-surface-400 hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
               <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
@@ -285,6 +290,9 @@ const TopNavbar = memo(function TopNavbar({ mobileMenuOpen, onToggleMobileMenu, 
           ))}
         </nav>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </>
   );
 });

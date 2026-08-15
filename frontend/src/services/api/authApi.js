@@ -17,5 +17,10 @@ export const authApi = {
     const response = await apiClient.get('/users/me');
     return response.data;
   },
+
+  updateMe: async (data) => {
+    const response = await apiClient.patch('/users/me', data);
+    return response.data;
+  },
 };
 
