@@ -84,18 +84,18 @@ const journey = [
   { num: '/04', title: 'Grow', desc: 'Make smarter decisions, build savings, and hit every goal.' },
 ];
 
-const testimonials = [
-  { name: 'Priya Nair', role: 'Freelance Designer', text: '"Onyx changed how I see money. I went from zero savings to ₹50k in 3 months just by tracking properly."', avatar: '👩‍🎨' },
-  { name: 'Rohan Mehta', role: 'Software Engineer', text: '"The analytics are incredible. I found I was spending ₹8k/month on food without realising. Fixed that in weeks."', avatar: '👨‍💻' },
-  { name: 'Sneha Kapoor', role: 'MBA Student', text: '"Beautiful design, zero friction. I actually open this app every day — which says everything."', avatar: '👩‍🎓' },
-  { name: 'Arjun Verma', role: 'Startup Founder', text: '"Managing personal and business expenses separately is a breeze. The category system is genius."', avatar: '👨‍💼' },
+const useCases = [
+  { name: 'Freelancers', role: 'Variable Income', text: '"Track client payments, manage business expenses separately, and never worry about tax-time chaos again."', avatar: '👩‍🎨' },
+  { name: 'Professionals', role: 'Salary Tracking', text: '"Automate your monthly budget, track fixed subscriptions, and watch your savings grow systematically."', avatar: '👨‍💻' },
+  { name: 'Students', role: 'Tight Budgets', text: '"Set strict limits on dining out, track educational expenses, and learn financial discipline early."', avatar: '👩‍🎓' },
+  { name: 'Founders', role: 'Business & Personal', text: '"Keep personal spending cleanly separated from bootstrap costs with custom categories and tags."', avatar: '👨‍💼' },
 ];
 
 const stats = [
-  { value: '₹2.4Cr+', label: 'Expenses tracked' },
-  { value: '12,000+', label: 'Active users' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '4.9★', label: 'User rating' },
+  { value: '100%', label: 'Data Privacy' },
+  { value: 'Smart', label: 'AI Insights' },
+  { value: 'Real-time', label: 'Analytics' },
+  { value: 'Secure', label: 'Architecture' },
 ];
 
 export default function Landing() {
@@ -352,23 +352,23 @@ export default function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════ */}
-      {/* SECTION 5 — TESTIMONIALS (replacing Pricing)             */}
+      {/* SECTION 5 — USE CASES                                    */}
       {/* ══════════════════════════════════════════════════════════ */}
-      <section id="testimonials" className="sticky top-0 min-h-screen bg-[#09090d] border-t border-white/5 shadow-2xl flex flex-col justify-center py-24">
+      <section id="use-cases" className="sticky top-0 min-h-screen bg-[#09090d] border-t border-white/5 shadow-2xl flex flex-col justify-center py-24">
         <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="flex items-center gap-3 mb-10">
-            <span className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-widest text-slate-400">✦ Testimonials</span>
+            <span className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-widest text-slate-400">✦ Use Cases</span>
           </div>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-16">
             <h2 className="font-serif text-5xl lg:text-7xl">
-              Real <em className="italic text-slate-400">Results</em>
+              Designed for <em className="italic text-slate-400">Everyone</em>
             </h2>
             <p className="text-slate-400 max-w-sm text-base leading-relaxed">
-              Thousands of people have transformed their relationship with money using Onyx.
+              Whether you're managing unpredictable freelance income or a fixed salary, Onyx adapts to your lifestyle.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {testimonials.map((t, idx) => (
+            {useCases.map((t, idx) => (
               <RevealCard key={idx} delay={idx * 100}>
                 <div className="rounded-3xl border border-white/8 bg-white/3 p-8 hover:bg-white/5 transition-colors hover:-translate-y-1 duration-500 flex flex-col gap-6">
                   <p className="text-base text-slate-200 leading-relaxed italic">{t.text}</p>
