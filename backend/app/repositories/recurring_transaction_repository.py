@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, Sequence, Dict
+from typing import Optional, Sequence, Dict, Any
 from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -170,32 +170,63 @@ class RecurringTransactionRepository:
                 item.category_name = item.category.name
         return items
 
-    async def get_counts(self, user_id: uuid.UUID) -> Dict[str, int]:
-        """Fetch counts of recurring transactions by status."""
-        active_res = await self.db.execute(
-            select(func.count(RecurringTransaction.id)).where(
-                and_(
-                    RecurringTransaction.user_id == user_id,
-                    RecurringTransaction.status == RecurringStatus.ACTIVE.value,
-                )
-            )
+    async def get_counts(self, user_id: uuid.UUID) -> Dict[str, Any]:
+        """Fetch counts of recurring transactions by status and calculate monthly totals."""
+        from app.models.enums import RecurringFrequency, TransactionType
+        
+        result = await self.db.execute(
+            select(RecurringTransaction).where(RecurringTransaction.user_id == user_id)
         )
-        paused_res = await self.db.execute(
-            select(func.count(RecurringTransaction.id)).where(
-                and_(
-                    RecurringTransaction.user_id == user_id,
-                    RecurringTransaction.status == RecurringStatus.PAUSED.value,
-                )
-            )
-        )
-        total_res = await self.db.execute(
-            select(func.count(RecurringTransaction.id)).where(
-                RecurringTransaction.user_id == user_id
-            )
-        )
+        transactions = result.scalars().all()
+        
+        active_count = 0
+        paused_count = 0
+        cancelled_count = 0
+        
+        active_expenses = 0
+        active_income = 0
+        total_monthly_expense = 0.0
+        total_monthly_income = 0.0
+        
+        for tx in transactions:
+            if tx.status == RecurringStatus.ACTIVE.value:
+                active_count += 1
+                
+                # Calculate monthly equivalent
+                multiplier = 1.0
+                if tx.frequency == RecurringFrequency.DAILY.value:
+                    multiplier = 30.44
+                elif tx.frequency == RecurringFrequency.WEEKLY.value:
+                    multiplier = 4.33
+                elif tx.frequency == RecurringFrequency.BIWEEKLY.value:
+                    multiplier = 2.16
+                elif tx.frequency == RecurringFrequency.MONTHLY.value:
+                    multiplier = 1.0
+                elif tx.frequency == RecurringFrequency.YEARLY.value:
+                    multiplier = 1 / 12.0
+                    
+                monthly_amount = float(tx.amount) * multiplier
+                
+                if tx.type == TransactionType.EXPENSE.value:
+                    active_expenses += 1
+                    total_monthly_expense += monthly_amount
+                elif tx.type == TransactionType.INCOME.value:
+                    active_income += 1
+                    total_monthly_income += monthly_amount
+                    
+            elif tx.status == RecurringStatus.PAUSED.value:
+                paused_count += 1
+            elif tx.status == RecurringStatus.CANCELLED.value:
+                cancelled_count += 1
 
         return {
-            "active_count": active_res.scalar() or 0,
-            "paused_count": paused_res.scalar() or 0,
-            "total_count": total_res.scalar() or 0,
+            "active_count": active_count,
+            "paused_count": paused_count,
+            "total_count": len(transactions),
+            "total_active": active_count,
+            "active_expenses": active_expenses,
+            "active_income": active_income,
+            "cancelled_count": cancelled_count,
+            "total_monthly_recurring_expense": round(total_monthly_expense, 2),
+            "total_monthly_recurring_income": round(total_monthly_income, 2),
         }

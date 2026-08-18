@@ -78,6 +78,12 @@ def test_get_recurring_counts_api(mock_service):
         "active_count": 5,
         "paused_count": 1,
         "total_count": 6,
+        "total_active": 5,
+        "active_expenses": 3,
+        "active_income": 2,
+        "cancelled_count": 0,
+        "total_monthly_recurring_expense": 5000.0,
+        "total_monthly_recurring_income": 10000.0,
     }
     response = client.get("/api/v1/recurring-transactions/counts")
     assert response.status_code == 200

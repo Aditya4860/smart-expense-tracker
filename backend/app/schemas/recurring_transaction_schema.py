@@ -85,3 +85,9 @@ class RecurringCountResponse(BaseModel):
     active_count: int
     paused_count: int
     total_count: int
+    total_active: int
+    active_expenses: int
+    active_income: int
+    cancelled_count: int
+    total_monthly_recurring_expense: float
+    total_monthly_recurring_income: float

@@ -309,5 +309,5 @@ class RecurringTransactionService:
             messages=messages,
         )
 
-    async def get_counts(self, user_id: uuid.UUID) -> Dict[str, int]:
+    async def get_counts(self, user_id: uuid.UUID) -> Dict[str, Any]:
         return await self.repository.get_counts(user_id)
