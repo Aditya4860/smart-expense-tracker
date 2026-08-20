@@ -188,12 +188,54 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  const oauthLogin = useCallback(async (code) => {
+    if (!code) {
+      return { success: false, error: 'Authorization code is missing.' };
+    }
+    try {
+      const response = await authApi.exchangeOAuthCode(code);
+      const newToken = response.access_token || response.token;
+      const newRefreshToken = response.refresh_token;
+      
+      let authenticatedUser = response.user || {};
+
+      if (newToken) {
+        localStorage.setItem(TOKEN_KEY, newToken);
+        if (newRefreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+        setToken(newToken);
+
+        try {
+          const me = await authApi.getMe();
+          if (me) {
+            authenticatedUser = {
+              id: me.id,
+              email: me.email,
+              name: me.full_name || me.email?.split('@')[0],
+              full_name: me.full_name,
+              currency_preference: me.currency_preference,
+              role: me.role,
+            };
+          }
+        } catch (meErr) {
+          console.warn('Could not fetch user details from /users/me:', meErr);
+        }
+      }
+
+      persistSession(newToken, newRefreshToken, authenticatedUser);
+      setUser(authenticatedUser);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message || 'OAuth exchange failed' };
+    }
+  }, []);
+
   const value = useMemo(() => ({
     user,
     token,
     loading,
     isAuthenticated: !!user && !!token,
     login,
+    oauthLogin,
     logout,
     register,
     updateProfile,
@@ -202,6 +244,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    oauthLogin,
     logout,
     register,
     updateProfile,

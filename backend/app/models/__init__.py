@@ -11,6 +11,7 @@ from app.models.notification import Notification
 from app.models.reminder import Reminder
 from app.models.reminder_history import ReminderHistory
 from app.models.audit_log import AuditLog
+from app.models.oauth_code import OAuthCode
 
 # Expose Base for Alembic
 

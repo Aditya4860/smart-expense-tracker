@@ -31,10 +31,10 @@ function RevealCard({ children, delay = 0, className = '' }) {
   );
 }
 
-/* ── ONYX Finance Logo SVG ─────────────────────────────────── */
-export function OnyxLogo({ size = 32 }) {
+/* ── ZENITH Finance Logo SVG ─────────────────────────────────── */
+export function ZenithLogo({ size = 32 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Onyx Logo">
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Zenith Logo">
       {/* Coin ring */}
       <circle cx="20" cy="20" r="18" stroke="white" strokeWidth="1.5" strokeOpacity="0.3"/>
       {/* Rising trend line */}
@@ -118,8 +118,8 @@ export default function Landing() {
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${scrolled ? 'bg-black/85 backdrop-blur-xl border-b border-white/5 py-3' : 'bg-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <OnyxLogo size={28} />
-            <span className="font-serif text-lg font-semibold tracking-wide uppercase">Onyx</span>
+            <ZenithLogo size={28} />
+            <span className="font-serif text-lg font-semibold tracking-wide uppercase">Zenith</span>
           </Link>
 
           <nav className="hidden lg:flex bg-white/5 backdrop-blur border border-white/10 rounded-full px-1.5 py-1 gap-0.5">
@@ -177,7 +177,7 @@ export default function Landing() {
           </h1>
 
           <p className="text-lg text-slate-300 max-w-lg leading-relaxed mb-12">
-            Onyx helps you log, budget, and understand every rupee — with beautiful analytics and AI-powered insights built for clarity.
+            Zenith helps you log, budget, and understand every rupee — with beautiful analytics and AI-powered insights built for clarity.
           </p>
 
           {/* CTAs */}
@@ -233,7 +233,7 @@ export default function Landing() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
                 <div className="w-3 h-3 rounded-full bg-green-500/70" />
                 <div className="ml-4 h-6 flex-1 rounded-full bg-white/5 max-w-xs flex items-center px-3">
-                  <span className="text-xs text-slate-600">onyx.finance/dashboard</span>
+                  <span className="text-xs text-slate-600">zenith.finance/dashboard</span>
                 </div>
               </div>
 
@@ -364,7 +364,7 @@ export default function Landing() {
               Designed for <em className="italic text-slate-400">Everyone</em>
             </h2>
             <p className="text-slate-400 max-w-sm text-base leading-relaxed">
-              Whether you're managing unpredictable freelance income or a fixed salary, Onyx adapts to your lifestyle.
+              Whether you're managing unpredictable freelance income or a fixed salary, Zenith adapts to your lifestyle.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -421,7 +421,7 @@ export default function Landing() {
                 <div className="space-y-5 text-sm">
                   <div>
                     <p className="text-xs uppercase tracking-wider text-slate-600 mb-1.5">Email</p>
-                    <p className="text-slate-300">hello@onyxwealth.com</p>
+                    <p className="text-slate-300">hello@zenithwealth.com</p>
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wider text-slate-600 mb-1.5">Support Hours</p>
@@ -467,8 +467,8 @@ export default function Landing() {
           <div className="border-t border-white/8 pt-14 grid grid-cols-2 md:grid-cols-4 gap-10 text-sm text-slate-500 mb-14">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2.5 mb-4">
-                <OnyxLogo size={22} />
-                <span className="font-serif text-base font-semibold text-white uppercase tracking-wide">Onyx</span>
+                <ZenithLogo size={22} />
+                <span className="font-serif text-base font-semibold text-white uppercase tracking-wide">Zenith</span>
               </div>
               <p className="text-xs leading-relaxed text-slate-500 max-w-[180px]">Smart personal finance, built for precision and clarity.</p>
             </div>
@@ -500,7 +500,7 @@ export default function Landing() {
 
           {/* Copyright bar */}
           <div className="border-t border-white/5 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-600">
-            <p>© {new Date().getFullYear()} Onyx Wealth Technologies. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Zenith Wealth Technologies. All rights reserved.</p>
             <p>Made with ♥ in India</p>
           </div>
 
@@ -508,7 +508,7 @@ export default function Landing() {
 
         {/* Giant watermark */}
         <div className="overflow-hidden pointer-events-none select-none">
-          <h1 className="text-[18vw] font-serif font-bold text-white/[0.025] tracking-tighter leading-none text-center">ONYX</h1>
+          <h1 className="text-[18vw] font-serif font-bold text-white/[0.025] tracking-tighter leading-none text-center">ZENITH</h1>
         </div>
       </section>
 

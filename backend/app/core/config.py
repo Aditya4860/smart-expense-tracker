@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True
 
+    # ── Google OAuth ───────────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    FRONTEND_URL: str = "http://localhost:3001"
+
     # ── CORS ───────────────────────────────────────────────────────────────────
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 

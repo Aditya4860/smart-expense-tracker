@@ -19,6 +19,7 @@ import PageLoader from './components/PageLoader';
 const Landing    = lazy(() => import('./pages/Landing'));
 const Login      = lazy(() => import('./pages/Login'));
 const Register   = lazy(() => import('./pages/Register'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const Dashboard  = lazy(() => import('./pages/Dashboard'));
 const Expenses   = lazy(() => import('./pages/Expenses'));
 const Income     = lazy(() => import('./pages/Income'));
@@ -51,6 +52,7 @@ function App() {
                                 <Route path="/"         element={<Landing />}  />
                                 <Route path="/login"    element={<Login />}    />
                                 <Route path="/register" element={<Register />} />
+                                <Route path="/oauth/callback" element={<OAuthCallback />} />
 
                                 {/* Protected routes */}
                                 <Route element={<ProtectedRoute />}>

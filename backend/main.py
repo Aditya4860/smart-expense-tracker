@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import text
 
@@ -106,6 +107,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Length", "Retry-After"],
 )
+
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # Security Headers & Request Sanitization Middleware
 @app.middleware("http")

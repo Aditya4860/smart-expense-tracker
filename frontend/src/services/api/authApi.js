@@ -22,5 +22,10 @@ export const authApi = {
     const response = await apiClient.patch('/users/me', data);
     return response.data;
   },
+
+  exchangeOAuthCode: async (code) => {
+    const response = await apiClient.post('/oauth/google/exchange', { code });
+    return response.data;
+  },
 };
 

@@ -57,7 +57,7 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your Onyx account to continue."
+      subtitle="Sign in to your Zenith account to continue."
       googleLabel="Sign in with Google"
       footer={
         <>

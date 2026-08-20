@@ -23,11 +23,11 @@ async function capture() {
   
   try {
     console.log("Navigating to Landing...");
-    await page.goto('http://localhost:3000/', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'landing.png') });
 
     console.log("Navigating to Register...");
-    await page.goto('http://localhost:3000/register', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/register', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'register.png') });
 
     // Fill Register
@@ -44,7 +44,7 @@ async function capture() {
     }
     
     console.log("Navigating to Login...");
-    await page.goto('http://localhost:3000/login', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/login', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'login.png') });
 
     // Fill Login
@@ -70,35 +70,35 @@ async function capture() {
     await delay(3000); // wait for login to redirect
     
     console.log("Navigating to Dashboard...");
-    await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/dashboard', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'dashboard.png') });
 
     console.log("Navigating to Expenses...");
-    await page.goto('http://localhost:3000/expenses', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/expenses', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'expenses.png') });
 
     console.log("Navigating to Income...");
-    await page.goto('http://localhost:3000/income', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/income', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'income.png') });
 
     console.log("Navigating to Budget...");
-    await page.goto('http://localhost:3000/budget', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/budget', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'budget.png') });
 
     console.log("Navigating to Goals...");
-    await page.goto('http://localhost:3000/goals', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/goals', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'goals.png') });
 
     console.log("Navigating to Categories...");
-    await page.goto('http://localhost:3000/categories', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/categories', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'categories.png') });
 
     console.log("Navigating to Reminders...");
-    await page.goto('http://localhost:3000/reminders', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/reminders', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'reminders.png') });
     
     console.log("Navigating to Analytics...");
-    await page.goto('http://localhost:3000/analytics', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:3001/analytics', { waitUntil: 'networkidle0' });
     await page.screenshot({ path: path.join(screenshotsDir, 'analytics.png') });
 
   } catch (error) {

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { OnyxLogo } from '../pages/Landing';
+import { ZenithLogo } from '../pages/Landing';
 import heroBg from '../assets/hero-bg-2.jpg';
 
 /**
@@ -15,9 +15,7 @@ import heroBg from '../assets/hero-bg-2.jpg';
  */
 export default function AuthLayout({ title, subtitle, footer, googleLabel, children }) {
   function handleGoogleAuth() {
-    // Placeholder: wire to backend Google OAuth endpoint when configured
-    // window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
-    alert('Google sign-in requires OAuth configuration. Please use email login for now.');
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth/google/login`;
   }
 
   return (
@@ -38,8 +36,8 @@ export default function AuthLayout({ title, subtitle, footer, googleLabel, child
 
         {/* Logo */}
         <Link to="/" aria-label="Back to home" className="relative z-10 flex items-center gap-2.5 group w-fit">
-          <OnyxLogo size={28} />
-          <span className="font-serif text-lg font-semibold tracking-wide uppercase group-hover:text-slate-200 transition-colors">Onyx</span>
+          <ZenithLogo size={28} />
+          <span className="font-serif text-lg font-semibold tracking-wide uppercase group-hover:text-slate-200 transition-colors">Zenith</span>
         </Link>
 
         {/* Tagline */}
@@ -63,7 +61,7 @@ export default function AuthLayout({ title, subtitle, footer, googleLabel, child
               ))}
             </div>
             <p className="text-sm text-slate-400">
-              <span className="text-white font-semibold">12,000+</span> users trust Onyx
+              <span className="text-white font-semibold">12,000+</span> users trust Zenith
             </p>
           </div>
         </div>
@@ -74,8 +72,8 @@ export default function AuthLayout({ title, subtitle, footer, googleLabel, child
 
         {/* Mobile logo */}
         <Link to="/" className="lg:hidden flex items-center gap-2 mb-10 group">
-          <OnyxLogo size={26} />
-          <span className="font-serif text-lg font-semibold uppercase tracking-wide">Onyx</span>
+          <ZenithLogo size={26} />
+          <span className="font-serif text-lg font-semibold uppercase tracking-wide">Zenith</span>
         </Link>
 
         {/* Ambient glow */}
@@ -130,7 +128,7 @@ export default function AuthLayout({ title, subtitle, footer, googleLabel, child
           {/* Back home */}
           <div className="mt-8 text-center">
             <Link to="/" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
-              ← Back to Onyx home
+              ← Back to Zenith home
             </Link>
           </div>
         </div>
