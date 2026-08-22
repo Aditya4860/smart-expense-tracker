@@ -15,7 +15,8 @@ import heroBg from '../assets/hero-bg-2.jpg';
  */
 export default function AuthLayout({ title, subtitle, footer, googleLabel, children }) {
   function handleGoogleAuth() {
-    window.location.href = `${import.meta.env.VITE_API_URL}/oauth/google/login`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+    window.location.href = `${apiUrl}/oauth/google/login?t=${new Date().getTime()}`;
   }
 
   return (
