@@ -1,12 +1,18 @@
 # Smart Expense Tracker
 
-![Dashboard](docs/screenshots/dashboard.png)
+![Zenith Landing Page](docs/screenshots/hero.png)
 
 ## Overview
 
-Smart Expense Tracker is a production-grade, AI-powered personal finance application designed to provide a robust and secure way to manage your finances. It helps you track expenses, monitor income sources, set budget limits, and achieve financial goals, all visualized through an intuitive and modern dashboard. 
+Zenith is a modern, production-grade personal finance application designed to help you take complete control of your financial life. Built with a focus on simplicity, security, and intelligent insights, the platform empowers users to effortlessly track expenses, monitor income streams, and set realistic budget limits to achieve long-term financial goals.
 
-The application goes beyond simple tracking by integrating an **AI Financial Assistant** that provides personalized insights, smart summaries, and actionable recommendations based on your real-time financial data.
+Under the hood, Zenith is powered by a robust and modern technology stack to ensure a seamless experience:
+- **Fast & Interactive User Interface:** The frontend is built using **React** and styled with **Tailwind CSS**, delivering a lightning-fast, responsive, and beautiful dark-mode experience across all devices.
+- **Secure & Scalable Backend:** The API is powered by **Python** and **FastAPI**, providing high-performance, asynchronous data processing.
+- **Reliable Data Storage:** All user data is securely stored in a **PostgreSQL** database, ensuring data integrity and reliability.
+- **AI-Powered Intelligence:** The application integrates with **Google Gemini AI** to act as your personal financial assistant, analyzing your spending habits to provide smart, actionable insights.
+
+Whether you are just starting your financial journey or looking for advanced analytics and cash flow visualizations, Zenith provides all the tools you need in one secure platform.
 
 ## Features & Screenshots
 
