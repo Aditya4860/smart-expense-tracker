@@ -32,11 +32,11 @@ export default function AIFloatingWidget() {
     }, [isOpen]);
 
     return (
-        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end pointer-events-none">
             {/* Popover */}
             <div 
                 ref={popoverRef}
-                className={`mb-4 w-[90vw] md:w-[400px] overflow-hidden transition-all duration-300 origin-bottom-right ${
+                className={`mb-4 w-[90vw] md:w-[400px] overflow-hidden transition-all duration-300 origin-bottom-right pointer-events-auto ${
                     isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
                 }`}
             >
@@ -58,15 +58,17 @@ export default function AIFloatingWidget() {
                             className="p-1.5 rounded text-surface-400 hover:text-white hover:bg-surface-800 transition-colors tooltip-trigger relative"
                             title="Open full page"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
                             </svg>
                         </button>
                         <button 
                             onClick={() => setIsOpen(false)}
-                            className="p-1.5 rounded text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+                            className="p-1.5 rounded text-surface-400 hover:text-white hover:bg-danger-500/20 hover:text-danger-400 transition-colors tooltip-trigger relative"
+                            title="Close"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
                         </button>
@@ -82,7 +84,7 @@ export default function AIFloatingWidget() {
             <button
                 id="ai-widget-toggle"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`group flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 overflow-hidden ${
+                className={`pointer-events-auto group flex items-center justify-center rounded-full shadow-2xl transition-all duration-300 overflow-hidden ${
                     isOpen 
                         ? 'bg-surface-800 border border-surface-700 text-white w-12 h-12' 
                         : 'bg-primary-600 border border-primary-500/50 text-white w-auto h-12 px-5 hover:bg-primary-500 hover:scale-105 hover:shadow-[0_0_20px_rgba(var(--color-primary-500),0.4)]'

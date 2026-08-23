@@ -30,7 +30,7 @@ const GoalRow = memo(function GoalRow({ goal, onEdit, onDelete, onClick }) {
 
   return (
     <tr 
-      className="group border-b border-surface-700/40 transition-colors hover:bg-white/[0.02] cursor-pointer"
+      className="group border-b border-surface-700/40 transition-colors hover:bg-surface-800/80 hover:shadow-[inset_4px_0_0_rgba(var(--color-primary-500),1)] cursor-pointer"
       onClick={onClick}
       role="button"
       tabIndex={0}

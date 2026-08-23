@@ -52,7 +52,7 @@ const ExpenseRow = memo(function ExpenseRow({ expense }) {
 
   return (
     <>
-      <tr className="group border-b border-surface-700/40 transition-colors hover:bg-white/[0.02]">
+      <tr className="group border-b border-surface-700/40 transition-colors hover:bg-surface-800/80 hover:shadow-[inset_4px_0_0_rgba(var(--color-primary-500),1)]">
 
         {/* Category icon + title */}
         <td className="px-4 py-3">
