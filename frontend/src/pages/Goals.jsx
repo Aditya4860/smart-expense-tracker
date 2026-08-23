@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import GoalSummary from '../components/goals/GoalSummary';
 import GoalTable from '../components/goals/GoalTable';
@@ -118,11 +118,11 @@ function GoalsInner() {
         </Button>
       </motion.div>
 
-      <motion.div variants={itemVariants}>
+      <div className="animate-fade-in">
         <GoalSummary />
-      </motion.div>
+      </div>
 
-      <motion.div variants={itemVariants} className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 animate-fade-in">
         <p className="text-sm text-slate-500">
           {goals.length === 0 ? (
             <span className="text-slate-600">No goals yet</span>
@@ -147,7 +147,7 @@ function GoalsInner() {
             Grid
           </button>
         </div>
-      </motion.div>
+      </div>
 
       <div className="mt-4">
         {viewMode === 'table' ? (

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import BudgetSummary from '../components/budget/BudgetSummary';
 import BudgetTable from '../components/budget/BudgetTable';
@@ -97,7 +97,7 @@ function BudgetInner() {
     >
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Budgets</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -116,12 +116,12 @@ function BudgetInner() {
       </motion.div>
 
       {/* ── Summary cards ────────────────────────────────────────────────── */}
-      <motion.div variants={itemVariants}>
+      <div className="animate-fade-in">
         <BudgetSummary />
-      </motion.div>
+      </div>
 
       {/* ── View toggle + count ───────────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 animate-fade-in">
         <p className="text-sm text-slate-500">
           {budgets.length === 0 ? (
             <span className="text-slate-600">No budgets yet</span>
@@ -180,7 +180,7 @@ function BudgetInner() {
           </button>
         </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
       <div className="mt-4">
