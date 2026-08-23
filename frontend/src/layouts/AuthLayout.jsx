@@ -49,22 +49,9 @@ export default function AuthLayout({ title, subtitle, footer, googleLabel, child
             Simplified.
           </h2>
           <p className="text-slate-400 text-base max-w-xs leading-relaxed mb-10">
-            Join thousands tracking every rupee, meeting budgets, and growing wealth — in one elegant dashboard.
+            Start tracking every rupee, meeting budgets, and growing wealth — in one elegant dashboard.
           </p>
 
-          {/* Social proof */}
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {['💼', '📊', '💡', '🎯'].map((e, i) => (
-                <div key={i} className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-base">
-                  {e}
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-slate-400">
-              <span className="text-white font-semibold">12,000+</span> users trust Zenith
-            </p>
-          </div>
         </div>
       </div>
 
