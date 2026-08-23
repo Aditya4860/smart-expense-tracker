@@ -56,11 +56,6 @@ export default function ProfileModal({ isOpen, onClose }) {
     return () => document.removeEventListener('keydown', handler);
   }, [isOpen]);
 
-  // Prevent body scroll while modal open
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
 
   function handleClose() {
     setEditing(false);

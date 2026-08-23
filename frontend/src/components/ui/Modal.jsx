@@ -57,16 +57,11 @@ export default function Modal({
   }, [onClose]);
 
   useEffect(() => {
-    if (!isOpen) {
-      document.body.style.overflow = '';
-      return;
-    }
+    if (!isOpen) return;
     document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
     panelRef.current?.querySelector(FOCUSABLE)?.focus();
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
     };
   }, [isOpen, handleKeyDown]);
 
