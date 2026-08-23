@@ -4,14 +4,16 @@ import Button from '../ui/Button';
 import GoalProgressBar from './GoalProgressBar';
 import useGoals from '../../hooks/useGoals';
 
+
 export default function GoalDetailsModal({ isOpen, onClose, goal, onAddMonthly, onAddCustom }) {
   const { calculateProgress, calculateRemainingAmount } = useGoals();
   
-  if (!goal) return null;
+  const pct = goal ? calculateProgress(goal.id) : 0;
+  const remaining = goal ? calculateRemainingAmount(goal.id) : 0;
+  const history = goal?.history || [];
 
-  const pct = calculateProgress(goal.id);
-  const remaining = calculateRemainingAmount(goal.id);
-  const history = goal.history || [];
+  if (!isOpen || !goal) return null;
+
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Goal Details" size="lg">

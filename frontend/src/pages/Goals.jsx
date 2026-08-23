@@ -86,27 +86,11 @@ function GoalsInner() {
     setAddSavingGoal(null);
   }, [addSavingGoal, addGoalSaving]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1, 
-      transition: { staggerChildren: 0.1 } 
-    }
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-  };
 
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="space-y-6 animate-fade-in">
 
-      <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Savings Goals</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -116,7 +100,7 @@ function GoalsInner() {
         <Button id="open-add-goal-modal" variant="primary" size="md" onClick={() => setAddOpen(true)}>
           {PlusIcon} Add Goal
         </Button>
-      </motion.div>
+      </div>
 
       <div className="animate-fade-in">
         <GoalSummary />
@@ -133,14 +117,14 @@ function GoalsInner() {
 
         <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1 relative z-[999]">
           <button
-            id="goal-view-table" type="button" onClick={() => { alert('Table view clicked!'); setViewMode('table'); }}
+            id="goal-view-table" type="button" onClick={() => setViewMode('table')}
             aria-pressed={viewMode === 'table'} aria-label="Table view"
             className={`flex h-10 px-4 cursor-pointer items-center justify-center rounded-lg transition-colors font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'table' ? 'bg-primary-500 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-surface-700'}`}
           >
             Table
           </button>
           <button
-            id="goal-view-grid" type="button" onClick={() => { alert('Grid view clicked!'); setViewMode('grid'); }}
+            id="goal-view-grid" type="button" onClick={() => setViewMode('grid')}
             aria-pressed={viewMode === 'grid'} aria-label="Grid view"
             className={`flex h-10 px-4 cursor-pointer items-center justify-center rounded-lg transition-colors font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'grid' ? 'bg-primary-500 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-surface-700'}`}
           >
@@ -220,7 +204,7 @@ function GoalsInner() {
           </div>
         </div>
       </GoalModal>
-    </motion.div>
+    </div>
   );
 }
 

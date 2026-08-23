@@ -76,25 +76,9 @@ function BudgetInner() {
     }
   }, [delBudget, deleteBudget]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1, 
-      transition: { staggerChildren: 0.1 } 
-    }
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-  };
 
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="space-y-6 animate-fade-in">
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between animate-fade-in">
@@ -113,7 +97,7 @@ function BudgetInner() {
           {PlusIcon}
           Add Budget
         </Button>
-      </motion.div>
+      </div>
 
       {/* ── Summary cards ────────────────────────────────────────────────── */}
       <div className="animate-fade-in">
@@ -149,7 +133,7 @@ function BudgetInner() {
           <button
             id="budget-view-table"
             type="button"
-            onClick={() => { alert('Table view clicked!'); setViewMode('table'); }}
+            onClick={() => setViewMode('table')}
             aria-pressed={viewMode === 'table'}
             aria-label="Table view"
             className={[
@@ -165,7 +149,7 @@ function BudgetInner() {
           <button
             id="budget-view-grid"
             type="button"
-            onClick={() => { alert('Grid view clicked!'); setViewMode('grid'); }}
+            onClick={() => setViewMode('grid')}
             aria-pressed={viewMode === 'grid'}
             aria-label="Grid view"
             className={[
@@ -278,7 +262,7 @@ function BudgetInner() {
           </div>
         </div>
       </BudgetModal>
-    </motion.div>
+    </div>
   );
 }
 
