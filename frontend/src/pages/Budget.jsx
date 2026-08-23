@@ -183,25 +183,15 @@ function BudgetInner() {
       </motion.div>
 
       {/* ── Content ──────────────────────────────────────────────────────── */}
-      <AnimatePresence mode="wait">
+      <div className="mt-4">
         {viewMode === 'table' ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <BudgetTable />
-          </motion.div>
+          <div key="table" className="animate-fade-in">
+            <BudgetTable onEdit={setEditBudget} onDelete={setDelBudget} />
+          </div>
         ) : (
-          <motion.div
+          <div
             key="grid"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in"
           >
             {budgets.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
@@ -233,9 +223,9 @@ function BudgetInner() {
                 />
               ))
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* ── Add modal ────────────────────────────────────────────────────── */}
       <BudgetModal

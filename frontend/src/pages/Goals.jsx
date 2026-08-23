@@ -149,25 +149,15 @@ function GoalsInner() {
         </div>
       </motion.div>
 
-      <AnimatePresence mode="wait">
+      <div className="mt-4">
         {viewMode === 'table' ? (
-          <motion.div
-            key="table"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div key="table" className="animate-fade-in">
             <GoalTable onEdit={setEditGoal} onDelete={setDelGoal} onClickRow={setSelectedGoal} />
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
+          <div
             key="grid"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in"
           >
             {goals.length === 0 ? (
               <div className="col-span-full"><GoalEmptyState /></div>
@@ -178,13 +168,15 @@ function GoalsInner() {
                   goal={goal} 
                   onEdit={() => setEditGoal(goal)} 
                   onDelete={() => setDelGoal(goal)} 
-                  onClick={() => setSelectedGoal(goal)} 
+                  onClick={() => setSelectedGoal(goal)}
+                  onAddMonthly={() => handleAddMonthly(goal)}
+                  onAddCustom={() => setAddSavingGoal(goal)}
                 />
               ))
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Add Modal */}
       <GoalModal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Add Goal">
