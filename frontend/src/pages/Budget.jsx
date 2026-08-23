@@ -149,7 +149,7 @@ function BudgetInner() {
           <button
             id="budget-view-table"
             type="button"
-            onClick={() => setViewMode('table')}
+            onClick={() => { alert('Table view clicked!'); setViewMode('table'); }}
             aria-pressed={viewMode === 'table'}
             aria-label="Table view"
             className={[
@@ -165,7 +165,7 @@ function BudgetInner() {
           <button
             id="budget-view-grid"
             type="button"
-            onClick={() => setViewMode('grid')}
+            onClick={() => { alert('Grid view clicked!'); setViewMode('grid'); }}
             aria-pressed={viewMode === 'grid'}
             aria-label="Grid view"
             className={[
