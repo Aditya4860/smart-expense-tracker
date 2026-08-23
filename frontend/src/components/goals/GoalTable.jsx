@@ -88,7 +88,7 @@ const GoalRow = memo(function GoalRow({ goal, onEdit, onDelete, onClick }) {
         <span className="text-sm text-slate-300">{formatLocalDate(goal.targetDate)}</span>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div className="flex items-center justify-end gap-1">
           <button
             type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }} aria-label="Edit goal"
             className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-primary-500/10 hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"

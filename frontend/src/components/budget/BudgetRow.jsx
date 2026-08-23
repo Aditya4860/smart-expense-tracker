@@ -110,7 +110,7 @@ const BudgetRow = memo(function BudgetRow({ budget }) {
 
         {/* Actions */}
         <td className="px-4 py-3">
-          <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <div className="flex items-center justify-end gap-1">
             <IconButton
               onClick={() => setEditOpen(true)}
               label={`Edit ${cat.name} budget`}

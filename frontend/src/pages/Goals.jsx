@@ -135,16 +135,16 @@ function GoalsInner() {
           <button
             id="goal-view-table" type="button" onClick={() => setViewMode('table')}
             aria-pressed={viewMode === 'table'} aria-label="Table view"
-            className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'table' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex h-10 px-4 cursor-pointer items-center justify-center rounded-lg transition-colors font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'table' ? 'bg-primary-500 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-surface-700'}`}
           >
-            {TableIcon}
+            Table
           </button>
           <button
             id="goal-view-grid" type="button" onClick={() => setViewMode('grid')}
             aria-pressed={viewMode === 'grid'} aria-label="Grid view"
-            className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'grid' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex h-10 px-4 cursor-pointer items-center justify-center rounded-lg transition-colors font-medium text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'grid' ? 'bg-primary-500 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-surface-700'}`}
           >
-            {GridIcon}
+            Grid
           </button>
         </div>
       </motion.div>
