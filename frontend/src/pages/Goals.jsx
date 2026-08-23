@@ -135,14 +135,14 @@ function GoalsInner() {
           <button
             id="goal-view-table" type="button" onClick={() => setViewMode('table')}
             aria-pressed={viewMode === 'table'} aria-label="Table view"
-            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'table' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'table' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
           >
             {TableIcon}
           </button>
           <button
             id="goal-view-grid" type="button" onClick={() => setViewMode('grid')}
             aria-pressed={viewMode === 'grid'} aria-label="Grid view"
-            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'grid' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${viewMode === 'grid' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
           >
             {GridIcon}
           </button>
