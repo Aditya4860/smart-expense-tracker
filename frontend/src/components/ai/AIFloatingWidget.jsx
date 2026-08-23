@@ -34,12 +34,14 @@ export default function AIFloatingWidget() {
     return (
         <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end pointer-events-none">
             {/* Popover */}
-            <div 
-                ref={popoverRef}
-                className={`mb-4 w-[90vw] md:w-[400px] overflow-hidden transition-all duration-300 origin-bottom-right pointer-events-auto ${
-                    isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
-                }`}
-            >
+        <div 
+            ref={popoverRef}
+            className={`mb-4 w-[90vw] md:w-[400px] overflow-hidden transition-all duration-300 origin-bottom-right ${
+                isOpen 
+                    ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' 
+                    : 'opacity-0 scale-95 translate-y-4 pointer-events-none invisible'
+            }`}
+        >
                 {/* Popover Header */}
                 <div className="bg-surface-950 border border-surface-700/60 rounded-t-xl p-3 flex items-center justify-between shadow-2xl">
                     <div className="flex items-center gap-2">
