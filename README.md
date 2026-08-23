@@ -2,7 +2,7 @@
 
 A full-stack personal finance application that helps you manage expenses, track income, set budgets, and achieve financial goals, all visualized through an intuitive dashboard.
 
-![Dashboard Preview](docs/screenshots/dashboard.png)
+![Landing Page](docs/screenshots/landing.png)
 
 ## Overview
 
@@ -26,6 +26,9 @@ Smart Expense Tracker is a production-grade web application built to provide a r
 - **Responsive & Modern UI**: Fully responsive, dark-mode native design with a clean card-based layout and animated transitions.
 
 ## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
 
 ### Budget Utilization
 ![Budget Tracking](docs/screenshots/budget.png)
