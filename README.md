@@ -1,62 +1,61 @@
 # Smart Expense Tracker
 
-A full-stack personal finance application that helps you manage expenses, track income, set budgets, and achieve financial goals, all visualized through an intuitive dashboard.
-
-![Landing Page](docs/screenshots/landing.png)
+![Dashboard](docs/screenshots/dashboard.png)
 
 ## Overview
 
-Smart Expense Tracker is a production-grade web application built to provide a robust and secure way to manage personal finances. It features a React 18 frontend with a responsive, modern UI and a FastAPI backend backed by PostgreSQL. The architecture relies on secure custom JWT authentication (with Google OAuth integration) and a highly performant RESTful API design.
+Smart Expense Tracker is a production-grade, AI-powered personal finance application designed to provide a robust and secure way to manage your finances. It helps you track expenses, monitor income sources, set budget limits, and achieve financial goals, all visualized through an intuitive and modern dashboard. 
 
-## Key Features
+The application goes beyond simple tracking by integrating an **AI Financial Assistant** that provides personalized insights, smart summaries, and actionable recommendations based on your real-time financial data.
 
-- **Advanced Authentication**: 
-  - Standard Email/Password with secure JWT-based session management.
-  - **Google OAuth**: One-click "Sign in with Google" seamlessly integrated with a stateless PKCE-style callback that is highly secure and immune to `SameSite` browser cookie blocks.
-- **AI Assistant**: Conversational AI capabilities integrated directly into the application using **Google Gemini AI**. Receive insights and smart financial summaries.
-- **Financial Dashboard**: A comprehensive, at-a-glance overview of your financial status with actionable summaries and recent transactions.
-- **Budgeting & Goals**: 
-  - Set category-based monthly budgets with real-time visual progress alerts.
-  - Track savings goals with target amounts and deadlines.
-- **Cash Flow Analytics**: Visual cash flow and spending breakdowns using interactive Recharts components.
-- **Comprehensive CRUD**:
-  - Full management of income sources and categorized expenses.
-  - Customizable transaction categories with rich icons.
-- **Reminders**: Schedule and manage important financial reminders for bills and subscriptions.
-- **Responsive & Modern UI**: Fully responsive, dark-mode native design with a clean card-based layout and animated transitions.
+## Features & Screenshots
 
-## Screenshots
+### Comprehensive Dashboard
+Get a complete at-a-glance overview of your financial health. Track your net balance, total income, total expenses, savings rate, and recent cash flow trends in a beautiful dark-mode interface.
+![Dashboard Details](docs/screenshots/dashboard.png)
 
-### Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
+### Advanced Budget Management
+Set category-based monthly budgets and track your utilization in real-time. The system automatically alerts you when you're approaching or exceeding your limits, helping you stay on track.
+![Budget Tracking](docs/screenshots/budgets.png)
 
-### Budget Utilization
-![Budget Tracking](docs/screenshots/budget.png)
+### Cash Flow Analytics
+Visualize your income versus expenses over time. Dive deep into category breakdowns and savings rates with interactive charts to understand exactly where your money is going.
+![Analytics](docs/screenshots/analytics.png)
 
-### Expense Management
-![Expense Adding](docs/screenshots/expense.png)
+### AI Financial Assistant (Powered by Google Gemini)
+Ask questions about your spending habits, get personalized financial insights, and receive smart recommendations on how to allocate surplus funds to your active savings goals.
+![AI Assistant](docs/screenshots/ai-assistant.png)
+
+### Automated Financial Reports
+Generate comprehensive, categorized monthly financial reports in CSV/Excel formats for detailed record-keeping and external analysis.
+![Financial Report](docs/screenshots/report.png)
 
 ## Technology Stack
 
+The application is built using modern, industry-standard technologies to ensure high performance, security, and maintainability.
+
 ### Frontend
-- **React 18** (Vite)
-- **Tailwind CSS** for responsive styling
-- **React Router v6** for client-side routing
-- **Recharts** for beautiful data visualization
-- **Lucide React** for crisp, scalable icons
+- **React 18** (Vite) for a fast, component-based UI
+- **Tailwind CSS** for responsive, utility-first styling
+- **React Router v6** for seamless client-side routing
+- **Recharts** for interactive data visualization
+- **Lucide React** for crisp, scalable iconography
 
 ### Backend
-- **Python 3.12** with **FastAPI** & **Uvicorn**
-- **Pydantic** for rigorous data validation
-- **SQLAlchemy** (async ORM)
-- **httpx** for external OAuth API calls
+- **Python 3.12** with **FastAPI** & **Uvicorn** for high-performance async API handling
+- **Pydantic** for rigorous data validation and serialization
+- **SQLAlchemy** (async ORM) for robust database interactions
+- **Google Gemini API** for generative AI financial insights
 
 ### Database & Security
-- **PostgreSQL** (hosted via Supabase)
-- **Alembic** (database migrations)
-- **JWT (JSON Web Tokens)** + **bcrypt** password hashing
+- **PostgreSQL** (hosted via Supabase) for reliable relational data storage
+- **Alembic** for seamless database schema migrations
+- **JWT (JSON Web Tokens)** + **bcrypt** for secure, stateless session management
+- **Google OAuth 2.0** integrated via a highly secure, PKCE-style stateless callback architecture
 
 ## Project Architecture
+
+The system utilizes a decoupled frontend-backend architecture, communicating via a RESTful API with secure stateless authentication.
 
 ```mermaid
 flowchart LR
@@ -97,7 +96,7 @@ pip install -r requirements.txt
 Create an `.env` file in the `backend` directory:
 ```env
 PROJECT_NAME="Smart Expense Tracker API"
-SECRET_KEY="your_secret_key"
+SECRET_KEY="your_secure_secret_key"
 DATABASE_URL="your_postgresql_database_url"
 ALEMBIC_DATABASE_URL="your_postgresql_database_url"
 BACKEND_CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
@@ -126,23 +125,4 @@ npm install
 npm run dev
 ```
 
-The frontend will start at `http://localhost:3000` or `http://localhost:5173`. 
-
-## API Documentation
-The backend exposes comprehensive REST APIs documented automatically. Once the backend is running, access Swagger UI at:
-- `GET http://localhost:8000/docs`
-
-Major API Endpoints:
-| Method | Endpoint | Description |
-| ------ | -------- | ----------- |
-| POST   | `/api/v1/oauth/google/login` | Initiate Google OAuth Flow |
-| POST   | `/api/v1/auth/login` | Authenticate standard user |
-| GET    | `/api/v1/expenses` | List expenses |
-| POST   | `/api/v1/expenses` | Add new expense |
-| GET    | `/api/v1/budget` | Get budget data |
-| GET    | `/api/v1/goals` | List financial goals |
-
-## Future Improvements
-- Mobile application (Progressive Web App)
-- Advanced customizable reporting (PDF/CSV exports)
-- Automated recurring transactions engine
+The frontend will start at `http://localhost:3000`. 
