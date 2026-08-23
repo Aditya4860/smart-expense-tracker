@@ -131,7 +131,7 @@ function GoalsInner() {
           )}
         </p>
 
-        <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1">
+        <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1 relative z-[999]">
           <button
             id="goal-view-table" type="button" onClick={() => setViewMode('table')}
             aria-pressed={viewMode === 'table'} aria-label="Table view"

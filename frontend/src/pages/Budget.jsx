@@ -145,7 +145,7 @@ function BudgetInner() {
             <span>Include Savings</span>
           </label>
 
-          <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1">
+          <div className="flex items-center gap-1 rounded-xl border border-surface-700/60 bg-surface-800 p-1 relative z-[999]">
           <button
             id="budget-view-table"
             type="button"
