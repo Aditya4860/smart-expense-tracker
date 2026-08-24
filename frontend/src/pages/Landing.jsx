@@ -102,6 +102,28 @@ export default function Landing() {
   const { isAuthenticated, loading } = useAuth();
   const [activeNav, setActiveNav] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [enquiryForm, setEnquiryForm] = useState({ name: '', email: '', query: '' });
+  const [enquiryStatus, setEnquiryStatus] = useState('idle');
+
+  const handleEnquirySubmit = async (e) => {
+    e.preventDefault();
+    setEnquiryStatus('loading');
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/api/v1/enquiries/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enquiryForm),
+      });
+      if (res.ok) {
+        setEnquiryStatus('success');
+      } else {
+        setEnquiryStatus('error');
+      }
+    } catch (err) {
+      setEnquiryStatus('error');
+    }
+  };
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 60);
@@ -430,8 +452,12 @@ export default function Landing() {
                   <div>
                     <p className="text-xs uppercase tracking-wider text-slate-600 mb-2">Follow Us</p>
                     <div className="flex gap-2">
-                      {['Instagram', 'X', 'LinkedIn', 'GitHub'].map(s => (
-                        <a key={s} href="#" className="px-3 py-1.5 border border-white/10 rounded-full text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors">{s}</a>
+                      {[
+                        { name: 'GitHub', url: 'https://github.com/Aditya4860/smart-expense-tracker' },
+                        { name: 'LinkedIn', url: 'https://www.linkedin.com/in/aditya-jain0315' },
+                        { name: 'Email', url: 'mailto:mad.developer15@gmail.com' }
+                      ].map(s => (
+                        <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 border border-white/10 rounded-full text-xs text-slate-400 hover:text-white hover:bg-white/5 transition-colors">{s.name}</a>
                       ))}
                     </div>
                   </div>
@@ -440,25 +466,77 @@ export default function Landing() {
             </RevealCard>
 
             <RevealCard delay={150}>
-              <div className="bg-[#0d0f14] border border-white/5 rounded-3xl p-10">
-                <h3 className="text-lg font-bold mb-8">Send an Enquiry</h3>
-                <form className="space-y-7" onSubmit={e => e.preventDefault()}>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Full Name</label>
-                    <input type="text" placeholder="Aarav Sharma" className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700" />
+              <div className="bg-[#0d0f14] border border-white/5 rounded-3xl p-10 flex flex-col min-h-[450px]">
+                {enquiryStatus === 'success' ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8 text-white">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">Enquiry Sent</h3>
+                    <p className="text-slate-400 mb-8 max-w-[250px]">We have received your details and will connect with you shortly.</p>
+                    <button 
+                      onClick={() => {
+                        setEnquiryStatus('idle');
+                        setEnquiryForm({ name: '', email: '', query: '' });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-slate-100 transition-colors"
+                    >
+                      Return Back
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Email</label>
-                    <input type="email" placeholder="aarav@example.com" className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Your Query</label>
-                    <textarea placeholder="How can we help you?" rows={3} className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700 resize-none" />
-                  </div>
-                  <button type="submit" className="w-full py-4 bg-white text-black font-bold rounded-full hover:bg-slate-100 transition-colors">
-                    Send Message →
-                  </button>
-                </form>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-bold mb-8">Send an Enquiry</h3>
+                    <form className="space-y-7 flex-1" onSubmit={handleEnquirySubmit}>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Full Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={enquiryForm.name}
+                          onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })}
+                          placeholder="Aarav Sharma" 
+                          className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Email</label>
+                        <input 
+                          type="email" 
+                          required
+                          value={enquiryForm.email}
+                          onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
+                          placeholder="aarav@example.com" 
+                          className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider">Your Query</label>
+                        <textarea 
+                          required
+                          value={enquiryForm.query}
+                          onChange={(e) => setEnquiryForm({ ...enquiryForm, query: e.target.value })}
+                          placeholder="How can we help you?" 
+                          rows={3} 
+                          className="w-full bg-transparent border-b border-white/10 pb-3 text-sm focus:outline-none focus:border-white/40 transition-colors placeholder:text-slate-700 resize-none" 
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        disabled={enquiryStatus === 'loading'}
+                        className="w-full py-4 bg-white text-black font-bold rounded-full hover:bg-slate-100 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {enquiryStatus === 'loading' ? 'Sending...' : 'Send Message →'}
+                      </button>
+                      {enquiryStatus === 'error' && (
+                        <p className="text-red-400 text-xs text-center mt-3">Failed to send enquiry. Please try again.</p>
+                      )}
+                    </form>
+                  </>
+                )}
               </div>
             </RevealCard>
           </div>
@@ -491,8 +569,12 @@ export default function Landing() {
             <div>
               <p className="font-bold text-white mb-5 text-xs uppercase tracking-wider">Connect</p>
               <div className="flex flex-col gap-3">
-                {['Instagram', 'X (Twitter)', 'LinkedIn', 'GitHub'].map(l => (
-                  <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>
+                {[
+                  { name: 'GitHub', url: 'https://github.com/Aditya4860/smart-expense-tracker' },
+                  { name: 'LinkedIn', url: 'https://www.linkedin.com/in/aditya-jain0315' },
+                  { name: 'Email', url: 'mailto:mad.developer15@gmail.com' }
+                ].map(l => (
+                  <a key={l.name} href={l.url} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{l.name}</a>
                 ))}
               </div>
             </div>

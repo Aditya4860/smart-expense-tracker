@@ -17,6 +17,7 @@ from app.api.v1.reminders import router as reminders_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.oauth import router as oauth_router
+from app.api.v1.enquiries import router as enquiries_router
 
 api_router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
@@ -31,5 +32,6 @@ api_router.include_router(recurring_router, prefix="/recurring-transactions", ta
 api_router.include_router(reminders_router, prefix="/reminders", tags=["Reminders"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports"])
 api_router.include_router(ai_router, prefix="/ai", tags=["AI Insights"])
+api_router.include_router(enquiries_router, prefix="/enquiries", tags=["Enquiries"])
 
 
